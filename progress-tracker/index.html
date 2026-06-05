@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>60 Months Progress</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #fff;
+            overflow: hidden;
+            touch-action: none;
+        }
+        
+        html {
+            overflow: hidden;
+        }
+        
+        .container {
+            background: #0a0a0a;
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 700px;
+            width: 100%;
+            box-shadow: 0 0 80px rgba(0, 208, 132, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .year {
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+        }
+        
+        .header-right {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .days-left {
+            font-size: 18px;
+            font-weight: 600;
+            color: #888;
+        }
+        
+        .days-left strong {
+            color: #fff;
+        }
+        
+        #settingsBtn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+        
+        #settingsBtn:hover {
+            background: rgba(255,255,255,0.15);
+            border-color: rgba(255,255,255,0.3);
+        }
+        
+        .subtitle {
+            font-size: 12px;
+            color: #555;
+            margin-bottom: 24px;
+            letter-spacing: 0.5px;
+        }
+        
+        .dots-container {
+            display: grid;
+            gap: 4px;
+            margin-bottom: 24px;
+            padding: 8px;
+        }
+        
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: #2a2a2a;
+            transition: background 0.2s ease;
+        }
+        
+        .dot.elapsed {
+            background: #fff;
+        }
+        
+        .dot.today {
+            background: #00d084;
+            box-shadow: 0 0 8px #00d084;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .stat {
+            text-align: center;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #fff;
+        }
+        
+        .stat-number.green {
+            color: #00d084;
+        }
+        
+        .stat-label {
+            font-size: 10px;
+            color: #666;
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .progress-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 16px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00d084, #00ff9d);
+            transition: width 0.5s ease;
+        }
+        
+        .dates {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 11px;
+            color: #555;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: #0a0a0a;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+        }
+        
+        .modal-header {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #00d084;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .modal-buttons button {
+            flex: 1;
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-save {
+            background: #00d084;
+            color: #000;
+        }
+        
+        .btn-save:hover {
+            background: #00ff9d;
+        }
+        
+        .btn-cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .btn-reset {
+            background: rgba(255, 100, 100, 0.2);
+            color: #ff6464;
+            border: 1px solid rgba(255, 100, 100, 0.3);
+            width: 100%;
+            margin-top: 12px;
+        }
+        
+        .btn-reset:hover {
+            background: rgba(255, 100, 100, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="year" id="currentYear">2025</div>
+            <div class="header-right">
+                <div class="days-left"><strong id="daysLeftNum">0</strong> days left</div>
+                <button id="settingsBtn">⚙️</button>
+            </div>
+        </div>
+        <div class="subtitle" id="subtitle">60 months • Nov 3, 2025 → Nov 3, 2030</div>
+        
+        <div class="dots-container" id="dotsContainer"></div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="dates">
+            <span id="startDateLabel">Start</span>
+            <span id="percentLabel">0%</span>
+            <span id="endDateLabel">End</span>
+        </div>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-number green" id="daysElapsed">0</div>
+                <div class="stat-label">Days Elapsed</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number" id="totalDays">0</div>
+                <div class="stat-label">Total Days</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number" id="monthsLeft">60</div>
+                <div class="stat-label">Months Left</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">Custom Dates</div>
+            <form id="settingsForm">
+                <div class="form-group">
+                    <label for="startDateInput">Start Date</label>
+                    <input type="date" id="startDateInput" required>
+                </div>
+                <div class="form-group">
+                    <label for="endDateInput">End Date</label>
+                    <input type="date" id="endDateInput" required>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="modal-buttons button btn-cancel" id="cancelBtn">Cancel</button>
+                    <button type="submit" class="modal-buttons button btn-save">Save</button>
+                </div>
+                <button type="button" class="btn-reset" id="resetBtn">Reset to Default</button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // Default dates
+        const DEFAULT_START = new Date(2025, 10, 3); // Nov 3, 2025
+        const DEFAULT_END = new Date(2030, 10, 3);   // Nov 3, 2030
+        
+        let START_DATE = DEFAULT_START;
+        let END_DATE = DEFAULT_END;
+        
+        // Load custom dates from localStorage
+        function loadCustomDates() {
+            const stored = localStorage.getItem('progressTrackerDates');
+            if (stored) {
+                try {
+                    const { start, end } = JSON.parse(stored);
+                    START_DATE = new Date(start);
+                    END_DATE = new Date(end);
+                } catch (e) {
+                    console.log('Could not parse stored dates, using defaults');
+                }
+            }
+        }
+        
+        // Save custom dates to localStorage
+        function saveCustomDates(startDate, endDate) {
+            localStorage.setItem('progressTrackerDates', JSON.stringify({
+                start: startDate.toISOString(),
+                end: endDate.toISOString()
+            }));
+            START_DATE = startDate;
+            END_DATE = endDate;
+            render();
+        }
+        
+        // Reset to defaults
+        function resetToDefaults() {
+            localStorage.removeItem('progressTrackerDates');
+            START_DATE = DEFAULT_START;
+            END_DATE = DEFAULT_END;
+            render();
+            closeModal();
+        }
+        
+        function daysBetween(d1, d2) {
+            const msPerDay = 1000 * 60 * 60 * 24;
+            return Math.floor((d2 - d1) / msPerDay);
+        }
+        
+        function formatDate(date) {
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+        
+        function formatDateForInput(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        function monthsBetween(d1, d2) {
+            let months = (d2.getFullYear() - d1.getFullYear()) * 12;
+            months += d2.getMonth() - d1.getMonth();
+            if (d2.getDate() < d1.getDate()) months--;
+            return Math.max(0, months);
+        }
+        
+        function render() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const totalDays = daysBetween(START_DATE, END_DATE);
+            const elapsedDays = Math.max(0, Math.min(totalDays, daysBetween(START_DATE, today)));
+            const daysLeft = totalDays - elapsedDays;
+            const monthsLeft = monthsBetween(today, END_DATE);
+            const percent = totalDays > 0 ? ((elapsedDays / totalDays) * 100).toFixed(1) : 0;
+            
+            // Update header
+            document.getElementById('currentYear').textContent = today.getFullYear();
+            document.getElementById('daysLeftNum').textContent = daysLeft.toLocaleString();
+            document.getElementById('subtitle').textContent = 
+                `${totalDays} days • ${formatDate(START_DATE)} → ${formatDate(END_DATE)}`;
+            
+            // Update stats
+            document.getElementById('daysElapsed').textContent = elapsedDays.toLocaleString();
+            document.getElementById('totalDays').textContent = totalDays.toLocaleString();
+            document.getElementById('monthsLeft').textContent = monthsLeft;
+            
+            // Update progress
+            document.getElementById('progressFill').style.width = percent + '%';
+            document.getElementById('percentLabel').textContent = percent + '%';
+            document.getElementById('startDateLabel').textContent = formatDate(START_DATE);
+            document.getElementById('endDateLabel').textContent = formatDate(END_DATE);
+            
+            // Render dots grid
+            const container = document.getElementById('dotsContainer');
+            container.innerHTML = '';
+            
+            // Calculate grid dimensions
+            const cols = 35;
+            container.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            
+            for (let i = 0; i < totalDays; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                if (i < elapsedDays) {
+                    dot.className = 'dot elapsed';
+                } else if (i === elapsedDays) {
+                    dot.className = 'dot today';
+                }
+                
+                // Tooltip showing date
+                const dotDate = new Date(START_DATE);
+                dotDate.setDate(dotDate.getDate() + i);
+                dot.title = formatDate(dotDate);
+                
+                container.appendChild(dot);
+            }
+        }
+        
+        function openModal() {
+            document.getElementById('startDateInput').value = formatDateForInput(START_DATE);
+            document.getElementById('endDateInput').value = formatDateForInput(END_DATE);
+            document.getElementById('settingsModal').classList.add('active');
+        }
+        
+        function closeModal() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+        
+        // Event listeners
+        document.getElementById('settingsBtn').addEventListener('click', openModal);
+        document.getElementById('cancelBtn').addEventListener('click', closeModal);
+        document.getElementById('settingsModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('settingsModal')) closeModal();
+        });
+        
+        document.getElementById('settingsForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const startDate = new Date(document.getElementById('startDateInput').value);
+            const endDate = new Date(document.getElementById('endDateInput').value);
+            
+            if (startDate < endDate) {
+                saveCustomDates(startDate, endDate);
+                closeModal();
+            } else {
+                alert('Start date must be before end date');
+            }
+        });
+        
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            if (confirm('Reset to default dates?')) {
+                resetToDefaults();
+            }
+        });
+        
+        // Initialize
+        loadCustomDates();
+        render();
+        setInterval(render, 60 * 60 * 1000);
+        
+        // Disable zoom and scrolling
+        document.addEventListener('wheel', (e) => e.preventDefault(), { passive: false });
+        document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+        document.addEventListener('gesturestart', (e) => e.preventDefault());
+        
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+    </script>
+</body>
+</html>
