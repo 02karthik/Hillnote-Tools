@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#000000" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<title>Random Quote</title>
+<style>
+  :root {
+    --bg: #000000;
+    --text-light: #ffffff;
+    --text-muted: #666666;
+    --accent: #ffffff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg);
+    min-height: 100%;
+  }
+
+  body {
+    min-height: 100vh;
+    width: 100%;
+    font-family: Georgia, 'Iowan Old Style', serif;
+    color: var(--text-light);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    overflow: hidden;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    flex: 1;
+  }
+
+  .quote-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    animation: fadeIn 0.6s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .opening-quote {
+    font-size: 48px;
+    color: var(--text-light);
+    opacity: 0.7;
+    line-height: 1;
+    font-family: Georgia, serif;
+  }
+
+  .quote-text {
+    font-size: clamp(18px, 4vw, 28px);
+    line-height: 1.8;
+    font-weight: 400;
+    color: var(--text-light);
+    margin: 20px 0;
+    letter-spacing: 0.3px;
+  }
+
+  .closing-quote {
+    font-size: 48px;
+    color: var(--text-light);
+    opacity: 0.7;
+    line-height: 1;
+    font-family: Georgia, serif;
+  }
+
+  .quote-author {
+    font-size: 14px;
+    color: var(--text-muted);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    text-transform: lowercase;
+    letter-spacing: 0.5px;
+    margin-top: 24px;
+    font-style: italic;
+  }
+
+  .refresh-btn {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 2px solid var(--text-light);
+    background: transparent;
+    color: var(--text-light);
+    font-size: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 100;
+  }
+
+  .refresh-btn:hover {
+    background: var(--text-light);
+    color: var(--bg);
+    transform: translateX(-50%) scale(1.1);
+  }
+
+  .refresh-btn:active {
+    transform: translateX(-50%) scale(0.95);
+  }
+
+  @media (max-width: 768px) {
+    body {
+      padding: 30px 20px;
+    }
+
+    .quote-text {
+      font-size: clamp(16px, 5vw, 24px);
+    }
+
+    .opening-quote,
+    .closing-quote {
+      font-size: 36px;
+    }
+
+    .refresh-btn {
+      width: 48px;
+      height: 48px;
+      font-size: 20px;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="container" id="container"></div>
+  <button class="refresh-btn" onclick="newQuote()" title="New Quote">↻</button>
+
+<script>
+const QUOTES = [
+  { text: "If you are allowed one wish for your child, seriously consider wishing him or her optimism. Optimists are normally cheerful and happy, and therefore popular; they are resilient in adapting to failures and hardships, their chances of clinical depression are reduced, their immune system is stronger, they take better care of their health, and are likely to live longer.", author: "Daniel Kahneman" },
+  { text: "If you ask other people about every decision you make, you're going to end up doing exactly what everyone else does and getting the same results that everyone else gets.", author: "" },
+  { text: "You cannot define a person on just one thing. You can't just forget all these wonderful and good things that a person has done because one thing didn't come off the way you thought it should come off.", author: "" },
+  { text: "So much of life isn't about intelligence or luck but putting yourself in a position for success. The cash-rich investor thrives in crashes. The well-rested athlete outperforms the exhausted star. All seem lucky, but they've positioned themselves to succeed. Master your circumstances before they master you.", author: "" },
+  { text: "In my whole life I've never been good at something I wasn't very interested in. It just doesn't work. There's no substitute for strong interest.", author: "" },
+  { text: "When you're fighting the status quo, remember the physics at play. Resistance is natural. It takes a sustained force in the right direction to build momentum. While the universe resists change, it always rewards those who dare to overcome that resistance.", author: "" },
+  { text: "There are many ways to win in business, but there is one surefire way to lose: run out of money. Entrepreneurship is a game of survival.", author: "" },
+  { text: "90 percent of success is not getting distracted.", author: "" },
+  { text: "The person who carefully designs their daily routine goes further than the person who negotiates with themselves every day. Let inertia work for you.", author: "" },
+  { text: "Compete externally and you compare. Compete internally and you improve.", author: "" },
+  { text: "One doesn't seem like much, but it's something real. At zero, you're still dreaming.", author: "" },
+  { text: "It is not the answer that enlightens, but the question.", author: "" },
+  { text: "The secret is to do a few things for a long time. Once you find something you want to do for a long time, you need the courage and discipline to say no to the shiny, new opportunities. You have to explore widely enough to find your thing, then focus narrowly enough to make it something great.", author: "" },
+  { text: "Bill Gates once had the radio removed from his car because he didn't want any distractions from thinking about Microsoft. Distractions are the assassins of great work. You don't need more time; you need more focus. Time expands when we eliminate interruptions — our attention, not the clock, ultimately limits what we can achieve.", author: "" },
+  { text: "Writing forces me to structure my thoughts, test my ideas, and refine my arguments. It is a way of holding myself accountable to the discipline of thinking deeply.", author: "" },
+  { text: "Results are forged from invisible efforts. That hit song? Years of practice. The championship athlete? Countless hours of unseen training. The invisible advantage is choosing to do what other people could do, but don't.", author: "" },
+  { text: "In life the challenge is not so much to figure out how best to play the game; the challenge is to figure out what game you're playing.", author: "" },
+  { text: "Learning to learn is extremely high leverage. 40 hours at 25% efficiency is the same as 12.5 hours at 80% efficiency. Deep Work rules.", author: "" },
+  { text: "Focus on what provides value to others, not what impresses others. The things we do to impress rarely impress for longer than five minutes. But the things we do to provide value can last a lifetime.", author: "" },
+  { text: "A critical quality to develop in life is the willingness to try. You must find enough confidence to give it a go. Before you can develop the skill to succeed, you must find the courage to attempt.", author: "" },
+  { text: "The truth is whispered while opinions are shouted.", author: "" },
+  { text: "Mastery is the best goal because the rich can't buy it, the impatient can't rush it, the privileged can't inherit it, and nobody can steal it. You can only earn it through hard work. Mastery is the ultimate status.", author: "" },
+  { text: "Going all in on something for a month gets better results than dabbling in it for a decade. Dabbling, you spend your energy on nothing.", author: "" },
+  { text: "Limiting your options now will expand your opportunities in the long run because you can remain focused enough to master something. Keeping your options open now will reduce opportunities because you divide your attention and end up doing an average job on seven different things.", author: "" },
+  { text: "Stop asking: 'How do I fix myself?' Start asking: 'How do I position myself where my natural traits are assets?'", author: "" },
+  { text: "You are better equipped to deal with stress when you are moving. Get out of your mind and move your body.", author: "" },
+  { text: "To learn, wander. To achieve, focus.", author: "" },
+  { text: "Loyalty must be given before it's earned.", author: "" },
+  { text: "If you hear criticism once, don't let it wreck your mindset. But if you're hearing something repeatedly, think carefully about whether the feedback is right. Focus on the pattern.", author: "" },
+  { text: "If you want to get paid, find the contrast. No one hears you if you sneeze in New York. But if you sneeze in a library, everyone does. It's better to dominate a small pond than drown in an ocean.", author: "" },
+  { text: "Great things are not done by impulse, but by a series of small things brought together. The trick is to focus on the first small thing. Starting small is still starting, and small beginnings often lead to extraordinary endings.", author: "Vincent Van Gogh" },
+  { text: "Beware the student of one teacher. A good idea spirals into dogma when it gets applied to everything and stretched beyond the areas where it is useful. Remain open and embrace a lot of teachers.", author: "" },
+  { text: "Persistence isn't just pushing harder — it's having energy that demands new ideas. Energy without imagination is force. Energy with imagination is persistence.", author: "" },
+  { text: "The meaning you give work determines its difficulty. Your relationship with the work shapes its weight more than the work itself.", author: "" },
+  { text: "An imperfect solution that exists outperforms a perfect one that doesn't.", author: "" },
+  { text: "The quality of your thoughts is determined by the quality of your reading. Spend more time thinking about the inputs.", author: "" },
+  { text: "Work becomes great when curiosity drives it beyond obligation.", author: "" },
+  { text: "Low self esteem is like driving through life with your handbrake on.", author: "" },
+  { text: "The 2-step process for exceptional results: (1) Spend a little time each day thinking about the highest leverage activity available to you. (2) Spend a little time each day working on it.", author: "" },
+  { text: "Everyone dreams big until they see the price tag.", author: "" },
+  { text: "Focus on the things you are for, not the things you are against. You are more than your frustrations. Build your identity around what you love.", author: "" },
+  { text: "Life shrinks or expands according to one's courage.", author: "" },
+  { text: "The clearer you are about your priorities, the easier it is to say no.", author: "" },
+  { text: "Outliers act despite their feelings, not because of them.", author: "" },
+  { text: "There is always more than one way to do something. Write down as many ways as you can think of to achieve your desired outcome. Then, rank them based on how much time they take, how much money they cost, and how effective you expect them to be. Choose the best.", author: "" },
+  { text: "When I notice myself worrying about 'what other people will think,' I find I'm usually not worried about any single person's opinion. What I fear is the collective opinion in my head. It's imaginary.", author: "" },
+  { text: "When you need to be managed, there's a cap on what you can earn. When you know how to create value and do it without being told, there's no cap. This is structural, not personal.", author: "" },
+  { text: "Practice the art of small daily discomforts. A good day — a meaningful and fulfilling day — requires small moments of discomfort. Growth demands discomfort. We need something to push against to learn how strong we can become.", author: "" },
+  { text: "Every great advance — whether in an individual life or the world at large — has come from dreams and attempts. Devise more dreams. Make more attempts.", author: "" },
+  { text: "When you drink water from a cup, it becomes part of you. When water falls on you like rain, it evaporates a few minutes later. You'll always feel the rain, but you don't have to drink the rain. You don't have to claim everything you feel.", author: "" },
+  { text: "The point isn't to say no to everything, but to recognize the difference between a good yes and a bad yes. Then, try to improve the ratio in your life.", author: "" },
+  { text: "The mindset: Confident enough to start. Humble enough to keep learning. The trap: Too humble to start. Or too confident to keep learning.", author: "" },
+  { text: "A good life is one in which things do not go perfectly, but you find a way to have a good day regardless.", author: "" },
+  { text: "One of my hopes is to age into a better mindset. The general trend seems to become less open minded, less resilient with the years. I hope to grow in the opposite direction. How can my mindset be better today than it was yesterday?", author: "" },
+  { text: "Action produces information. If you're unsure of what to do, just do anything, even if it's the wrong thing. This will give you information about what you should actually be doing.", author: "" },
+  { text: "We are only one thought, one idea, one insight away from living a completely different experience of life.", author: "" },
+  { text: "Your mind is your greatest salesman — it knows exactly what to say to bring you back to the vicious cycle of destructive negative thinking.", author: "" },
+  { text: "Quality thoughts determine the quality of life. If thoughts don't serve a useful purpose then they are useless.", author: "" },
+  { text: "Challenge yourself when life is easy, so you'll be ready when life is hard.", author: "" },
+  { text: "If you do not know which port you are seeking, no wind is favorable.", author: "" },
+  { text: "It always seems impossible until it's done.", author: "nelson mandela" },
+  { text: "Anyone who has never made a mistake has never tried anything new.", author: "albert einstein" },
+  { text: "Design is thinking made visual.", author: "saul bass" },
+  { text: "Creativity is just connecting things.", author: "steve jobs" }
+];
+
+const container = document.getElementById('container');
+let currentQuoteIndex = -1;
+
+function getRandomQuote() {
+  let idx;
+  do {
+    idx = Math.floor(Math.random() * QUOTES.length);
+  } while (idx === currentQuoteIndex);
+  currentQuoteIndex = idx;
+  return idx;
+}
+
+function displayQuote(quote) {
+  container.innerHTML = `
+    <div class="quote-wrapper">
+      <div class="opening-quote">"</div>
+      <div class="quote-text">${quote.text}</div>
+      <div class="closing-quote">"</div>
+      ${quote.author ? `<div class="quote-author">— ${quote.author}</div>` : ''}
+    </div>
+  `;
+}
+
+function newQuote() {
+  const idx = getRandomQuote();
+  displayQuote(QUOTES[idx]);
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' || e.code === 'ArrowRight' || e.code === 'Enter') {
+    e.preventDefault();
+    newQuote();
+  }
+});
+
+// Initial load
+newQuote();
+</script>
+</body>
+</html>
