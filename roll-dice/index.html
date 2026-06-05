@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roll a Dice</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .dice-display {
+            width: 150px;
+            height: 150px;
+            background: #fff;
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 30px;
+            font-size: 5em;
+            color: #000;
+            font-weight: bold;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+            border: 3px solid #000;
+        }
+
+        .dice-display.rolling {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(-5deg) scale(1.05); }
+            50% { transform: rotate(5deg) scale(1.05); }
+            75% { transform: rotate(-5deg) scale(1.05); }
+        }
+
+        button {
+            background: #1a1a1a;
+            color: white;
+            border: 2px solid #fff;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: bold;
+            margin: 10px 5px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 255, 255, 0.3);
+            background: #222;
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎲 Roll a Dice</h1>
+        <div class="dice-display" id="diceDisplay">-</div>
+        <button id="rollBtn" onclick="rollDice()">Roll Dice</button>
+        
+
+    </div>
+
+    <script>
+        function rollDice() {
+            const diceDisplay = document.getElementById('diceDisplay');
+            const rollBtn = document.getElementById('rollBtn');
+            
+            rollBtn.disabled = true;
+            diceDisplay.classList.add('rolling');
+
+            // Simulate rolling animation
+            let rolls = 0;
+            const rollInterval = setInterval(() => {
+                const randomNum = Math.floor(Math.random() * 6) + 1;
+                diceDisplay.textContent = randomNum;
+                rolls++;
+
+                if (rolls >= 10) {
+                    clearInterval(rollInterval);
+                    const finalNumber = Math.floor(Math.random() * 6) + 1;
+                    diceDisplay.textContent = finalNumber;
+                    diceDisplay.classList.remove('rolling');
+                    rollBtn.disabled = false;
+                }
+            }, 100);
+        }
+    </script>
+</body>
+</html>
