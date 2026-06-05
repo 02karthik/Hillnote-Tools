@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Habit Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #fff;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        html {
+            overflow: hidden;
+        }
+
+        .container {
+            background: #0a0a0a;
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 700px;
+            width: 100%;
+            box-shadow: 0 0 80px rgba(0, 208, 132, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .year {
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .days-left {
+            font-size: 18px;
+            font-weight: 600;
+            color: #888;
+        }
+
+        .days-left strong {
+            color: #fff;
+        }
+
+        #settingsBtn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+
+        #settingsBtn:hover {
+            background: rgba(255,255,255,0.15);
+            border-color: rgba(255,255,255,0.3);
+        }
+
+        .subtitle {
+            font-size: 12px;
+            color: #555;
+            margin-bottom: 24px;
+            letter-spacing: 0.5px;
+        }
+
+        .dots-container {
+            display: grid;
+            gap: 4px;
+            margin-bottom: 24px;
+            padding: 8px;
+        }
+
+        .dot {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: #2a2a2a;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.15s ease;
+        }
+
+        .dot:hover {
+            transform: scale(1.25);
+        }
+
+        .dot.elapsed {
+            background: #fff;
+        }
+
+        .dot.done {
+            background: #00d084;
+            box-shadow: 0 0 8px #00d084;
+        }
+
+        .dot.today {
+            background: #fff;
+            box-shadow: 0 0 0 2px #00d084;
+        }
+
+        .dot.today.done {
+            background: #00d084;
+            box-shadow: 0 0 8px #00d084;
+        }
+
+        .dot.future {
+            opacity: 0.45;
+            cursor: default;
+        }
+
+        .dot.future:hover {
+            transform: none;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .stat {
+            text-align: center;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .stat-number.green {
+            color: #00d084;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: #666;
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 16px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00d084, #00ff9d);
+            transition: width 0.5s ease;
+        }
+
+        .dates {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 11px;
+            color: #555;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #0a0a0a;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #00d084;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-save {
+            background: #00d084;
+            color: #000;
+        }
+
+        .btn-save:hover {
+            background: #00ff9d;
+        }
+
+        .btn-cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-reset {
+            background: rgba(255, 100, 100, 0.2);
+            color: #ff6464;
+            border: 1px solid rgba(255, 100, 100, 0.3);
+            width: 100%;
+            margin-top: 12px;
+        }
+
+        .btn-reset:hover {
+            background: rgba(255, 100, 100, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="year" id="currentYear">2026</div>
+            <div class="header-right">
+                <div class="days-left"><strong id="headerStreak">0</strong> day streak</div>
+                <button id="settingsBtn">⚙️</button>
+            </div>
+        </div>
+        <div class="subtitle" id="subtitle">My Habit • Jan 1, 2026 → Dec 31, 2026</div>
+
+        <div class="dots-container" id="dotsContainer"></div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="dates">
+            <span id="startDateLabel">Start</span>
+            <span id="percentLabel">0%</span>
+            <span id="endDateLabel">End</span>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-number green" id="currentStreak">0</div>
+                <div class="stat-label">Current Streak</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number" id="bestStreak">0</div>
+                <div class="stat-label">Best Streak</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number" id="daysDone">0</div>
+                <div class="stat-label">Days Done</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">Habit Settings</div>
+            <form id="settingsForm">
+                <div class="form-group">
+                    <label for="habitNameInput">Habit Name</label>
+                    <input type="text" id="habitNameInput" placeholder="e.g. Exercise daily" required>
+                </div>
+                <div class="form-group">
+                    <label for="yearInput">Year</label>
+                    <input type="number" id="yearInput" min="2000" max="2100" required>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="modal-buttons button btn-cancel" id="cancelBtn">Cancel</button>
+                    <button type="submit" class="modal-buttons button btn-save">Save</button>
+                </div>
+                <button type="button" class="btn-reset" id="resetBtn">Reset All Data</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'habitTrackerData';
+
+        function todayMidnight() {
+            const d = new Date();
+            d.setHours(0, 0, 0, 0);
+            return d;
+        }
+
+        function defaultState() {
+            return {
+                name: 'My Habit',
+                year: todayMidnight().getFullYear(),
+                done: []
+            };
+        }
+
+        let STATE = defaultState();
+        let doneSet = new Set();
+
+        // Load habit data from localStorage
+        function loadState() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                try {
+                    const parsed = JSON.parse(stored);
+                    STATE = Object.assign(defaultState(), parsed);
+                } catch (e) {
+                    console.log('Could not parse stored habit data, using defaults');
+                }
+            }
+            doneSet = new Set(STATE.done || []);
+        }
+
+        // Save habit data to localStorage
+        function saveState() {
+            STATE.done = Array.from(doneSet).sort();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE));
+        }
+
+        // Clear all data
+        function resetAll() {
+            localStorage.removeItem(STORAGE_KEY);
+            STATE = defaultState();
+            doneSet = new Set();
+            render();
+            closeModal();
+        }
+
+        function daysBetween(d1, d2) {
+            const msPerDay = 1000 * 60 * 60 * 24;
+            return Math.floor((d2 - d1) / msPerDay);
+        }
+
+        function formatDate(date) {
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function formatISO(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Toggle a habit day on/off
+        function toggleDay(iso) {
+            if (doneSet.has(iso)) {
+                doneSet.delete(iso);
+            } else {
+                doneSet.add(iso);
+            }
+            saveState();
+            render();
+        }
+
+        function render() {
+            const today = todayMidnight();
+            const thisYear = today.getFullYear();
+            const year = STATE.year;
+            const jan1 = new Date(year, 0, 1);
+            const dec31 = new Date(year, 11, 31);
+            const totalDays = daysBetween(jan1, dec31) + 1;
+
+            // Days elapsed within this year
+            let elapsedDays;
+            if (year < thisYear) {
+                elapsedDays = totalDays;
+            } else if (year > thisYear) {
+                elapsedDays = 0;
+            } else {
+                elapsedDays = daysBetween(jan1, today) + 1;
+            }
+
+            // Count completed days within this year
+            let doneCount = 0;
+            for (const iso of doneSet) {
+                if (iso.startsWith(year + '-')) doneCount++;
+            }
+
+            // Streak calculations
+            const hasDone = (d) => doneSet.has(formatISO(d));
+
+            let bestStreak = 0, run = 0;
+            for (let i = 0; i < totalDays; i++) {
+                const d = new Date(year, 0, 1 + i);
+                if (d > today) break; // don't count future days
+                if (hasDone(d)) {
+                    run++;
+                    if (run > bestStreak) bestStreak = run;
+                } else {
+                    run = 0;
+                }
+            }
+
+            let currentStreak = 0;
+            let anchor = null;
+            if (year === thisYear) anchor = new Date(today);
+            else if (year < thisYear) anchor = new Date(dec31);
+            if (anchor) {
+                const d = new Date(anchor);
+                // Forgiving: if today isn't marked yet, anchor on yesterday
+                if (year === thisYear && !hasDone(d)) d.setDate(d.getDate() - 1);
+                while (d >= jan1 && hasDone(d)) {
+                    currentStreak++;
+                    d.setDate(d.getDate() - 1);
+                }
+            }
+
+            const completion = elapsedDays > 0 ? (doneCount / elapsedDays) * 100 : 0;
+            const completionStr = completion.toFixed(1);
+
+            // Update header
+            document.getElementById('currentYear').textContent = year;
+            document.getElementById('headerStreak').textContent = currentStreak;
+            document.getElementById('subtitle').textContent =
+                `${STATE.name} • ${formatDate(jan1)} → ${formatDate(dec31)}`;
+
+            // Update stats
+            document.getElementById('currentStreak').textContent = currentStreak;
+            document.getElementById('bestStreak').textContent = bestStreak;
+            document.getElementById('daysDone').textContent = doneCount;
+
+            // Update progress
+            document.getElementById('progressFill').style.width = Math.min(100, completion) + '%';
+            document.getElementById('percentLabel').textContent = completionStr + '%';
+            document.getElementById('startDateLabel').textContent = formatDate(jan1);
+            document.getElementById('endDateLabel').textContent = formatDate(dec31);
+
+            // Render dots grid (one dot per day of the year)
+            const container = document.getElementById('dotsContainer');
+            container.innerHTML = '';
+
+            const cols = 28;
+            container.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+            for (let i = 0; i < totalDays; i++) {
+                const date = new Date(year, 0, 1 + i);
+                const iso = formatISO(date);
+                const isFuture = date > today;
+                const isToday = date.getTime() === today.getTime();
+                const isDone = doneSet.has(iso);
+
+                const dot = document.createElement('div');
+                let cls = 'dot';
+                if (isDone) cls += ' done';
+                if (isToday) cls += ' today';
+                if (isFuture) cls += ' future';
+                dot.className = cls;
+                dot.title = formatDate(date) + (isDone ? ' ✓ done' : '');
+
+                if (!isFuture) {
+                    dot.addEventListener('click', () => toggleDay(iso));
+                }
+
+                container.appendChild(dot);
+            }
+        }
+
+        function openModal() {
+            document.getElementById('habitNameInput').value = STATE.name;
+            document.getElementById('yearInput').value = STATE.year;
+            document.getElementById('settingsModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
+        // Event listeners
+        document.getElementById('settingsBtn').addEventListener('click', openModal);
+        document.getElementById('cancelBtn').addEventListener('click', closeModal);
+        document.getElementById('settingsModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('settingsModal')) closeModal();
+        });
+
+        document.getElementById('settingsForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('habitNameInput').value.trim() || 'My Habit';
+            const year = parseInt(document.getElementById('yearInput').value, 10);
+
+            if (!year || year < 2000 || year > 2100) {
+                alert('Enter a valid year (2000–2100)');
+                return;
+            }
+
+            STATE.name = name;
+            STATE.year = year;
+            saveState();
+            render();
+            closeModal();
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            if (confirm('Reset habit tracker? This clears all completed days.')) {
+                resetAll();
+            }
+        });
+
+        // Initialize
+        loadState();
+        render();
+        setInterval(render, 60 * 60 * 1000);
+
+        // Disable zoom and scrolling
+        document.addEventListener('wheel', (e) => e.preventDefault(), { passive: false });
+        document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+        document.addEventListener('gesturestart', (e) => e.preventDefault());
+
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+    </script>
+</body>
+</html>
