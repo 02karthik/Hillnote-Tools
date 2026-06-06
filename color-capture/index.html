@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Dominant Colors</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            min-height: 100vh;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            background: #0a0a0a;
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 0 80px rgba(0, 208, 132, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .subtitle {
+            font-size: 12px;
+            color: #555;
+            margin-bottom: 24px;
+            letter-spacing: 0.5px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            min-width: 130px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .btn.primary {
+            background: #00d084;
+            color: #000;
+            border-color: #00d084;
+        }
+
+        .btn.primary:hover {
+            background: #00ff9d;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .count-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .count-row select {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #fff;
+            padding: 6px 10px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .stage {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #111;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .stage.active {
+            display: block;
+        }
+
+        #video, #preview {
+            display: block;
+            width: 100%;
+            max-height: 360px;
+            object-fit: contain;
+            background: #000;
+        }
+
+        .capture-bar {
+            position: absolute;
+            bottom: 12px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .message {
+            font-size: 13px;
+            color: #ff8a8a;
+            background: rgba(255, 100, 100, 0.12);
+            border: 1px solid rgba(255, 100, 100, 0.25);
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .message.active {
+            display: block;
+        }
+
+        .palette {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+            gap: 10px;
+        }
+
+        .swatch {
+            border-radius: 12px;
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 10px;
+            cursor: pointer;
+            transition: transform 0.15s ease;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .swatch:hover {
+            transform: scale(1.05);
+        }
+
+        .swatch .hex {
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .swatch .pct {
+            font-size: 10px;
+            opacity: 0.75;
+            margin-top: 2px;
+        }
+
+        .hint {
+            text-align: center;
+            font-size: 12px;
+            color: #444;
+            margin-top: 16px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: #00d084;
+            color: #000;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.25s ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">🎨 Dominant Colors</div>
+        <div class="subtitle">Snap a photo or upload an image to extract its palette</div>
+
+        <div class="controls">
+            <button class="btn primary" id="cameraBtn">📷 Use Camera</button>
+            <label class="btn" for="fileInput">🖼 Upload Image</label>
+            <input type="file" id="fileInput" accept="image/*">
+        </div>
+
+        <div class="count-row">
+            <span>Colors</span>
+            <select id="countSelect">
+                <option value="4">4</option>
+                <option value="6" selected>6</option>
+                <option value="8">8</option>
+                <option value="10">10</option>
+            </select>
+        </div>
+
+        <div class="message" id="message"></div>
+
+        <!-- Live camera -->
+        <div class="stage" id="cameraStage">
+            <video id="video" autoplay playsinline muted></video>
+            <div class="capture-bar">
+                <button class="btn primary" id="snapBtn">Capture</button>
+                <button class="btn" id="stopBtn">Cancel</button>
+            </div>
+        </div>
+
+        <!-- Captured / uploaded preview -->
+        <div class="stage" id="previewStage">
+            <img id="preview" alt="preview">
+        </div>
+
+        <div class="palette" id="palette"></div>
+
+        <div class="hint" id="hint">Tap a swatch to copy its hex code</div>
+    </div>
+
+    <canvas id="work" style="display:none;"></canvas>
+    <div class="toast" id="toast">Copied!</div>
+
+    <script>
+        const els = {
+            cameraBtn: document.getElementById('cameraBtn'),
+            fileInput: document.getElementById('fileInput'),
+            countSelect: document.getElementById('countSelect'),
+            message: document.getElementById('message'),
+            cameraStage: document.getElementById('cameraStage'),
+            previewStage: document.getElementById('previewStage'),
+            video: document.getElementById('video'),
+            preview: document.getElementById('preview'),
+            snapBtn: document.getElementById('snapBtn'),
+            stopBtn: document.getElementById('stopBtn'),
+            palette: document.getElementById('palette'),
+            hint: document.getElementById('hint'),
+            work: document.getElementById('work'),
+            toast: document.getElementById('toast'),
+        };
+
+        let stream = null;
+        let lastPixels = null; // cached sample so changing color count is instant
+
+        function showMessage(text) {
+            els.message.textContent = text;
+            els.message.classList.add('active');
+        }
+        function clearMessage() {
+            els.message.classList.remove('active');
+        }
+
+        // ---- Camera ----
+        async function startCamera() {
+            clearMessage();
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                showMessage('Camera API unavailable here. The camera needs a secure context (https:// or localhost). Use “Upload Image” instead — on a phone it opens the camera directly.');
+                return;
+            }
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' }, audio: false
+                });
+                els.video.srcObject = stream;
+                els.previewStage.classList.remove('active');
+                els.cameraStage.classList.add('active');
+            } catch (err) {
+                showMessage('Could not access the camera (' + err.name + '). It needs https:// or localhost, and permission. Use “Upload Image” instead.');
+            }
+        }
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(t => t.stop());
+                stream = null;
+            }
+            els.cameraStage.classList.remove('active');
+        }
+
+        function captureFromVideo() {
+            const w = els.video.videoWidth;
+            const h = els.video.videoHeight;
+            if (!w || !h) return;
+            // Show the captured frame as the preview
+            const snap = document.createElement('canvas');
+            snap.width = w;
+            snap.height = h;
+            snap.getContext('2d').drawImage(els.video, 0, 0, w, h);
+            els.preview.src = snap.toDataURL('image/png');
+            els.previewStage.classList.add('active');
+            stopCamera();
+            samplePixels(els.video, w, h);
+            extractAndRender();
+        }
+
+        // ---- Upload ----
+        function handleFile(file) {
+            clearMessage();
+            stopCamera();
+            const url = URL.createObjectURL(file);
+            const img = new Image();
+            img.onload = () => {
+                els.preview.src = url;
+                els.previewStage.classList.add('active');
+                samplePixels(img, img.naturalWidth, img.naturalHeight);
+                extractAndRender();
+            };
+            img.onerror = () => showMessage('Could not load that image.');
+            img.src = url;
+        }
+
+        // ---- Pixel sampling (downscale for speed) ----
+        function samplePixels(source, srcW, srcH) {
+            const maxDim = 120;
+            const scale = Math.min(1, maxDim / Math.max(srcW, srcH));
+            const w = Math.max(1, Math.round(srcW * scale));
+            const h = Math.max(1, Math.round(srcH * scale));
+            els.work.width = w;
+            els.work.height = h;
+            const ctx = els.work.getContext('2d');
+            ctx.drawImage(source, 0, 0, w, h);
+            const data = ctx.getImageData(0, 0, w, h).data;
+
+            const pixels = [];
+            for (let i = 0; i < data.length; i += 4) {
+                if (data[i + 3] < 125) continue; // skip transparent
+                pixels.push([data[i], data[i + 1], data[i + 2]]);
+            }
+            lastPixels = pixels;
+        }
+
+        // ---- Median-cut color quantization ----
+        function medianCut(pixels, k) {
+            if (pixels.length === 0) return [];
+
+            const channelRange = (box, ch) => {
+                let min = 255, max = 0;
+                for (const p of box) {
+                    if (p[ch] < min) min = p[ch];
+                    if (p[ch] > max) max = p[ch];
+                }
+                return max - min;
+            };
+            const longestChannel = (box) => {
+                const r = channelRange(box, 0);
+                const g = channelRange(box, 1);
+                const b = channelRange(box, 2);
+                const max = Math.max(r, g, b);
+                return { channel: max === r ? 0 : max === g ? 1 : 2, range: max };
+            };
+
+            let boxes = [pixels.slice()];
+
+            while (boxes.length < k) {
+                // Pick the box worth splitting most: variance × population
+                let target = -1, bestScore = -1;
+                for (let i = 0; i < boxes.length; i++) {
+                    if (boxes[i].length < 2) continue;
+                    const score = longestChannel(boxes[i]).range * boxes[i].length;
+                    if (score > bestScore) { bestScore = score; target = i; }
+                }
+                if (target === -1) break; // nothing left to split
+
+                const box = boxes[target];
+                const { channel } = longestChannel(box);
+                box.sort((a, b) => a[channel] - b[channel]);
+                const mid = Math.floor(box.length / 2);
+                boxes.splice(target, 1, box.slice(0, mid), box.slice(mid));
+            }
+
+            // Average each box, keep population for sorting
+            return boxes.map(box => {
+                let r = 0, g = 0, b = 0;
+                for (const p of box) { r += p[0]; g += p[1]; b += p[2]; }
+                const n = box.length;
+                return {
+                    rgb: [Math.round(r / n), Math.round(g / n), Math.round(b / n)],
+                    count: n
+                };
+            }).sort((a, b) => b.count - a.count);
+        }
+
+        function rgbToHex([r, g, b]) {
+            return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('').toUpperCase();
+        }
+
+        function textColorFor([r, g, b]) {
+            // Relative luminance → pick readable text color
+            const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            return lum > 0.6 ? '#000' : '#fff';
+        }
+
+        function extractAndRender() {
+            if (!lastPixels) return;
+            const k = parseInt(els.countSelect.value, 10);
+            const colors = medianCut(lastPixels, k);
+            const total = colors.reduce((s, c) => s + c.count, 0) || 1;
+
+            els.palette.innerHTML = '';
+            colors.forEach(c => {
+                const hex = rgbToHex(c.rgb);
+                const pct = ((c.count / total) * 100).toFixed(1);
+                const txt = textColorFor(c.rgb);
+
+                const div = document.createElement('div');
+                div.className = 'swatch';
+                div.style.background = hex;
+                div.style.color = txt;
+                div.innerHTML = `<span class="hex">${hex}</span><span class="pct">${pct}%</span>`;
+                div.title = `${hex} • ${pct}% — click to copy`;
+                div.addEventListener('click', () => copyHex(hex));
+                els.palette.appendChild(div);
+            });
+            els.hint.textContent = 'Tap a swatch to copy its hex code';
+        }
+
+        // ---- Copy ----
+        function copyHex(hex) {
+            const done = () => showToast(hex + ' copied');
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(hex).then(done).catch(() => fallbackCopy(hex, done));
+            } else {
+                fallbackCopy(hex, done);
+            }
+        }
+        function fallbackCopy(text, cb) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); cb(); } catch (e) {}
+            document.body.removeChild(ta);
+        }
+
+        let toastTimer = null;
+        function showToast(text) {
+            els.toast.textContent = text;
+            els.toast.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => els.toast.classList.remove('show'), 1500);
+        }
+
+        // ---- Events ----
+        els.cameraBtn.addEventListener('click', startCamera);
+        els.snapBtn.addEventListener('click', captureFromVideo);
+        els.stopBtn.addEventListener('click', stopCamera);
+        els.fileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) handleFile(e.target.files[0]);
+            e.target.value = ''; // allow re-selecting the same file
+        });
+        els.countSelect.addEventListener('change', extractAndRender);
+    </script>
+</body>
+</html>
