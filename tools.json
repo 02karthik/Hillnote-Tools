@@ -1,0 +1,61 @@
+{
+  "catalogVersion": 1,
+  "tools": [
+    {
+      "dir": "color-capture",
+      "name": "Color Capture",
+      "description": "Pull the dominant color palette out of any image.",
+      "glyph": "🎨",
+      "color": "#e11d48",
+      "version": 1
+    },
+    {
+      "dir": "fav-quote-gen",
+      "name": "Quote Generator",
+      "description": "Generate and save your favourite quotes.",
+      "glyph": "💬",
+      "color": "#0ea5e9",
+      "version": 1
+    },
+    {
+      "dir": "habit-tracker",
+      "name": "Habit Tracker",
+      "description": "Track daily habits and build streaks.",
+      "glyph": "✅",
+      "color": "#22c55e",
+      "version": 1
+    },
+    {
+      "dir": "pomodoro-timer",
+      "name": "Pomodoro Timer",
+      "description": "Focus in timed work and break intervals.",
+      "glyph": "🍅",
+      "color": "#ef4444",
+      "version": 1
+    },
+    {
+      "dir": "progress-tracker",
+      "name": "Progress Tracker",
+      "description": "Visualise long-term progress, month by month.",
+      "glyph": "📈",
+      "color": "#8b5cf6",
+      "version": 1
+    },
+    {
+      "dir": "roll-dice",
+      "name": "Roll a Dice",
+      "description": "Roll a simple 1–6 die.",
+      "glyph": "🎲",
+      "color": "#f59e0b",
+      "version": 1
+    },
+    {
+      "dir": "tic-tac-toe",
+      "name": "Tic Tac Toe",
+      "description": "Play the classic two-player game.",
+      "glyph": "⭕",
+      "color": "#14b8a6",
+      "version": 1
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <rect x="72" y="72" width="880" height="880" rx="180" fill="#2f9e64"/>
+  <!-- asterisk -->
+  <g stroke="#f3f4f1" stroke-width="46" stroke-linecap="butt">
+    <line x1="318" y1="183" x2="318" y2="393"/>
+    <line x1="227" y1="235" x2="409" y2="341"/>
+    <line x1="409" y1="235" x2="227" y2="341"/>
+  </g>
+  <!-- mountain -->
+  <path d="M196 638 L196 600 L330 492 L398 492 L488 400 L828 610 L828 638 Z" fill="#101b14"/>
+  <!-- reflection -->
+  <g fill="#23854f">
+    <rect x="212" y="668" width="600" height="26"/>
+    <rect x="284" y="712" width="430" height="26"/>
+    <rect x="342" y="756" width="296" height="26"/>
+    <rect x="452" y="800" width="110" height="24"/>
+    <rect x="470" y="840" width="34" height="22"/>
+  </g>
+</svg>

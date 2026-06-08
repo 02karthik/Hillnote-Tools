@@ -1,0 +1,12 @@
+# Build output (generated + signed in CI, deployed to Pages)
+dist/
+
+# Node
+node_modules/
+
+# Signing key — NEVER commit. Lives locally + as the CATALOG_SIGNING_KEY CI secret.
+keys/ed25519-private.pem
+*.pem
+
+# OS
+.DS_Store

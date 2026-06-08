@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hillnote Tools</title>
+<style>
+  :root {
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e5e5e5;
+    --text: #1a1a1a;
+    --muted: #737373;
+    --accent: #1a1a1a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+  header {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 72px 24px 48px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  header img {
+    width: 64px;
+    height: 64px;
+    border-radius: 14px;
+    flex-shrink: 0;
+  }
+  header h1 {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  header p {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 15px;
+  }
+  .grid {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 24px 96px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .card:hover {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    transform: translateY(-2px);
+  }
+  .card img {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+    display: block;
+    border-bottom: 1px solid var(--border);
+  }
+  .card-body {
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .card-body h2 {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .btn {
+    font-size: 13px;
+    font-weight: 500;
+    padding: 7px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s ease;
+    font-family: inherit;
+  }
+  .btn:hover { background: #f5f5f5; }
+  .btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .btn-primary:hover { background: #333; }
+
+  /* Preview modal */
+  .modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    z-index: 10;
+  }
+  .modal.open { display: flex; }
+  .modal-box {
+    background: var(--card);
+    border-radius: 12px;
+    width: min(1000px, 100%);
+    height: min(700px, 100%);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .modal-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-bar span { font-size: 14px; font-weight: 600; }
+  .modal-bar button {
+    border: none;
+    background: none;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--muted);
+    padding: 4px;
+  }
+  .modal-box iframe { flex: 1; border: none; width: 100%; }
+</style>
+</head>
+<body>
+
+<header>
+  <img src="icon.svg" alt="Hillnote Tools icon">
+  <div>
+    <h1>Hillnote Tools</h1>
+    <p>A collection of small, single-file tools. Preview them in your browser, download the ones you like.</p>
+  </div>
+</header>
+
+<main class="grid" id="grid"></main>
+
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <div class="modal-bar">
+      <span id="modal-title"></span>
+      <button id="modal-close" aria-label="Close preview">&times;</button>
+    </div>
+    <iframe id="modal-frame" title="Tool preview"></iframe>
+  </div>
+</div>
+
+<script>
+  // ── Hillnote in-app bridge contract ────────────────────────────────────────
+  // When this page runs inside the Hillnote app, the app injects:
+  //     window.HillnoteBridge.requestInstall(dir: string): void
+  // The page only passes the tool's `dir` (its catalog id) — it proposes. The
+  // app then independently fetches + signature-verifies the catalog and installs
+  // the tool into a workspace (see SecureToolInstaller). In a plain browser the
+  // bridge is absent and the button falls back to a normal file download.
+  const bridge = window.HillnoteBridge;
+  const inApp = !!(bridge && typeof bridge.requestInstall === "function");
+
+  const grid = document.getElementById("grid");
+  const modal = document.getElementById("modal");
+  const frame = document.getElementById("modal-frame");
+  const title = document.getElementById("modal-title");
+
+  fetch("tools.json")
+    .then(r => r.json())
+    .then(data => render(data.tools || []))
+    .catch(() => {
+      grid.innerHTML = '<p style="color:var(--muted)">Couldn’t load the tool list.</p>';
+    });
+
+  function render(tools) {
+    grid.innerHTML = tools.map(t => `
+      <div class="card">
+        <img src="screenshots/${t.dir}.webp" alt="${t.name} screenshot" loading="lazy">
+        <div class="card-body">
+          <h2>${t.name}</h2>
+          <div class="actions">
+            <button class="btn" data-preview="${t.dir}" data-name="${t.name}">Preview</button>
+            <a class="btn btn-primary" href="${t.dir}/index.html" download="${t.dir}.html" data-install="${t.dir}">${inApp ? "Add to workspace" : "Download"}</a>
+          </div>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  grid.addEventListener("click", e => {
+    const preview = e.target.closest("button[data-preview]");
+    if (preview) {
+      title.textContent = preview.dataset.name;
+      frame.src = preview.dataset.preview + "/index.html";
+      modal.classList.add("open");
+      return;
+    }
+    const install = e.target.closest("a[data-install]");
+    if (install && inApp) {
+      e.preventDefault();                              // page proposes…
+      bridge.requestInstall(install.dataset.install);  // …app verifies + installs
+    }
+    // plain browser: let the <a download> proceed normally
+  });
+
+  function closeModal() {
+    modal.classList.remove("open");
+    frame.src = "";
+  }
+  document.getElementById("modal-close").addEventListener("click", closeModal);
+  modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "hillnote-tools-catalog",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Static catalog of single-file Hillnote tools, plus a signed manifest for in-app verified install.",
+  "scripts": {
+    "keygen": "node scripts/keygen.mjs",
+    "build": "node scripts/build-catalog.mjs",
+    "verify": "node scripts/verify-catalog.mjs"
+  }
+}
