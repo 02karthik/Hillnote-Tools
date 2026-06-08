@@ -16,16 +16,10 @@
             background: #000;
             min-height: 100vh;
             display: flex;
-            align-items: center;
-            justify-content: center;
             padding: 20px;
             color: #fff;
-            overflow: hidden;
-            touch-action: none;
-        }
-        
-        html {
-            overflow: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
         
         .container {
@@ -34,6 +28,7 @@
             padding: 32px;
             max-width: 700px;
             width: 100%;
+            margin: auto;
             box-shadow: 0 0 80px rgba(0, 208, 132, 0.15);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
@@ -501,11 +496,9 @@
         render();
         setInterval(render, 60 * 60 * 1000);
         
-        // Disable zoom and scrolling
-        document.addEventListener('wheel', (e) => e.preventDefault(), { passive: false });
-        document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+        // Disable pinch-zoom (but allow scrolling)
         document.addEventListener('gesturestart', (e) => e.preventDefault());
-        
+
         document.addEventListener('touchstart', (e) => {
             if (e.touches.length > 1) {
                 e.preventDefault();

@@ -1,5 +1,5 @@
 {
-  "catalogVersion": 1,
+  "catalogVersion": 2,
   "tools": [
     {
       "dir": "color-capture",
@@ -7,7 +7,7 @@
       "description": "Pull the dominant color palette out of any image.",
       "glyph": "🎨",
       "color": "#e11d48",
-      "version": 1
+      "version": 2
     },
     {
       "dir": "fav-quote-gen",
@@ -39,7 +39,7 @@
       "description": "Visualise long-term progress, month by month.",
       "glyph": "📈",
       "color": "#8b5cf6",
-      "version": 1
+      "version": 2
     },
     {
       "dir": "roll-dice",
@@ -55,6 +55,14 @@
       "description": "Play the classic two-player game.",
       "glyph": "⭕",
       "color": "#14b8a6",
+      "version": 1
+    },
+    {
+      "dir": "box-breathing",
+      "name": "Box Breathing",
+      "description": "Guided breathing with box, 4-7-8 and calming patterns.",
+      "glyph": "🫁",
+      "color": "#5b8dee",
       "version": 1
     }
   ]
