@@ -1,5 +1,5 @@
 {
-  "catalogVersion": 2,
+  "catalogVersion": 3,
   "tools": [
     {
       "dir": "color-capture",
@@ -63,6 +63,14 @@
       "description": "Guided breathing with box, 4-7-8 and calming patterns.",
       "glyph": "🫁",
       "color": "#5b8dee",
+      "version": 1
+    },
+    {
+      "dir": "mood-tracker",
+      "name": "Mood Tracker",
+      "description": "Log how you feel each day and spot your emotional trends.",
+      "glyph": "🩷",
+      "color": "#ec4899",
       "version": 1
     }
   ]
