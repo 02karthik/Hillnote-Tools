@@ -6,7 +6,7 @@
  *   writes  dist/                       deployable static site (Pages)
  *           dist/bundles/<dir>-v<n>.zip  one deterministic zip per tool
  *           dist/catalog.json            machine catalog: per-tool sha256 + metadata
- *           dist/catalog.sig             Ed25519 signature over catalog.json's bytes
+ *           dist/catalog.sig             ECDSA P-256 (SHA-256) signature over catalog.json's bytes
  *
  * Signing key: env CATALOG_SIGNING_KEY (PEM) in CI, else keys/ed25519-private.pem.
  * The app verifies catalog.sig over the EXACT bytes of catalog.json using the
@@ -171,15 +171,20 @@ const catalog = {
 const catalogBytes = Buffer.from(JSON.stringify(catalog, null, 2) + '\n', 'utf8');
 writeFileSync(join(distDir, 'catalog.json'), catalogBytes);
 
-const signature = sign(null, catalogBytes, createPrivateKey(privPem));
+const signature = sign('sha256', catalogBytes, createPrivateKey(privPem));
 writeFileSync(join(distDir, 'catalog.sig'), signature.toString('base64') + '\n');
 
 // self-verify with the committed public key — catches a key/secret mismatch in CI early
+const point = Buffer.from(pub.publicKey, 'base64'); // 0x04 || X(32) || Y(32)
 const pubKey = createPublicKey({
-  key: { kty: 'OKP', crv: 'Ed25519', x: Buffer.from(pub.publicKey, 'base64').toString('base64url') },
+  key: {
+    kty: 'EC', crv: 'P-256',
+    x: point.subarray(1, 33).toString('base64url'),
+    y: point.subarray(33, 65).toString('base64url'),
+  },
   format: 'jwk',
 });
-if (!verify(null, catalogBytes, pubKey, signature)) {
+if (!verify('sha256', catalogBytes, pubKey, signature)) {
   console.error('✗ self-verification FAILED — signing key does not match keys/public-key.json');
   process.exit(1);
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * One-time Ed25519 keypair generation for signing the tool catalog.
+ * One-time ECDSA P-256 keypair generation for signing the tool catalog.
  *
  *   keys/ed25519-private.pem  — PRIVATE key (gitignored). Keep secret; also store
  *                               as the CATALOG_SIGNING_KEY CI secret.
@@ -29,19 +29,26 @@ const now = new Date();
 // "dev" marks this as a throwaway local key. Regenerate (drop the -dev) for production.
 const keyId = `hillnote-dev-${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
 
-const { publicKey, privateKey } = generateKeyPairSync('ed25519');
+const { publicKey, privateKey } = generateKeyPairSync('ec', { namedCurve: 'P-256' });
 const privPem = privateKey.export({ type: 'pkcs8', format: 'pem' });
 
-// JWK 'x' is the base64url of the raw 32-byte public key — store it as plain base64,
-// which is what BouncyCastle (Android) and CryptoKit (iOS) consume directly.
+// Store the public key as the 65-byte uncompressed EC point (0x04 || X || Y), base64.
+// Both verifiers consume that directly: Android JCA (ECPoint) and iOS SecKey
+// (kSecAttrKeyTypeECSECPrimeRandom).
 const jwk = publicKey.export({ format: 'jwk' });
-const rawPublicKeyB64 = Buffer.from(jwk.x, 'base64url').toString('base64');
+const point = Buffer.concat([
+  Buffer.from([0x04]),
+  Buffer.from(jwk.x, 'base64url'),
+  Buffer.from(jwk.y, 'base64url'),
+]);
+if (point.length !== 65) throw new Error(`unexpected EC point length ${point.length}`);
+const rawPublicKeyB64 = point.toString('base64');
 
 mkdirSync(keysDir, { recursive: true });
 writeFileSync(privPath, privPem, { mode: 0o600 });
 writeFileSync(pubPath, JSON.stringify({
   keyId,
-  alg: 'ed25519',
+  alg: 'ecdsa-p256',
   publicKey: rawPublicKeyB64,
   createdAt: now.toISOString(),
 }, null, 2) + '\n');

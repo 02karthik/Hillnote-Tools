@@ -3,7 +3,7 @@
  * Verifies dist/catalog.json against dist/catalog.sig with the pinned public key
  * (keys/public-key.json) — exactly the two-gate check the Hillnote app performs:
  *
- *   Gate 1  Ed25519-verify the signature over the RAW bytes of catalog.json.
+ *   Gate 1  ECDSA-P256 verify the signature over the RAW bytes of catalog.json.
  *           (Never reparse-then-reserialize before verifying — verify the bytes.)
  *   Gate 2  Re-hash every bundle and confirm it matches the catalog's sha256.
  *
@@ -21,12 +21,17 @@ const pub = JSON.parse(readFileSync(join(root, 'keys', 'public-key.json'), 'utf8
 const catalogBytes = readFileSync(join(dist, 'catalog.json'));                       // raw bytes
 const sig = Buffer.from(readFileSync(join(dist, 'catalog.sig'), 'utf8').trim(), 'base64');
 
+const point = Buffer.from(pub.publicKey, 'base64'); // 0x04 || X(32) || Y(32)
 const pubKey = createPublicKey({
-  key: { kty: 'OKP', crv: 'Ed25519', x: Buffer.from(pub.publicKey, 'base64').toString('base64url') },
+  key: {
+    kty: 'EC', crv: 'P-256',
+    x: point.subarray(1, 33).toString('base64url'),
+    y: point.subarray(33, 65).toString('base64url'),
+  },
   format: 'jwk',
 });
 
-if (!verify(null, catalogBytes, pubKey, sig)) {
+if (!verify('sha256', catalogBytes, pubKey, sig)) {
   console.error('✗ Gate 1: signature INVALID');
   process.exit(1);
 }

@@ -1,6 +1,6 @@
 {
   "keyId": "hillnote-dev-2026-06",
-  "alg": "ed25519",
-  "publicKey": "FfuUVhbFaDT9QiJcMZNSmfHCLMAOigG1AXvpxGav+84=",
-  "createdAt": "2026-06-08T04:31:26.167Z"
+  "alg": "ecdsa-p256",
+  "publicKey": "BHEY0cQcwKFxnu1sl+wodqZQrgys4U8hcQLEg6IQYF8NOgfQufKQY3t4uOmbGMX38GI9XzdT0DWfa4IDej5876w=",
+  "createdAt": "2026-06-08T05:47:19.520Z"
 }

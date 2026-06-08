@@ -95,7 +95,7 @@ private key never leaves your machine) and publish the `dist/` output yourself.
 
 ## Keys
 
-Signing uses an **Ed25519 keypair**:
+Signing uses an **ECDSA P-256 keypair**:
 
 | Key | File | Committed? | Used for |
 | --- | --- | --- | --- |
@@ -128,7 +128,7 @@ gh secret set CATALOG_SIGNING_KEY < keys/ed25519-private.pem
 The app embeds the pinned public key and fetches:
 
 - catalog base — `https://02karthik.github.io/Hillnote-Tools/`
-- `catalog.json` (signed) + `catalog.sig` (Ed25519 over the **exact bytes** of `catalog.json`)
+- `catalog.json` (signed) + `catalog.sig` (ECDSA P-256 / SHA-256 over the **exact bytes** of `catalog.json`)
 
 It verifies the signature against the pinned key, then trusts each tool by its
 `bundle.sha256`: download → hash-check → install into a workspace.
