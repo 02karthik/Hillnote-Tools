@@ -1,5 +1,5 @@
 {
-  "catalogVersion": 3,
+  "catalogVersion": 4,
   "tools": [
     {
       "dir": "color-capture",
@@ -71,6 +71,14 @@
       "description": "Log how you feel each day and spot your emotional trends.",
       "glyph": "🩷",
       "color": "#ec4899",
+      "version": 1
+    },
+    {
+      "dir": "water-tracker",
+      "name": "Water Tracker",
+      "description": "Log your daily water intake and hit your hydration goal.",
+      "glyph": "💧",
+      "color": "#38bdf8",
       "version": 1
     }
   ]
