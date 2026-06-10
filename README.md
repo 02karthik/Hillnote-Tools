@@ -6,7 +6,7 @@ Hillnote app can download and install them with verified integrity.
 This repo is two things at once:
 
 - a **static site** (`index.html` + each tool folder), served for browser
-  preview/download at <https://02karthik.github.io/Hillnote-Tools/>, and
+  preview/download at <https://hillnote.com/Hillnote-Tools/>, and
 - a **signed manifest** (`catalog.json` + `catalog.sig`) that the Hillnote app
   fetches, verifies against a pinned key, and installs into a workspace.
 
