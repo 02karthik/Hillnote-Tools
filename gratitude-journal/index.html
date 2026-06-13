@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <title>Gratitude Journal</title>
+  <style>
+    :root {
+      --bg: #000;
+      --surface: #0d0d0d;
+      --border: #1a1a1a;
+      --text: #f0f0f0;
+      --muted: #666;
+      --accent: #f97316;
+      --accent-dim: rgba(249,115,22,0.15);
+      --radius: 16px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 24px;
+      gap: 24px;
+    }
+
+    h1 {
+      font-size: clamp(0.9rem, 3.5vw, 1.1rem);
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .date-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      margin-top: -14px;
+    }
+
+    .prompt {
+      font-size: clamp(0.8rem, 3vw, 0.9rem);
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      text-align: center;
+    }
+
+    .entries {
+      width: 100%;
+      max-width: 380px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .entry-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .entry-num {
+      font-size: 0.7rem;
+      color: var(--accent);
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      min-width: 16px;
+      padding-top: 14px;
+    }
+
+    .entry-input {
+      flex: 1;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: var(--text);
+      font-size: 0.88rem;
+      font-family: inherit;
+      outline: none;
+      resize: none;
+      min-height: 44px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+      line-height: 1.5;
+    }
+
+    .entry-input:focus { border-color: var(--accent); }
+
+    .entry-input::placeholder {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .save-btn {
+      background: var(--accent);
+      border: none;
+      border-radius: 100px;
+      color: #000;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 12px 32px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+
+    .save-btn:hover { opacity: 0.85; transform: scale(1.02); }
+    .save-btn:active { transform: scale(0.98); }
+
+    .history-section {
+      width: 100%;
+      max-width: 380px;
+    }
+
+    .section-title {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .history-grid {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .history-day {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .history-bubble {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+    }
+
+    .history-bubble.logged {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    .history-bubble.today { box-shadow: 0 0 10px var(--accent-dim); }
+
+    .history-day-label {
+      font-size: 0.58rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .stats {
+      display: flex;
+      gap: 36px;
+      padding-top: 4px;
+      border-top: 1px solid var(--border);
+      width: 100%;
+      max-width: 380px;
+      justify-content: center;
+    }
+
+    .stat { text-align: center; }
+
+    .stat-val {
+      font-size: 1.6rem;
+      font-weight: 300;
+      color: var(--text);
+    }
+
+    .stat-label {
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .past-section { width: 100%; max-width: 380px; }
+
+    .past-entry {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 8px;
+    }
+
+    .past-date {
+      font-size: 0.62rem;
+      color: var(--accent);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .past-item {
+      font-size: 0.82rem;
+      color: var(--text);
+      line-height: 1.6;
+      padding-left: 10px;
+      border-left: 2px solid var(--accent-dim);
+      margin-bottom: 4px;
+    }
+
+    .past-item:last-child { margin-bottom: 0; }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(70px);
+      background: var(--surface);
+      border: 1px solid var(--accent);
+      color: var(--text);
+      padding: 10px 24px;
+      border-radius: 100px;
+      font-size: 0.8rem;
+      letter-spacing: 0.06em;
+      transition: transform 0.3s ease;
+      pointer-events: none;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+  <h1>Gratitude Journal</h1>
+  <div class="date-label" id="dateLabel"></div>
+
+  <p class="prompt">What are you grateful for today?</p>
+
+  <div class="entries">
+    <div class="entry-row">
+      <span class="entry-num">1</span>
+      <textarea class="entry-input" id="e1" placeholder="Something good that happened…" rows="1"></textarea>
+    </div>
+    <div class="entry-row">
+      <span class="entry-num">2</span>
+      <textarea class="entry-input" id="e2" placeholder="Someone who made a difference…" rows="1"></textarea>
+    </div>
+    <div class="entry-row">
+      <span class="entry-num">3</span>
+      <textarea class="entry-input" id="e3" placeholder="A small moment you noticed…" rows="1"></textarea>
+    </div>
+  </div>
+
+  <button class="save-btn" id="saveBtn">Save Today</button>
+
+  <div class="history-section">
+    <div class="section-title">Last 7 days</div>
+    <div class="history-grid" id="historyGrid"></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-val" id="streakVal">0</div>
+      <div class="stat-label">day streak</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="totalVal">0</div>
+      <div class="stat-label">days logged</div>
+    </div>
+  </div>
+
+  <div class="past-section" id="pastSection"></div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const KEY = 'gratitudeJournalData';
+
+    function isoToday() {
+      const d = new Date();
+      return `${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;
+    }
+
+    function isoOffset(n) {
+      const d = new Date();
+      d.setDate(d.getDate() - n);
+      return `${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;
+    }
+
+    function p2(n) { return String(n).padStart(2, '0'); }
+
+    function shortDay(iso) {
+      return new Date(iso + 'T00:00:00')
+        .toLocaleDateString('en-US', { weekday: 'short' }).slice(0, 2);
+    }
+
+    function prettyDate(iso) {
+      return new Date(iso + 'T00:00:00').toLocaleDateString('en-US', {
+        weekday: 'long', month: 'short', day: 'numeric'
+      });
+    }
+
+    function escHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    let data = {};
+    try { data = JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e) {}
+
+    function persist() { localStorage.setItem(KEY, JSON.stringify(data)); }
+
+    let toastTimer;
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+    }
+
+    function loadToday() {
+      const entry = data[isoToday()];
+      if (entry) {
+        document.getElementById('e1').value = entry[0] || '';
+        document.getElementById('e2').value = entry[1] || '';
+        document.getElementById('e3').value = entry[2] || '';
+        document.querySelectorAll('.entry-input').forEach(el => {
+          el.style.height = 'auto';
+          el.style.height = el.scrollHeight + 'px';
+        });
+      }
+    }
+
+    function save() {
+      const vals = [
+        document.getElementById('e1').value.trim(),
+        document.getElementById('e2').value.trim(),
+        document.getElementById('e3').value.trim(),
+      ];
+      if (!vals.some(Boolean)) { showToast('Write at least one thing 🙏'); return; }
+      data[isoToday()] = vals;
+      persist();
+      renderHistory();
+      renderStats();
+      renderPast();
+      showToast('🙏  Saved');
+    }
+
+    function renderHistory() {
+      const grid = document.getElementById('historyGrid');
+      grid.innerHTML = '';
+      const today = isoToday();
+      for (let i = 6; i >= 0; i--) {
+        const iso = isoOffset(i);
+        const logged = !!(data[iso] && data[iso].some(Boolean));
+        const isToday = iso === today;
+
+        const col = document.createElement('div');
+        col.className = 'history-day';
+
+        const bubble = document.createElement('div');
+        bubble.className = 'history-bubble' +
+          (logged ? ' logged' : '') + (isToday ? ' today' : '');
+        bubble.textContent = logged ? '🙏' : '·';
+
+        const lbl = document.createElement('div');
+        lbl.className = 'history-day-label';
+        lbl.textContent = isToday ? 'today' : shortDay(iso);
+
+        col.appendChild(bubble);
+        col.appendChild(lbl);
+        grid.appendChild(col);
+      }
+    }
+
+    function renderStats() {
+      let streak = 0;
+      for (let i = 0; ; i++) {
+        const entry = data[isoOffset(i)];
+        if (entry && entry.some(Boolean)) streak++;
+        else break;
+      }
+      document.getElementById('streakVal').textContent = streak;
+      document.getElementById('totalVal').textContent =
+        Object.values(data).filter(e => e && e.some(Boolean)).length;
+    }
+
+    function renderPast() {
+      const section = document.getElementById('pastSection');
+      const today = isoToday();
+      const sorted = Object.keys(data)
+        .filter(iso => iso !== today && data[iso] && data[iso].some(Boolean))
+        .sort((a, b) => b.localeCompare(a))
+        .slice(0, 5);
+
+      if (!sorted.length) { section.innerHTML = ''; return; }
+
+      const cards = sorted.map(iso => {
+        const items = data[iso].filter(Boolean);
+        return `<div class="past-entry">
+          <div class="past-date">${prettyDate(iso)}</div>
+          ${items.map(item => `<div class="past-item">${escHtml(item)}</div>`).join('')}
+        </div>`;
+      }).join('');
+
+      section.innerHTML =
+        `<div class="section-title">Recent entries</div>${cards}`;
+    }
+
+    document.getElementById('saveBtn').addEventListener('click', save);
+
+    document.querySelectorAll('.entry-input').forEach(el => {
+      el.addEventListener('input', () => {
+        el.style.height = 'auto';
+        el.style.height = el.scrollHeight + 'px';
+      });
+      el.addEventListener('keydown', e => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') save();
+      });
+    });
+
+    document.getElementById('dateLabel').textContent = new Date().toLocaleDateString(
+      'en-US', { weekday: 'long', month: 'long', day: 'numeric' }
+    );
+
+    loadToday();
+    renderHistory();
+    renderStats();
+    renderPast();
+  </script>
+</body>
+</html>

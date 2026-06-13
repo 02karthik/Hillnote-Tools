@@ -1,5 +1,5 @@
 {
-  "catalogVersion": 4,
+  "catalogVersion": 5,
   "tools": [
     {
       "dir": "color-capture",
@@ -79,6 +79,14 @@
       "description": "Log your daily water intake and hit your hydration goal.",
       "glyph": "💧",
       "color": "#38bdf8",
+      "version": 1
+    },
+    {
+      "dir": "gratitude-journal",
+      "name": "Gratitude Journal",
+      "description": "Write three things you're grateful for each day.",
+      "glyph": "🙏",
+      "color": "#f97316",
       "version": 1
     }
   ]
