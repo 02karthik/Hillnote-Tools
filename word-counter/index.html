@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <title>Word Counter</title>
+  <style>
+    :root {
+      --bg: #000;
+      --surface: #0d0d0d;
+      --border: #1a1a1a;
+      --text: #f0f0f0;
+      --muted: #666;
+      --accent: #10b981;
+      --accent-dim: rgba(16,185,129,0.12);
+      --radius: 16px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 24px;
+      gap: 24px;
+    }
+
+    h1 {
+      font-size: clamp(0.9rem, 3.5vw, 1.1rem);
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 10px;
+      text-align: center;
+      transition: border-color 0.25s, background 0.25s;
+    }
+
+    .stat-card.active {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    .stat-val {
+      font-size: 1.8rem;
+      font-weight: 300;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    .reading-time {
+      font-size: 0.88rem;
+      color: var(--accent);
+      text-align: center;
+      letter-spacing: 0.05em;
+      min-height: 1.2em;
+    }
+
+    textarea {
+      width: 100%;
+      max-width: 420px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      color: var(--text);
+      font-size: 0.9rem;
+      font-family: inherit;
+      outline: none;
+      resize: vertical;
+      min-height: 180px;
+      line-height: 1.6;
+      transition: border-color 0.2s;
+    }
+
+    textarea:focus { border-color: var(--accent); }
+
+    textarea::placeholder {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .clear-btn {
+      background: transparent;
+      border: 1.5px solid var(--border);
+      border-radius: 100px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 10px 28px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .clear-btn:hover { border-color: var(--muted); color: var(--text); }
+    .clear-btn:active { transform: scale(0.97); }
+  </style>
+</head>
+<body>
+
+  <h1>✍️ Word Counter</h1>
+
+  <div class="stats-grid">
+    <div class="stat-card" id="cardWords">
+      <div class="stat-val" id="wordCount">0</div>
+      <div class="stat-label">Words</div>
+    </div>
+    <div class="stat-card" id="cardChars">
+      <div class="stat-val" id="charCount">0</div>
+      <div class="stat-label">Characters</div>
+    </div>
+    <div class="stat-card" id="cardSentences">
+      <div class="stat-val" id="sentenceCount">0</div>
+      <div class="stat-label">Sentences</div>
+    </div>
+    <div class="stat-card" id="cardParas">
+      <div class="stat-val" id="paraCount">0</div>
+      <div class="stat-label">Paragraphs</div>
+    </div>
+    <div class="stat-card" id="cardNoSpace">
+      <div class="stat-val" id="noSpaceCount">0</div>
+      <div class="stat-label">No spaces</div>
+    </div>
+    <div class="stat-card" id="cardAvg">
+      <div class="stat-val" id="avgLen">0</div>
+      <div class="stat-label">Avg word</div>
+    </div>
+  </div>
+
+  <div class="reading-time" id="readingTime">&nbsp;</div>
+
+  <textarea id="input" placeholder="Paste or type your text here…" autocomplete="off" spellcheck="true"></textarea>
+
+  <button class="clear-btn" id="clearBtn">Clear</button>
+
+  <script>
+    const input = document.getElementById('input');
+    const cards = document.querySelectorAll('.stat-card');
+
+    function analyse() {
+      const text = input.value;
+      const trimmed = text.trim();
+
+      const words = trimmed ? trimmed.split(/\s+/).filter(Boolean) : [];
+      const wordCount = words.length;
+      const sentences = trimmed ? trimmed.split(/[.!?]+/).filter(s => s.trim()) : [];
+      const paras = trimmed ? trimmed.split(/\n\s*\n/).filter(p => p.trim()) : [];
+      const avgLen = wordCount
+        ? (words.reduce((s, w) => s + w.replace(/[^a-zA-Z]/g, '').length, 0) / wordCount).toFixed(1)
+        : 0;
+
+      document.getElementById('wordCount').textContent    = wordCount;
+      document.getElementById('charCount').textContent    = text.length;
+      document.getElementById('sentenceCount').textContent = sentences.length;
+      document.getElementById('paraCount').textContent    = paras.length;
+      document.getElementById('noSpaceCount').textContent = text.replace(/\s/g, '').length;
+      document.getElementById('avgLen').textContent       = avgLen;
+
+      cards.forEach(c => c.classList.toggle('active', wordCount > 0));
+
+      if (wordCount > 0) {
+        const mins = Math.ceil(wordCount / 238);
+        document.getElementById('readingTime').textContent =
+          `~${mins} ${mins === 1 ? 'min' : 'mins'} read`;
+      } else {
+        document.getElementById('readingTime').innerHTML = '&nbsp;';
+      }
+    }
+
+    input.addEventListener('input', analyse);
+
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      input.value = '';
+      analyse();
+      input.focus();
+    });
+  </script>
+
+</body>
+</html>
