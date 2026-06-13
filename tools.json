@@ -1,5 +1,5 @@
 {
-  "catalogVersion": 5,
+  "catalogVersion": 6,
   "tools": [
     {
       "dir": "color-capture",
@@ -87,6 +87,14 @@
       "description": "Write three things you're grateful for each day.",
       "glyph": "🙏",
       "color": "#f97316",
+      "version": 1
+    },
+    {
+      "dir": "word-counter",
+      "name": "Word Counter",
+      "description": "Paste or type any text to instantly see word count, reading time, and more.",
+      "glyph": "✍️",
+      "color": "#10b981",
       "version": 1
     }
   ]
