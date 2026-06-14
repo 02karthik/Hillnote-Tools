@@ -1,5 +1,5 @@
 {
-  "catalogVersion": 6,
+  "catalogVersion": 7,
   "tools": [
     {
       "dir": "color-capture",
@@ -95,6 +95,14 @@
       "description": "Paste or type any text to instantly see word count, reading time, and more.",
       "glyph": "✍️",
       "color": "#10b981",
+      "version": 1
+    },
+    {
+      "dir": "readability-score",
+      "name": "Readability Score",
+      "description": "Instantly check how readable your writing is with Flesch-Kincaid ease and grade level.",
+      "glyph": "📖",
+      "color": "#6366f1",
       "version": 1
     }
   ]
