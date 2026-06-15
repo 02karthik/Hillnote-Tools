@@ -1,5 +1,5 @@
 {
-  "catalogVersion": 7,
+  "catalogVersion": 8,
   "tools": [
     {
       "dir": "color-capture",
@@ -103,6 +103,14 @@
       "description": "Instantly check how readable your writing is with Flesch-Kincaid ease and grade level.",
       "glyph": "📖",
       "color": "#6366f1",
+      "version": 1
+    },
+    {
+      "dir": "typing-speed",
+      "name": "Typing Speed",
+      "description": "Measure your typing speed and accuracy with real-time WPM feedback.",
+      "glyph": "⌨️",
+      "color": "#f59e0b",
       "version": 1
     }
   ]
