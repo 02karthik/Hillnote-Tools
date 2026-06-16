@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <title>Typing Speed</title>
+  <style>
+    :root {
+      --bg: #000;
+      --surface: #0d0d0d;
+      --border: #1a1a1a;
+      --text: #f0f0f0;
+      --muted: #666;
+      --accent: #f59e0b;
+      --accent-dim: rgba(245,158,11,0.12);
+      --radius: 16px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 24px;
+      gap: 24px;
+    }
+
+    h1 {
+      font-size: clamp(0.9rem, 3.5vw, 1.1rem);
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 10px;
+      text-align: center;
+      transition: border-color 0.25s, background 0.25s;
+    }
+
+    .stat-card.active {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    .stat-val {
+      font-size: 1.8rem;
+      font-weight: 300;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    .passage {
+      width: 100%;
+      max-width: 420px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      font-size: 0.95rem;
+      line-height: 1.9;
+      letter-spacing: 0.01em;
+      color: var(--muted);
+      user-select: none;
+    }
+
+    .passage .correct { color: var(--accent); }
+    .passage .wrong   { color: #ef4444; background: rgba(239,68,68,0.15); border-radius: 2px; }
+    .passage .cursor  {
+      color: var(--text);
+      border-left: 2px solid var(--accent);
+      padding-left: 1px;
+      margin-left: -1px;
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { border-color: var(--accent); }
+      50%       { border-color: transparent; }
+    }
+
+    textarea {
+      width: 100%;
+      max-width: 420px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      color: var(--text);
+      font-size: 0.9rem;
+      font-family: inherit;
+      outline: none;
+      resize: none;
+      height: 76px;
+      line-height: 1.6;
+      transition: border-color 0.2s;
+    }
+
+    textarea:focus { border-color: var(--accent); }
+    textarea::placeholder { color: var(--muted); font-style: italic; }
+    textarea:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    .status-line {
+      font-size: 0.8rem;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      min-height: 1.2em;
+      text-align: center;
+    }
+
+    .status-line.done { color: var(--accent); font-weight: 600; }
+
+    .btn-row { display: flex; gap: 12px; }
+
+    .action-btn {
+      background: transparent;
+      border: 1.5px solid var(--border);
+      border-radius: 100px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 10px 28px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .action-btn.primary { border-color: var(--accent); color: var(--accent); }
+    .action-btn:hover { border-color: var(--muted); color: var(--text); }
+    .action-btn.primary:hover { border-color: var(--text); color: var(--text); }
+    .action-btn:active { transform: scale(0.97); }
+  </style>
+</head>
+<body>
+
+  <h1>⌨️ Typing Speed</h1>
+
+  <div class="stats-grid">
+    <div class="stat-card" id="cardWpm">
+      <div class="stat-val" id="wpmVal">—</div>
+      <div class="stat-label">WPM</div>
+    </div>
+    <div class="stat-card" id="cardAcc">
+      <div class="stat-val" id="accVal">—</div>
+      <div class="stat-label">Accuracy</div>
+    </div>
+    <div class="stat-card" id="cardTime">
+      <div class="stat-val" id="timeVal">—</div>
+      <div class="stat-label">Seconds</div>
+    </div>
+  </div>
+
+  <div class="passage" id="passage"></div>
+
+  <textarea
+    id="input"
+    placeholder="Start typing to begin…"
+    autocomplete="off"
+    autocorrect="off"
+    autocapitalize="off"
+    spellcheck="false"
+  ></textarea>
+
+  <div class="status-line" id="status">Type the passage above to measure your speed</div>
+
+  <div class="btn-row">
+    <button class="action-btn primary" id="newBtn">New Passage</button>
+    <button class="action-btn" id="resetBtn">Retry</button>
+  </div>
+
+  <script>
+    const PASSAGES = [
+      "The quick brown fox jumps over the lazy dog near the river bank.",
+      "Practice makes perfect. The more you type, the faster and more accurate you become over time.",
+      "Every great journey begins with a single step taken in the right direction.",
+      "Clear writing is clear thinking. Simplicity is the ultimate sophistication.",
+      "Focus is the art of knowing what to ignore. Do one thing at a time and do it well.",
+      "The best way to predict the future is to create it with deliberate daily action.",
+      "Reading gives you knowledge; writing gives you clarity; typing gives you speed.",
+      "Small consistent efforts compound into extraordinary results over the long run.",
+      "A smooth sea never made a skilled sailor. Embrace difficulty and grow stronger.",
+      "Write to think, think to write. The pen and keyboard are tools of the mind.",
+    ];
+
+    let passage = '';
+    let startTime = null;
+    let timerInterval = null;
+    let finished = false;
+
+    const passageEl = document.getElementById('passage');
+    const inputEl   = document.getElementById('input');
+    const wpmEl     = document.getElementById('wpmVal');
+    const accEl     = document.getElementById('accVal');
+    const timeEl    = document.getElementById('timeVal');
+    const statusEl  = document.getElementById('status');
+    const cardWpm   = document.getElementById('cardWpm');
+    const cardAcc   = document.getElementById('cardAcc');
+    const cardTime  = document.getElementById('cardTime');
+
+    function pickPassage() {
+      const last = passage;
+      let p;
+      do { p = PASSAGES[Math.floor(Math.random() * PASSAGES.length)]; }
+      while (p === last && PASSAGES.length > 1);
+      return p;
+    }
+
+    function escape(ch) {
+      return ch === '&' ? '&amp;' : ch === '<' ? '&lt;' : ch === '>' ? '&gt;' : ch;
+    }
+
+    function renderPassage(typed) {
+      let html = '';
+      for (let i = 0; i < passage.length; i++) {
+        const ch = escape(passage[i]);
+        if (i < typed.length) {
+          html += `<span class="${typed[i] === passage[i] ? 'correct' : 'wrong'}">${ch}</span>`;
+        } else if (i === typed.length) {
+          html += `<span class="cursor">${ch}</span>`;
+        } else {
+          html += `<span>${ch}</span>`;
+        }
+      }
+      passageEl.innerHTML = html;
+    }
+
+    function calcWpm(elapsed, correctChars) {
+      const mins = elapsed / 60;
+      return mins > 0 ? Math.round((correctChars / 5) / mins) : 0;
+    }
+
+    function calcAcc(typed) {
+      if (!typed.length) return 100;
+      let correct = 0;
+      for (let i = 0; i < typed.length; i++) {
+        if (typed[i] === passage[i]) correct++;
+      }
+      return Math.round((correct / typed.length) * 100);
+    }
+
+    function stopTimer() { clearInterval(timerInterval); timerInterval = null; }
+
+    function init(keepPassage) {
+      if (!keepPassage) passage = pickPassage();
+      inputEl.value = '';
+      inputEl.disabled = false;
+      startTime = null;
+      finished = false;
+      stopTimer();
+      wpmEl.textContent  = '—';
+      accEl.textContent  = '—';
+      timeEl.textContent = '—';
+      cardWpm.classList.remove('active');
+      cardAcc.classList.remove('active');
+      cardTime.classList.remove('active');
+      statusEl.textContent = 'Type the passage above to measure your speed';
+      statusEl.classList.remove('done');
+      renderPassage('');
+      inputEl.focus();
+    }
+
+    inputEl.addEventListener('input', () => {
+      if (finished) return;
+      const typed = inputEl.value;
+
+      if (typed.length === 1 && !startTime) {
+        startTime = Date.now();
+        timerInterval = setInterval(() => {
+          if (!finished) {
+            const s = (Date.now() - startTime) / 1000;
+            timeEl.textContent = s.toFixed(1);
+            cardTime.classList.add('active');
+          }
+        }, 100);
+      }
+
+      renderPassage(typed);
+
+      const elapsed = startTime ? (Date.now() - startTime) / 1000 : 0;
+      const correctChars = [...typed].filter((c, i) => c === passage[i]).length;
+      const acc = calcAcc(typed);
+
+      if (elapsed > 0) {
+        wpmEl.textContent = calcWpm(elapsed, correctChars);
+        cardWpm.classList.add('active');
+      }
+      accEl.textContent = acc + '%';
+      cardAcc.classList.add('active');
+
+      if (typed === passage) {
+        finished = true;
+        stopTimer();
+        inputEl.disabled = true;
+        const finalWpm  = calcWpm(elapsed, correctChars);
+        const finalAcc  = acc;
+        const finalTime = elapsed.toFixed(1);
+        wpmEl.textContent  = finalWpm;
+        accEl.textContent  = finalAcc + '%';
+        timeEl.textContent = finalTime;
+        statusEl.textContent = `Done! ${finalWpm} WPM · ${finalAcc}% accuracy · ${finalTime}s`;
+        statusEl.classList.add('done');
+      }
+    });
+
+    document.getElementById('newBtn').addEventListener('click', () => init(false));
+    document.getElementById('resetBtn').addEventListener('click', () => init(true));
+
+    init(false);
+  </script>
+
+</body>
+</html>
