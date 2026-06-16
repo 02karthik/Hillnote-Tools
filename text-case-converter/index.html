@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <title>Text Case Converter</title>
+  <style>
+    :root {
+      --bg: #000;
+      --surface: #0d0d0d;
+      --border: #1a1a1a;
+      --text: #f0f0f0;
+      --muted: #666;
+      --accent: #06b6d4;
+      --accent-dim: rgba(6,182,212,0.12);
+      --radius: 16px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 24px;
+      gap: 20px;
+    }
+
+    h1 {
+      font-size: clamp(0.9rem, 3.5vw, 1.1rem);
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    textarea {
+      width: 100%;
+      max-width: 420px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      color: var(--text);
+      font-size: 0.9rem;
+      font-family: inherit;
+      outline: none;
+      resize: vertical;
+      min-height: 110px;
+      line-height: 1.6;
+      transition: border-color 0.2s;
+    }
+
+    textarea:focus { border-color: var(--accent); }
+    textarea::placeholder { color: var(--muted); font-style: italic; }
+
+    .cases {
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .case-row {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: border-color 0.2s;
+    }
+
+    .case-row.active { border-color: rgba(6,182,212,0.3); }
+
+    .case-info { flex: 1; min-width: 0; }
+
+    .case-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .case-value {
+      font-size: 0.85rem;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-family: 'SF Mono', 'Fira Code', 'Menlo', monospace;
+    }
+
+    .case-value.empty {
+      color: var(--muted);
+      font-style: italic;
+      font-family: inherit;
+    }
+
+    .copy-btn {
+      flex-shrink: 0;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 6px 12px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+
+    .copy-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .copy-btn.copied { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+    .copy-btn:disabled { opacity: 0.3; cursor: default; }
+
+    .clear-btn {
+      background: transparent;
+      border: 1.5px solid var(--border);
+      border-radius: 100px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 10px 28px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .clear-btn:hover { border-color: var(--muted); color: var(--text); }
+    .clear-btn:active { transform: scale(0.97); }
+  </style>
+</head>
+<body>
+
+  <h1>🔡 Text Case Converter</h1>
+
+  <textarea id="input" placeholder="Type or paste your text here…" autocomplete="off" spellcheck="false"></textarea>
+
+  <div class="cases" id="cases"></div>
+
+  <button class="clear-btn" id="clearBtn">Clear</button>
+
+  <script>
+    const CASES = [
+      { id: 'upper',     label: 'UPPER CASE',      fn: s => s.toUpperCase() },
+      { id: 'lower',     label: 'lower case',      fn: s => s.toLowerCase() },
+      { id: 'title',     label: 'Title Case',      fn: titleCase },
+      { id: 'sentence',  label: 'Sentence case',   fn: sentenceCase },
+      { id: 'camel',     label: 'camelCase',       fn: s => toCamel(s, false) },
+      { id: 'pascal',    label: 'PascalCase',      fn: s => toCamel(s, true) },
+      { id: 'snake',     label: 'snake_case',      fn: s => toDelimited(s, '_').toLowerCase() },
+      { id: 'kebab',     label: 'kebab-case',      fn: s => toDelimited(s, '-').toLowerCase() },
+      { id: 'screaming', label: 'SCREAMING_SNAKE', fn: s => toDelimited(s, '_').toUpperCase() },
+    ];
+
+    function words(s) {
+      return s.trim().split(/[\s\-_]+/).filter(Boolean);
+    }
+
+    function titleCase(s) {
+      return s.replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    function sentenceCase(s) {
+      const t = s.trim();
+      return t.charAt(0).toUpperCase() + t.slice(1).toLowerCase();
+    }
+
+    function toCamel(s, pascal) {
+      return words(s).map((w, i) =>
+        (!pascal && i === 0)
+          ? w.toLowerCase()
+          : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
+      ).join('');
+    }
+
+    function toDelimited(s, sep) {
+      return words(s).join(sep);
+    }
+
+    const casesEl = document.getElementById('cases');
+    const rowEls = {};
+
+    CASES.forEach(({ id, label }) => {
+      const row = document.createElement('div');
+      row.className = 'case-row';
+      row.innerHTML = `
+        <div class="case-info">
+          <div class="case-label">${label}</div>
+          <div class="case-value empty" id="val-${id}">—</div>
+        </div>
+        <button class="copy-btn" id="copy-${id}" disabled>Copy</button>
+      `;
+      casesEl.appendChild(row);
+      rowEls[id] = row;
+
+      row.querySelector(`#copy-${id}`).addEventListener('click', () => {
+        const val = document.getElementById(`val-${id}`).textContent;
+        navigator.clipboard.writeText(val).then(() => {
+          const btn = row.querySelector(`#copy-${id}`);
+          btn.textContent = 'Copied!';
+          btn.classList.add('copied');
+          setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
+        });
+      });
+    });
+
+    function update() {
+      const text = document.getElementById('input').value;
+      const hasText = text.trim().length > 0;
+
+      CASES.forEach(({ id, fn }) => {
+        const valEl = document.getElementById(`val-${id}`);
+        const copyBtn = document.getElementById(`copy-${id}`);
+        if (hasText) {
+          valEl.textContent = fn(text);
+          valEl.classList.remove('empty');
+          copyBtn.disabled = false;
+          rowEls[id].classList.add('active');
+        } else {
+          valEl.textContent = '—';
+          valEl.classList.add('empty');
+          copyBtn.disabled = true;
+          rowEls[id].classList.remove('active');
+        }
+      });
+    }
+
+    document.getElementById('input').addEventListener('input', update);
+
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      document.getElementById('input').value = '';
+      update();
+      document.getElementById('input').focus();
+    });
+  </script>
+
+</body>
+</html>
