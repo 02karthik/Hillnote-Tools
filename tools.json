@@ -1,5 +1,5 @@
 {
-  "catalogVersion": 8,
+  "catalogVersion": 9,
   "tools": [
     {
       "dir": "color-capture",
@@ -111,6 +111,14 @@
       "description": "Measure your typing speed and accuracy with real-time WPM feedback.",
       "glyph": "⌨️",
       "color": "#f59e0b",
+      "version": 1
+    },
+    {
+      "dir": "text-case-converter",
+      "name": "Text Case Converter",
+      "description": "Instantly convert text between UPPER, lower, Title, camelCase, snake_case, kebab-case and more.",
+      "glyph": "🔡",
+      "color": "#06b6d4",
       "version": 1
     }
   ]
