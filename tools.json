@@ -1,5 +1,5 @@
 {
-  "catalogVersion": 9,
+  "catalogVersion": 10,
   "tools": [
     {
       "dir": "color-capture",
@@ -119,6 +119,14 @@
       "description": "Instantly convert text between UPPER, lower, Title, camelCase, snake_case, kebab-case and more.",
       "glyph": "🔡",
       "color": "#06b6d4",
+      "version": 1
+    },
+    {
+      "dir": "writing-prompt",
+      "name": "Writing Prompt",
+      "description": "Spark your next idea with a random writing prompt across Fiction, Personal, Observation, and What If.",
+      "glyph": "✨",
+      "color": "#a855f7",
       "version": 1
     }
   ]

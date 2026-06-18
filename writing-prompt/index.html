@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <title>Writing Prompt</title>
+  <style>
+    :root {
+      --bg: #000;
+      --surface: #0d0d0d;
+      --border: #1a1a1a;
+      --text: #f0f0f0;
+      --muted: #666;
+      --accent: #a855f7;
+      --accent-dim: rgba(168,85,247,0.12);
+      --radius: 16px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 24px;
+      gap: 20px;
+    }
+
+    h1 {
+      font-size: clamp(0.9rem, 3.5vw, 1.1rem);
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .category-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .cat-btn {
+      background: transparent;
+      border: 1.5px solid var(--border);
+      border-radius: 100px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 7px 14px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+
+    .cat-btn:hover { border-color: var(--muted); color: var(--text); }
+    .cat-btn.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    .prompt-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      width: 100%;
+      max-width: 420px;
+      min-height: 160px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 16px;
+      transition: border-color 0.4s;
+    }
+
+    .prompt-card.fresh { border-color: var(--accent); }
+
+    .prompt-tag {
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .prompt-text {
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: var(--text);
+      font-style: italic;
+      transition: opacity 0.2s;
+    }
+
+    .prompt-text.fading { opacity: 0; }
+
+    .prompt-counter {
+      font-size: 0.68rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      text-align: right;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .btn-primary {
+      flex: 1;
+      background: var(--accent);
+      border: none;
+      border-radius: 100px;
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 14px 20px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-primary:active { transform: scale(0.97); }
+
+    .btn-copy {
+      background: transparent;
+      border: 1.5px solid var(--border);
+      border-radius: 100px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 500;
+      padding: 14px 22px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-copy:hover { border-color: var(--muted); color: var(--text); }
+    .btn-copy.copied { border-color: var(--accent); color: var(--accent); }
+    .btn-copy:active { transform: scale(0.97); }
+  </style>
+</head>
+<body>
+
+  <h1>&#10024; Writing Prompt</h1>
+
+  <div class="category-bar" id="catBar">
+    <button class="cat-btn active" data-cat="all">All</button>
+    <button class="cat-btn" data-cat="fiction">Fiction</button>
+    <button class="cat-btn" data-cat="personal">Personal</button>
+    <button class="cat-btn" data-cat="observation">Observation</button>
+    <button class="cat-btn" data-cat="what-if">What If</button>
+  </div>
+
+  <div class="prompt-card" id="promptCard">
+    <div>
+      <div class="prompt-tag" id="promptTag"></div>
+      <div class="prompt-text" id="promptText"></div>
+    </div>
+    <div class="prompt-counter" id="promptCounter"></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn-primary" id="nextBtn">New Prompt</button>
+    <button class="btn-copy" id="copyBtn">Copy</button>
+  </div>
+
+  <script>
+    const PROMPTS = [
+      { cat: 'fiction', text: 'A letter arrives addressed to you — but it was written 50 years ago.' },
+      { cat: 'fiction', text: 'Two strangers share an elevator that stops between floors. Neither has their phone.' },
+      { cat: 'fiction', text: 'The last bookshop in the city is closing tomorrow. Write the owner\'s last day.' },
+      { cat: 'fiction', text: 'Someone wakes up speaking a language they\'ve never heard before.' },
+      { cat: 'fiction', text: 'A lighthouse keeper receives a message in a bottle — and recognises the handwriting.' },
+      { cat: 'fiction', text: 'Write the conversation between two people meeting for the very last time without knowing it.' },
+      { cat: 'fiction', text: 'A small town holds a festival every year that nobody outside has ever heard of.' },
+      { cat: 'fiction', text: 'The map on the wall has a room marked that doesn\'t exist in the house.' },
+      { cat: 'fiction', text: 'A chef discovers that a recipe from their grandmother\'s notebook is actually a code.' },
+      { cat: 'fiction', text: 'The night-shift security guard at a museum notices one painting has changed.' },
+      { cat: 'personal', text: 'Describe a moment when silence said more than words ever could.' },
+      { cat: 'personal', text: 'Write about a skill you taught yourself and why it mattered.' },
+      { cat: 'personal', text: 'What\'s one belief you held five years ago that you\'ve since completely changed?' },
+      { cat: 'personal', text: 'Describe a place that no longer exists, exactly as you remember it.' },
+      { cat: 'personal', text: 'Write a letter to the version of yourself who is just starting something hard.' },
+      { cat: 'personal', text: 'What\'s something you do differently from everyone you know?' },
+      { cat: 'personal', text: 'Describe the last time you were genuinely surprised by your own reaction.' },
+      { cat: 'personal', text: 'Write about a small, ordinary moment that turned out to be unforgettable.' },
+      { cat: 'personal', text: 'What would you do differently if nobody was keeping score?' },
+      { cat: 'personal', text: 'Describe a conversation you rehearsed but never had.' },
+      { cat: 'observation', text: 'Pick the nearest object and write its entire history — imagined or real.' },
+      { cat: 'observation', text: 'Describe the view from your window as if you\'ve never seen it before.' },
+      { cat: 'observation', text: 'Write about a sound you hear every day but have never described in words.' },
+      { cat: 'observation', text: 'Describe someone you see regularly but have never spoken to.' },
+      { cat: 'observation', text: 'Look at the oldest thing near you and write what it has witnessed.' },
+      { cat: 'observation', text: 'Describe the light in the room you\'re in right now, in precise detail.' },
+      { cat: 'observation', text: 'Write about the texture, smell, and weight of something you eat every day.' },
+      { cat: 'observation', text: 'Describe a familiar walk, but from ground level — as if you\'re an ant.' },
+      { cat: 'observation', text: 'Notice something broken or worn nearby. Write the story of how it broke.' },
+      { cat: 'observation', text: 'Describe the silence in a specific place at a specific time of day.' },
+      { cat: 'what-if', text: 'What if you could only speak for one hour each day? How would you use it?' },
+      { cat: 'what-if', text: 'What if every object you owned could show you one memory it holds?' },
+      { cat: 'what-if', text: 'What if you could revisit one hour of your life, just to observe it?' },
+      { cat: 'what-if', text: 'What if you woke up tomorrow with the skills of your 80-year-old self?' },
+      { cat: 'what-if', text: 'What if every city had a mandatory quiet day once a month?' },
+      { cat: 'what-if', text: 'What if you found a notebook filled with detailed plans for your life — written by a stranger?' },
+      { cat: 'what-if', text: 'What if reading someone\'s writing let you hear their exact voice in your head?' },
+      { cat: 'what-if', text: 'What if the last sentence you typed became permanently true?' },
+      { cat: 'what-if', text: 'What if you had to explain today to someone from 200 years ago?' },
+      { cat: 'what-if', text: 'What if you could only remember the last seven days?' },
+    ];
+
+    const LABELS = { fiction: 'Fiction', personal: 'Personal', observation: 'Observation', 'what-if': 'What If' };
+
+    let activeCat = 'all';
+    let seen = new Set();
+    let current = null;
+
+    function getFiltered() {
+      return activeCat === 'all' ? PROMPTS : PROMPTS.filter(p => p.cat === activeCat);
+    }
+
+    function pickPrompt() {
+      const pool = getFiltered();
+      let unseen = pool.filter(p => !seen.has(p));
+      if (unseen.length === 0) { seen.clear(); unseen = pool; }
+      const pick = unseen[Math.floor(Math.random() * unseen.length)];
+      seen.add(pick);
+      return pick;
+    }
+
+    function showPrompt(animate) {
+      const textEl = document.getElementById('promptText');
+      const tagEl  = document.getElementById('promptTag');
+      const ctrEl  = document.getElementById('promptCounter');
+      const card   = document.getElementById('promptCard');
+
+      const apply = () => {
+        current = pickPrompt();
+        textEl.textContent = current.text;
+        tagEl.textContent  = LABELS[current.cat];
+        ctrEl.textContent  = seen.size + ' / ' + getFiltered().length;
+        textEl.classList.remove('fading');
+        card.classList.add('fresh');
+        setTimeout(() => card.classList.remove('fresh'), 600);
+      };
+
+      if (animate) {
+        textEl.classList.add('fading');
+        setTimeout(apply, 200);
+      } else {
+        apply();
+      }
+    }
+
+    document.getElementById('catBar').addEventListener('click', function(e) {
+      var btn = e.target.closest('.cat-btn');
+      if (!btn) return;
+      document.querySelectorAll('.cat-btn').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      activeCat = btn.dataset.cat;
+      seen.clear();
+      showPrompt(true);
+    });
+
+    document.getElementById('nextBtn').addEventListener('click', function() { showPrompt(true); });
+
+    document.getElementById('copyBtn').addEventListener('click', function() {
+      if (!current) return;
+      navigator.clipboard.writeText(current.text).then(function() {
+        var btn = document.getElementById('copyBtn');
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
+      });
+    });
+
+    showPrompt(false);
+  </script>
+
+</body>
+</html>
