@@ -1,5 +1,5 @@
 {
-  "catalogVersion": 10,
+  "catalogVersion": 11,
   "tools": [
     {
       "dir": "color-capture",
@@ -127,6 +127,14 @@
       "description": "Spark your next idea with a random writing prompt across Fiction, Personal, Observation, and What If.",
       "glyph": "✨",
       "color": "#a855f7",
+      "version": 1
+    },
+    {
+      "dir": "flip-a-coin",
+      "name": "Flip a Coin",
+      "description": "Flip a coin and let chance decide. Tracks heads and tails across multiple flips.",
+      "glyph": "🪙",
+      "color": "#eab308",
       "version": 1
     }
   ]
