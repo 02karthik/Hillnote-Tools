@@ -1,5 +1,5 @@
 {
-  "catalogVersion": 11,
+  "catalogVersion": 12,
   "tools": [
     {
       "dir": "color-capture",
@@ -135,6 +135,14 @@
       "description": "Flip a coin and let chance decide. Tracks heads and tails across multiple flips.",
       "glyph": "🪙",
       "color": "#eab308",
+      "version": 1
+    },
+    {
+      "dir": "word-of-the-day",
+      "name": "Word of the Day",
+      "description": "Discover a new word every day — definition, pronunciation, example, and etymology.",
+      "glyph": "📖",
+      "color": "#84cc16",
       "version": 1
     }
   ]

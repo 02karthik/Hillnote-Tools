@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <title>Word of the Day</title>
+  <style>
+    :root {
+      --bg: #000;
+      --surface: #0d0d0d;
+      --border: #1a1a1a;
+      --text: #f0f0f0;
+      --muted: #666;
+      --accent: #84cc16;
+      --accent-dim: rgba(132,204,22,0.10);
+      --radius: 16px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 24px 40px;
+      gap: 20px;
+    }
+
+    h1 {
+      font-size: clamp(0.9rem, 3.5vw, 1.1rem);
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .day-badge {
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--accent-dim);
+      border: 1px solid rgba(132,204,22,0.25);
+      border-radius: 100px;
+      padding: 5px 14px;
+      font-weight: 500;
+    }
+
+    .word-card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      transition: border-color 0.4s, opacity 0.15s;
+    }
+
+    .word-card.fresh { border-color: var(--accent); }
+    .word-card.fading { opacity: 0; }
+
+    .word {
+      font-size: clamp(2rem, 8vw, 2.8rem);
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .word-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .phonetic {
+      font-size: 0.82rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .pos-badge {
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--accent-dim);
+      border: 1px solid rgba(132,204,22,0.2);
+      padding: 3px 9px;
+      border-radius: 100px;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+    }
+
+    .definition {
+      font-size: 0.95rem;
+      line-height: 1.7;
+      color: var(--text);
+    }
+
+    .example {
+      font-size: 0.88rem;
+      line-height: 1.65;
+      color: var(--muted);
+      font-style: italic;
+      padding-left: 14px;
+      border-left: 2px solid var(--border);
+    }
+
+    .origin {
+      font-size: 0.72rem;
+      color: #444;
+      line-height: 1.5;
+      letter-spacing: 0.02em;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .btn-primary {
+      flex: 1;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 100px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 14px 20px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-primary:active { transform: scale(0.97); }
+
+    .btn-copy {
+      background: transparent;
+      border: 1.5px solid var(--border);
+      border-radius: 100px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 500;
+      padding: 14px 22px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-copy:hover { border-color: var(--muted); color: var(--text); }
+    .btn-copy.copied { border-color: var(--accent); color: var(--accent); }
+    .btn-copy:active { transform: scale(0.97); }
+  </style>
+</head>
+<body>
+
+  <h1>&#x1F4D6; Word of the Day</h1>
+
+  <div class="day-badge" id="dayBadge"></div>
+
+  <div class="word-card" id="wordCard">
+    <div>
+      <div class="word" id="wordText"></div>
+      <div class="word-meta">
+        <span class="phonetic" id="phonetic"></span>
+        <span class="pos-badge" id="posText"></span>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="definition" id="definition"></div>
+    <div class="example" id="example"></div>
+    <div class="origin" id="origin"></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn-primary" id="shuffleBtn">Random Word</button>
+    <button class="btn-copy" id="copyBtn">Copy</button>
+  </div>
+
+  <script>
+    const WORDS = [
+      { word: 'Petrichor', phonetic: '/ˈpɛtrɪkɔːr/', pos: 'noun', definition: 'The pleasant, earthy smell produced when rain falls on dry soil.', example: 'She stepped outside after the storm and breathed in the petrichor rising from the warm earth.', origin: 'Greek: petra (stone) + ichor (fluid in the veins of the gods). Coined 1964.' },
+      { word: 'Ephemeral', phonetic: '/ɪˈfɛm(ə)r(ə)l/', pos: 'adjective', definition: 'Lasting for a very short time; transitory.', example: 'The ephemeral beauty of cherry blossoms makes them all the more precious.', origin: 'Greek: ephēmeros (lasting only a day), from epi (on) + hēmera (day).' },
+      { word: 'Liminal', phonetic: '/ˈlɪmɪn(ə)l/', pos: 'adjective', definition: 'Relating to a transitional or initial stage; occupying a position at or on both sides of a boundary.', example: 'The empty airport at 3 a.m. had a liminal quality — neither here nor there.', origin: 'Latin: limen (threshold). First used in psychology by Arnold van Gennep, 1909.' },
+      { word: 'Mellifluous', phonetic: '/mɪˈlɪfluəs/', pos: 'adjective', definition: 'Pleasingly smooth and musical to hear.', example: 'Her mellifluous voice drew the entire room into silence.', origin: 'Latin: mel (honey) + fluere (to flow).' },
+      { word: 'Palimpsest', phonetic: '/ˈpalɪm(p)sɛst/', pos: 'noun', definition: 'Something altered but still bearing visible traces of an earlier form; a manuscript page scraped clean and reused.', example: 'The old city was a palimpsest — Roman ruins beneath medieval walls beneath a modern skyline.', origin: 'Greek: palin (again) + psēstos (scraped smooth).' },
+      { word: 'Equanimity', phonetic: '/ˌɛkwəˈnɪmɪti/', pos: 'noun', definition: 'Mental calmness and composure, especially in difficult situations.', example: 'She faced each setback with quiet equanimity, never losing her footing.', origin: 'Latin: aequus (equal) + animus (mind) — an even-tempered mind.' },
+      { word: 'Lacuna', phonetic: '/ləˈkjuːnə/', pos: 'noun', definition: 'A gap or missing portion in a manuscript, text, or sequence; an unfilled space.', example: 'There was a curious lacuna in his memoir — ten years he never explained.', origin: 'Latin: lacuna (pit, pool, gap), related to lacus (lake).' },
+      { word: 'Halcyon', phonetic: '/ˈhalsɪən/', pos: 'adjective', definition: 'Denoting a period of time in the past that was idyllically happy and peaceful.', example: 'She often longed for those halcyon summers before everything changed.', origin: 'Greek myth: halkyon, a bird believed to calm the wind and sea during its winter nesting.' },
+      { word: 'Susurrus', phonetic: '/suːˈsʌrəs/', pos: 'noun', definition: 'A whispering or rustling sound; a murmur.', example: 'The susurrus of wind through tall grass was the only sound for miles.', origin: 'Latin: susurrare (to whisper, to hum) — imitative of the sound itself.' },
+      { word: 'Numinous', phonetic: '/ˈnjuːmɪnəs/', pos: 'adjective', definition: 'Having a strong spiritual quality; suggesting the presence of a divinity.', example: 'Standing inside the cathedral, he felt something numinous — a stillness beyond words.', origin: 'Latin: numen (divine will, presence). Coined philosophically by Rudolf Otto, 1917.' },
+      { word: 'Scintilla', phonetic: '/sɪnˈtɪlə/', pos: 'noun', definition: 'A tiny trace or spark of a specified quality or feeling.', example: 'There was not a scintilla of doubt in her mind about what she had to do.', origin: 'Latin: scintilla (spark, glimmer of light).' },
+      { word: 'Ennui', phonetic: '/ɒnˈwiː/', pos: 'noun', definition: 'A feeling of listlessness and dissatisfaction arising from a lack of occupation or excitement.', example: 'The long afternoon stretched ahead of him, thick with ennui.', origin: 'French: ennui (boredom), from Latin in odio (in hatred).' },
+      { word: 'Reverie', phonetic: '/ˈrɛv(ə)ri/', pos: 'noun', definition: 'A state of being pleasantly lost in one\'s thoughts; a daydream.', example: 'She was startled out of her reverie by the sudden ring of the phone.', origin: 'French: rêverie (daydreaming), from rêver (to dream).' },
+      { word: 'Solace', phonetic: '/ˈsɒlɪs/', pos: 'noun', definition: 'Comfort or consolation in a time of distress or sadness.', example: 'In the hardest months, he found solace in long early-morning walks.', origin: 'Latin: solacium (comfort), from solari (to console).' },
+      { word: 'Vespertine', phonetic: '/ˈvɛspətɪn/', pos: 'adjective', definition: 'Relating to, occurring in, or active during the evening.', example: 'The vespertine light turned everything gold for exactly seven minutes.', origin: 'Latin: vesper (evening, the west, the evening star).' },
+      { word: 'Luminous', phonetic: '/ˈluːmɪnəs/', pos: 'adjective', definition: 'Full of or shedding light; bright; clearly expressed and easy to understand.', example: 'Her prose was luminous — every sentence placed exactly where it needed to be.', origin: 'Latin: lumen (light), from lucere (to shine).' },
+      { word: 'Flâneur', phonetic: '/flɑːˈnəː/', pos: 'noun', definition: 'A person who strolls the city observing its life and society; an idle but attentive wanderer.', example: 'He spent his twenties as a flâneur, drifting through European capitals with nothing but a notebook.', origin: 'French: flâner (to stroll). Popularised by Charles Baudelaire, mid-19th century.' },
+      { word: 'Sanguine', phonetic: '/ˈsaŋɡwɪn/', pos: 'adjective', definition: 'Optimistic, especially in a difficult situation.', example: 'Despite the delays, she remained sanguine about the project\'s chances.', origin: 'Latin: sanguis (blood). Medieval medicine held that an abundance of blood made one cheerful.' },
+      { word: 'Quixotic', phonetic: '/kwɪkˈsɒtɪk/', pos: 'adjective', definition: 'Exceedingly idealistic; unrealistic and impractical, yet noble in spirit.', example: 'It was a quixotic ambition — to write a book that changed every reader\'s life.', origin: 'From Don Quixote, Cervantes\'s idealistic knight-errant, 1605.' },
+      { word: 'Crepuscular', phonetic: '/krɪˈpʌskjʊlə/', pos: 'adjective', definition: 'Relating to, resembling, or active during twilight.', example: 'Deer are crepuscular animals, most often seen at dusk and dawn.', origin: 'Latin: crepusculum (twilight, dusk), from creper (obscure, dusky).' },
+      { word: 'Limerence', phonetic: '/ˈlɪm(ə)r(ə)ns/', pos: 'noun', definition: 'The state of being infatuated with another person; involuntary romantic longing.', example: 'What he had felt was not love, exactly — it was limerence, all ache and ideation.', origin: 'Coined by psychologist Dorothy Tennov in Love and Limerence, 1979.' },
+      { word: 'Gossamer', phonetic: '/ˈɡɒsəmə/', pos: 'noun / adjective', definition: 'Something light, delicate, and insubstantial — like a spider\'s web in morning dew.', example: 'The mist left gossamer threads across every leaf in the garden.', origin: 'Middle English: goose + summer — warm autumn days when cobwebs drifted on the air.' },
+      { word: 'Penumbra', phonetic: '/pɪˈnʌmbrə/', pos: 'noun', definition: 'The partially shaded outer region of a shadow; the area of partial illumination at the edge of a full shadow.', example: 'He lived in the penumbra of his famous father\'s reputation, never quite stepping into his own light.', origin: 'Latin: paene (almost) + umbra (shadow). Coined by Johannes Kepler, 1604.' },
+      { word: 'Sempiternal', phonetic: '/ˌsɛmpɪˈtəːn(ə)l/', pos: 'adjective', definition: 'Eternal and unchanging; everlasting.', example: 'The monks chanted their sempiternal prayers as they had done for eight centuries.', origin: 'Latin: semper (always, ever) + aeternus (eternal).' },
+      { word: 'Hiraeth', phonetic: '/ˈhɪraɪθ/', pos: 'noun', definition: 'A deep longing for a home you cannot return to, or that may never have been; a nostalgic grief.', example: 'She could not name the feeling — not quite homesickness — but it was hiraeth, a longing for something lost.', origin: 'Welsh: untranslatable. Combines grief, nostalgia, longing, and love for what is gone.' },
+      { word: 'Ineffable', phonetic: '/ɪˈnɛfəb(ə)l/', pos: 'adjective', definition: 'Too great or extreme to be expressed or described in words.', example: 'There was an ineffable sadness to the place — something felt but never named.', origin: 'Latin: in (not) + effabilis (utterable), from effari (to utter).' },
+      { word: 'Serendipity', phonetic: '/ˌsɛr(ə)nˈdɪpɪti/', pos: 'noun', definition: 'The occurrence of events by chance in a fortunate or happy way; pleasant discovery by accident.', example: 'It was pure serendipity — she found the book she\'d been searching years for on a market stall.', origin: 'Coined by Horace Walpole, 1754, from a Persian fairy tale set in Serendip (Sri Lanka).' },
+      { word: 'Elegy', phonetic: '/ˈɛlɪdʒi/', pos: 'noun', definition: 'A poem or piece of music of serious reflection, typically mourning the loss of the dead.', example: 'His whole last novel reads like an elegy for a world he sensed was already ending.', origin: 'Greek: elegeia (a lament), from elegos (mournful poem sung to the flute).' },
+      { word: 'Verdant', phonetic: '/ˈvəːd(ə)nt/', pos: 'adjective', definition: 'Green with grass or other rich vegetation; lush.', example: 'After months abroad, the verdant hills of home felt like a physical relief.', origin: 'Latin: viridis (green), via Old French verd.' },
+      { word: 'Zephyr', phonetic: '/ˈzɛfə/', pos: 'noun', definition: 'A soft gentle breeze; anything light and delicate.', example: 'A warm zephyr carried the scent of jasmine through the open window.', origin: 'Greek: Zephyros, god of the west wind, son of Eos (Dawn) and Astraeus.' },
+      { word: 'Ebullience', phonetic: '/ɪˈbʌlɪəns/', pos: 'noun', definition: 'The quality of being cheerful and full of energy; exuberant enthusiasm.', example: 'Her ebullience was infectious — it was impossible to feel flat in her company.', origin: 'Latin: ebullire (to boil up, to bubble over), from ex (out) + bullire (to boil).' },
+      { word: 'Imbroglio', phonetic: '/ɪmˈbrəʊlɪəʊ/', pos: 'noun', definition: 'An extremely confused, complicated, or embarrassing situation.', example: 'The diplomatic imbroglio took three months and four delegations to untangle.', origin: 'Italian: imbrogliare (to tangle, confuse). Related to English embroil.' },
+      { word: 'Lambent', phonetic: '/ˈlambənt/', pos: 'adjective', definition: 'Glowing, gleaming, or flickering with a soft, gentle radiance.', example: 'The lambent light of a dozen candles made the old room seem warm and alive.', origin: 'Latin: lambere (to lick) — gentle flames seem to lick surfaces with light.' },
+      { word: 'Nimbus', phonetic: '/ˈnɪmbəs/', pos: 'noun', definition: 'A luminous cloud or halo surrounding a person; a large grey rain cloud.', example: 'She entered the room with a nimbus of confidence that made everyone look up.', origin: 'Latin: nimbus (storm cloud, rain cloud, radiant light).' },
+      { word: 'Recondite', phonetic: '/ˈrɛk(ə)ndʌɪt/', pos: 'adjective', definition: 'Not known by many people; abstruse; dealing with obscure subject matter.', example: 'His lectures were brilliant but recondite — few students could follow them all the way.', origin: 'Latin: reconditus (hidden away), past participle of recondere (to store away).' },
+      { word: 'Sibilant', phonetic: '/ˈsɪbɪl(ə)nt/', pos: 'adjective', definition: 'Making or characterised by a hissing sound, like the letter S.', example: 'The sibilant whisper of the sea grass filled the walk back to the cottage.', origin: 'Latin: sibilare (to hiss, to whistle) — imitative of the sound.' },
+      { word: 'Querulous', phonetic: '/ˈkwɛrʊləs/', pos: 'adjective', definition: 'Complaining in a petulant or whining manner; habitually complaining.', example: 'After the third delay, even the most patient travellers grew querulous.', origin: 'Latin: queri (to complain). Related to quarrel.' },
+      { word: 'Incandescent', phonetic: '/ɪnkənˈdɛs(ə)nt/', pos: 'adjective', definition: 'Emitting light as a result of being heated; full of strong emotion; brilliant.', example: 'She was incandescent with a fury she barely managed to keep contained.', origin: 'Latin: incandescere (to glow, to become hot), from in + candescere (to become white).' },
+      { word: 'Labyrinthine', phonetic: '/ˌlabəˈrɪnθɪn/', pos: 'adjective', definition: 'Like a labyrinth; intricate and difficult to navigate.', example: 'The labyrinthine streets of the old city defied every attempt at a map.', origin: 'Greek: labyrinthos, the legendary maze built by Daedalus to contain the Minotaur on Crete.' },
+      { word: 'Oblivion', phonetic: '/əˈblɪvɪən/', pos: 'noun', definition: 'The state of being unaware or forgotten; total forgetfulness.', example: 'She drank not to feel joy but to slide gratefully into oblivion for a few hours.', origin: 'Latin: oblivio (forgetfulness), from oblivisci (to forget).' },
+      { word: 'Tremulous', phonetic: '/ˈtrɛmjʊləs/', pos: 'adjective', definition: 'Shaking or quivering slightly; timid; easily shaken.', example: 'He gave a tremulous smile and stepped through the door for the last time.', origin: 'Latin: tremulus (shaking, trembling), from tremere (to tremble).' },
+      { word: 'Baleful', phonetic: '/ˈbeɪlf(ʊ)l/', pos: 'adjective', definition: 'Threatening harm; menacing; having a harmful or destructive effect.', example: 'The old cat fixed the dog with a baleful stare from across the room.', origin: 'Old English: bealufull, from bealu (evil, harm, destruction).' },
+      { word: 'Dappled', phonetic: '/ˈdap(ə)ld/', pos: 'adjective', definition: 'Marked with spots or patches of colour or shade; patterned with irregular light.', example: 'She lay in the dappled shade of the apple tree and read until evening.', origin: 'Middle English: perhaps from Old Norse depill (spot, dot).' },
+      { word: 'Facetious', phonetic: '/fəˈsiːʃəs/', pos: 'adjective', definition: 'Treating serious issues with inappropriately humorous intent; flippant.', example: 'His facetious response to the question did not go down well in the boardroom.', origin: 'French: facétieux, from Latin facetiae (jokes, witty sayings), from facetus (witty).' },
+      { word: 'Kerfuffle', phonetic: '/kəˈfʌf(ə)l/', pos: 'noun', definition: 'A commotion or fuss, especially one caused by conflicting views.', example: 'There was quite a kerfuffle at the reception desk over the missing reservation.', origin: 'Scottish: curfuffle (to disorder, to ruffle), from Scottish Gaelic car (to twist) + fuffle (to disorder).' },
+      { word: 'Malapropism', phonetic: '/ˈmaləprɒpɪz(ə)m/', pos: 'noun', definition: 'The mistaken use of a word in place of a similar-sounding one, often with comic effect.', example: 'Saying "for all intensive purposes" instead of "for all intents and purposes" is a classic malapropism.', origin: 'From Mrs. Malaprop, a character in Sheridan\'s 1775 play The Rivals, famous for mixing up words.' },
+      { word: 'Opulent', phonetic: '/ˈɒpjʊl(ə)nt/', pos: 'adjective', definition: 'Ostentatiously rich and luxurious; wealthy; abundant.', example: 'The lobby was opulent to the point of excess — marble, gold, and flowers everywhere.', origin: 'Latin: opulentus (wealthy, powerful), from ops (resources, wealth).' },
+      { word: 'Syzygy', phonetic: '/ˈsɪzɪdʒi/', pos: 'noun', definition: 'The alignment of three celestial bodies; in poetry, a pair of connected or corresponding things.', example: 'The eclipse occurred at a perfect syzygy of earth, moon, and sun.', origin: 'Greek: syzygia (union, conjunction), from syn (together) + zygon (yoke).' },
+      { word: 'Woebegone', phonetic: '/ˈwəʊbɪɡɒn/', pos: 'adjective', definition: 'Sad or miserable in appearance; overcome with misery or woe.', example: 'He stood at the window looking woebegone — the rain, perhaps, or something else entirely.', origin: 'Middle English: woe + begon (surrounded by), from Old English began (to go around).' },
+      { word: 'Panacea', phonetic: '/ˌpanəˈsiːə/', pos: 'noun', definition: 'A solution or remedy for all difficulties or diseases; a universal cure.', example: 'Optimism is not a panacea, but it is a better starting point than despair.', origin: 'Greek: Panakeia, goddess of universal remedy; pan (all) + akos (remedy).' },
+      { word: 'Wabi-sabi', phonetic: '/ˌwɑːbi ˈsɑːbi/', pos: 'noun', definition: 'A Japanese philosophy of finding beauty in imperfection, impermanence, and incompleteness.', example: 'The cracked glaze on the old bowl had a wabi-sabi quality — more beautiful for being repaired.', origin: 'Japanese: wabi (simple, quiet beauty) + sabi (the beauty of aging and imperfection).' },
+      { word: 'Sonder', phonetic: '/ˈsɒndər/', pos: 'noun', definition: 'The realisation that each passerby has a life as vivid, complex, and unknowable as your own.', example: 'A sudden sonder hit her on the crowded platform — all these lives, brushing past and disappearing.', origin: 'Coined by John Koenig in The Dictionary of Obscure Sorrows, 2012. From German sinnen (to ponder).' },
+      { word: 'Abstemious', phonetic: '/əbˈstiːmɪəs/', pos: 'adjective', definition: 'Not self-indulgent, especially when eating and drinking; moderate and restrained.', example: 'He was abstemious at dinner, taking small portions and declining the wine.', origin: 'Latin: abstemius, from abs (from) + temetum (strong drink).' },
+      { word: 'Perspicacious', phonetic: '/ˌpəːspɪˈkeɪʃəs/', pos: 'adjective', definition: 'Having a ready insight into things; having good judgement; shrewdly perceptive.', example: 'Her perspicacious reading of the situation saved the negotiation before it broke down.', origin: 'Latin: perspicax (sharp-sighted), from perspicere (to look through, to see clearly).' },
+      { word: 'Loquacious', phonetic: '/ləˈkweɪʃəs/', pos: 'adjective', definition: 'Tending to talk a great deal; garrulous; excessively chatty.', example: 'He was loquacious on paper but almost silent in person — writing was his native language.', origin: 'Latin: loquax (talkative), from loqui (to speak).' },
+      { word: 'Insouciant', phonetic: '/ɪnˈsuːsɪənt/', pos: 'adjective', definition: 'Showing a casual lack of concern; carefree; unconcerned.', example: 'She wore her success with an insouciant ease that others found either inspiring or infuriating.', origin: 'French: insouciant, from in (not) + soucier (to trouble oneself), from Latin sollicitare.' },
+      { word: 'Melancholy', phonetic: '/ˈmɛl(ə)nk(ə)li/', pos: 'noun', definition: 'A feeling of pensive sadness, typically with no obvious cause; a thoughtful, gentle sadness.', example: 'There was a particular melancholy to revisiting a city where you once were happy.', origin: 'Greek: melankholia, from melas (black) + kholē (bile). Medieval medicine blamed sadness on black bile.' },
+      { word: 'Subterfuge', phonetic: '/ˈsʌbtəfjuːdʒ/', pos: 'noun', definition: 'Deceit used in order to achieve one\'s goal; a trick or stratagem.', example: 'The whole performance had been subterfuge — she had known the answer all along.', origin: 'Latin: subterfugere (to escape secretly), from subter (beneath) + fugere (to flee).' },
+      { word: 'Evanescent', phonetic: '/ˌɛvəˈnɛs(ə)nt/', pos: 'adjective', definition: 'Quickly fading or disappearing; lasting only a short time; fleeting.', example: 'The joy was evanescent — real for a moment, then gone, leaving only its shape behind.', origin: 'Latin: evanescere (to vanish), from ex (out) + vanescere (to fade).' },
+      { word: 'Penultimate', phonetic: '/pɪˈnʌltɪmət/', pos: 'adjective', definition: 'Second to last in a sequence; immediately before the final one.', example: 'She saved the best photograph for the penultimate page, so the final one landed harder.', origin: 'Latin: paene (almost) + ultimus (last) — almost the last.' },
+      { word: 'Umbra', phonetic: '/ˈʌmbrə/', pos: 'noun', definition: 'The fully shaded inner region of a shadow; the darkest part cast by an opaque object.', example: 'Within the umbra of the eclipse, day turned to an eerie, star-visible dark.', origin: 'Latin: umbra (shadow, shade, ghost).' },
+      { word: 'Atrabilious', phonetic: '/ˌatrəˈbɪlɪəs/', pos: 'adjective', definition: 'Melancholy or ill-tempered; gloomy and out of sorts.', example: 'He was atrabilious all morning — best to leave him to his coffee and his thoughts.', origin: 'Latin: atra bilis (black bile), the humour medieval medicine blamed for melancholy and bad temper.' },
+    ];
+
+    function getDayIndex() {
+      const now = new Date();
+      const start = new Date(now.getFullYear(), 0, 0);
+      const day = Math.floor((now - start) / 86400000);
+      return day % WORDS.length;
+    }
+
+    let currentIndex = getDayIndex();
+    let isDaily = true;
+
+    function render(index, animate) {
+      const w = WORDS[index];
+      const card = document.getElementById('wordCard');
+
+      const apply = () => {
+        document.getElementById('wordText').textContent = w.word;
+        document.getElementById('phonetic').textContent = w.phonetic;
+        document.getElementById('posText').textContent = w.pos;
+        document.getElementById('definition').textContent = w.definition;
+        document.getElementById('example').textContent = '“' + w.example + '”';
+        document.getElementById('origin').textContent = w.origin;
+        card.classList.remove('fading');
+        card.classList.add('fresh');
+        setTimeout(function() { card.classList.remove('fresh'); }, 600);
+      };
+
+      if (animate) {
+        card.classList.add('fading');
+        setTimeout(apply, 180);
+      } else {
+        apply();
+      }
+    }
+
+    function updateBadge() {
+      var now = new Date();
+      var dateStr = now.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' });
+      document.getElementById('dayBadge').textContent = isDaily ? 'Word for ' + dateStr : 'Random Word';
+    }
+
+    document.getElementById('shuffleBtn').addEventListener('click', function() {
+      var next;
+      do { next = Math.floor(Math.random() * WORDS.length); } while (next === currentIndex && WORDS.length > 1);
+      currentIndex = next;
+      isDaily = false;
+      updateBadge();
+      render(currentIndex, true);
+    });
+
+    document.getElementById('copyBtn').addEventListener('click', function() {
+      var w = WORDS[currentIndex];
+      var text = w.word + ' (' + w.pos + '): ' + w.definition;
+      navigator.clipboard.writeText(text).then(function() {
+        var btn = document.getElementById('copyBtn');
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
+      });
+    });
+
+    render(currentIndex, false);
+    updateBadge();
+  </script>
+
+</body>
+</html>
