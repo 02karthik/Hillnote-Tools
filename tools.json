@@ -1,5 +1,5 @@
 {
-  "catalogVersion": 12,
+  "catalogVersion": 13,
   "tools": [
     {
       "dir": "color-capture",
@@ -143,6 +143,14 @@
       "description": "Discover a new word every day — definition, pronunciation, example, and etymology.",
       "glyph": "📖",
       "color": "#84cc16",
+      "version": 1
+    },
+    {
+      "dir": "ambient-sounds",
+      "name": "Ambient Sounds",
+      "description": "Play calming background sounds — rain, ocean, forest, cafe, or white noise — to help you focus or unwind.",
+      "glyph": "🎧",
+      "color": "#0891b2",
       "version": 1
     }
   ]
