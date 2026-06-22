@@ -8,5 +8,8 @@
     "keygen": "node scripts/keygen.mjs",
     "build": "node scripts/build-catalog.mjs",
     "verify": "node scripts/verify-catalog.mjs"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^24.43.1"
   }
 }
