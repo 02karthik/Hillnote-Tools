@@ -152,6 +152,14 @@
       "glyph": "🎧",
       "color": "#0891b2",
       "version": 1
+    },
+    {
+      "dir": "event-countdown",
+      "name": "Event Countdown",
+      "description": "Count down the days, hours, minutes, and seconds to any event — birthday, launch, vacation, or deadline.",
+      "glyph": "⏳",
+      "color": "#fb923c",
+      "version": 1
     }
   ]
 }

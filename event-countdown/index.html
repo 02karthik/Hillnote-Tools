@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <title>Event Countdown</title>
+  <style>
+    :root {
+      --bg: #000;
+      --surface: #0d0d0d;
+      --border: #1a1a1a;
+      --text: #f0f0f0;
+      --muted: #666;
+      --accent: #fb923c;
+      --accent-dim: rgba(251,146,60,0.12);
+      --radius: 16px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 24px;
+      gap: 32px;
+    }
+
+    h1 {
+      font-size: clamp(0.9rem, 3.5vw, 1.1rem);
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ── setup form ── */
+    .setup {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      width: 100%;
+      max-width: 340px;
+    }
+
+    .setup input {
+      width: 100%;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 0.95rem;
+      padding: 14px 18px;
+      outline: none;
+      transition: border-color 0.2s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .setup input::placeholder { color: var(--muted); }
+    .setup input:focus { border-color: var(--accent); }
+
+    .setup input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.6);
+      cursor: pointer;
+    }
+
+    .start-btn {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 100px;
+      padding: 14px 52px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.15s;
+      width: 100%;
+    }
+
+    .start-btn:hover { opacity: 0.88; }
+    .start-btn:active { transform: scale(0.97); }
+
+    /* ── countdown display ── */
+    .countdown { display: none; flex-direction: column; align-items: center; gap: 28px; }
+    .countdown.active { display: flex; }
+
+    .event-name {
+      font-size: clamp(1.1rem, 4vw, 1.5rem);
+      font-weight: 300;
+      letter-spacing: 0.04em;
+      color: var(--text);
+      text-align: center;
+      max-width: 320px;
+    }
+
+    .event-date {
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .units {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+    }
+
+    .unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .unit-val {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: clamp(64px, 17vw, 82px);
+      height: clamp(64px, 17vw, 82px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(1.6rem, 5vw, 2.2rem);
+      font-weight: 300;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+      transition: transform 0.1s;
+    }
+
+    .unit-val.tick {
+      transform: scale(1.06);
+    }
+
+    .unit-label {
+      font-size: 0.58rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .sep {
+      font-size: clamp(1.4rem, 4vw, 1.8rem);
+      font-weight: 200;
+      color: var(--border);
+      margin-bottom: 22px;
+    }
+
+    /* ── done / past state ── */
+    .done-msg {
+      display: none;
+      font-size: clamp(1rem, 4vw, 1.3rem);
+      font-weight: 300;
+      color: var(--accent);
+      letter-spacing: 0.04em;
+      text-align: center;
+    }
+
+    .done-msg.active { display: block; }
+
+    /* ── change button ── */
+    .change-btn {
+      background: transparent;
+      border: 1.5px solid var(--border);
+      border-radius: 100px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 9px 28px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .change-btn:hover { border-color: var(--muted); color: var(--text); }
+    .change-btn:active { transform: scale(0.97); }
+  </style>
+</head>
+<body>
+
+  <h1>⏳ Event Countdown</h1>
+
+  <!-- setup form -->
+  <div class="setup" id="setup">
+    <input type="text" id="eventName" placeholder="What are you counting down to?" maxlength="60" autocomplete="off" />
+    <input type="date" id="eventDate" />
+    <button class="start-btn" id="startBtn">Start Countdown</button>
+  </div>
+
+  <!-- live countdown -->
+  <div class="countdown" id="countdown">
+    <div class="event-name" id="displayName"></div>
+    <div class="event-date" id="displayDate"></div>
+
+    <div class="units" id="units">
+      <div class="unit">
+        <div class="unit-val" id="daysVal">00</div>
+        <div class="unit-label">Days</div>
+      </div>
+      <div class="sep">:</div>
+      <div class="unit">
+        <div class="unit-val" id="hoursVal">00</div>
+        <div class="unit-label">Hours</div>
+      </div>
+      <div class="sep">:</div>
+      <div class="unit">
+        <div class="unit-val" id="minsVal">00</div>
+        <div class="unit-label">Mins</div>
+      </div>
+      <div class="sep">:</div>
+      <div class="unit">
+        <div class="unit-val" id="secsVal">00</div>
+        <div class="unit-label">Secs</div>
+      </div>
+    </div>
+
+    <div class="done-msg" id="doneMsg">🎉 It's here!</div>
+
+    <button class="change-btn" id="changeBtn">Change Event</button>
+  </div>
+
+  <script>
+    const setupEl   = document.getElementById('setup');
+    const countdownEl = document.getElementById('countdown');
+    const nameInput  = document.getElementById('eventName');
+    const dateInput  = document.getElementById('eventDate');
+    const startBtn   = document.getElementById('startBtn');
+    const changeBtn  = document.getElementById('changeBtn');
+    const displayName = document.getElementById('displayName');
+    const displayDate = document.getElementById('displayDate');
+    const daysVal    = document.getElementById('daysVal');
+    const hoursVal   = document.getElementById('hoursVal');
+    const minsVal    = document.getElementById('minsVal');
+    const secsVal    = document.getElementById('secsVal');
+    const doneMsg    = document.getElementById('doneMsg');
+    const unitsEl    = document.getElementById('units');
+
+    let targetDate = null;
+    let ticker     = null;
+    let prevSecs   = -1;
+
+    const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+
+    function formatDate(d) {
+      return `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+    }
+
+    function tick(el) {
+      el.classList.add('tick');
+      setTimeout(() => el.classList.remove('tick'), 120);
+    }
+
+    function update() {
+      const now  = Date.now();
+      const diff = targetDate - now;
+
+      if (diff <= 0) {
+        daysVal.textContent  = '00';
+        hoursVal.textContent = '00';
+        minsVal.textContent  = '00';
+        secsVal.textContent  = '00';
+        unitsEl.style.opacity = '0.25';
+        doneMsg.classList.add('active');
+        clearInterval(ticker);
+        return;
+      }
+
+      const totalSecs = Math.floor(diff / 1000);
+      const s = totalSecs % 60;
+      const m = Math.floor(totalSecs / 60) % 60;
+      const h = Math.floor(totalSecs / 3600) % 24;
+      const d = Math.floor(totalSecs / 86400);
+
+      if (s !== prevSecs) {
+        if (prevSecs !== -1) tick(secsVal);
+        secsVal.textContent  = pad(s);
+        minsVal.textContent  = pad(m);
+        hoursVal.textContent = pad(h);
+        daysVal.textContent  = pad(d);
+        prevSecs = s;
+      }
+    }
+
+    function startCountdown(name, dateStr) {
+      // treat the date as end-of-day in local time
+      const parts = dateStr.split('-').map(Number);
+      targetDate = new Date(parts[0], parts[1] - 1, parts[2], 23, 59, 59, 999).getTime();
+
+      displayName.textContent = name || 'Your Event';
+      displayDate.textContent = formatDate(new Date(parts[0], parts[1] - 1, parts[2]));
+      doneMsg.classList.remove('active');
+      unitsEl.style.opacity = '1';
+      prevSecs = -1;
+
+      setupEl.style.display    = 'none';
+      countdownEl.classList.add('active');
+
+      clearInterval(ticker);
+      update();
+      ticker = setInterval(update, 500);
+    }
+
+    function showSetup() {
+      clearInterval(ticker);
+      countdownEl.classList.remove('active');
+      setupEl.style.display = '';
+    }
+
+    startBtn.addEventListener('click', () => {
+      const name = nameInput.value.trim();
+      const date = dateInput.value;
+      if (!date) { dateInput.focus(); return; }
+      localStorage.setItem('hn-countdown', JSON.stringify({ name, date }));
+      startCountdown(name, date);
+    });
+
+    nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') dateInput.focus(); });
+    dateInput.addEventListener('keydown', e => { if (e.key === 'Enter') startBtn.click(); });
+
+    changeBtn.addEventListener('click', () => {
+      localStorage.removeItem('hn-countdown');
+      showSetup();
+    });
+
+    // restore saved event
+    const saved = localStorage.getItem('hn-countdown');
+    if (saved) {
+      try {
+        const { name, date } = JSON.parse(saved);
+        nameInput.value = name;
+        dateInput.value = date;
+        startCountdown(name, date);
+      } catch { localStorage.removeItem('hn-countdown'); }
+    }
+
+    // default date to tomorrow
+    if (!dateInput.value) {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      dateInput.valueAsDate = tomorrow;
+    }
+  </script>
+
+</body>
+</html>
