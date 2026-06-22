@@ -1,10 +1,8 @@
-# Build output (generated + signed in CI, deployed to Pages)
-dist/
-
 # Node
 node_modules/
 
-# Signing key — NEVER commit. Lives locally + as the CATALOG_SIGNING_KEY CI secret.
+# Signing key — NEVER commit. The catalog is signed by the Hillnote website
+# backend (its CATALOG_SIGNING_KEY), not in this repo. Only public-key.json is tracked.
 keys/ed25519-private.pem
 *.pem
 

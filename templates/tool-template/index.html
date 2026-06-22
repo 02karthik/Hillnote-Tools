@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- TODO: your tool's name -->
+  <title>My Tool</title>
+  <style>
+    /* Everything is inline — a tool is ONE self-contained file. No remote fonts,
+       scripts, stylesheets, or images: the app runs tools under a strict CSP
+       that blocks the network, so anything remote simply won't load. Use system
+       fonts and, if you need an icon, an emoji or an inline data: URI. */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      /* TODO: match the "color" you set in tools.json */
+      --accent: #6366f1;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0b0b0f;
+      color: #1a1a1a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      background: #fff;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+      text-align: center;
+      max-width: 420px;
+      width: 100%;
+    }
+
+    h1 { font-size: 2em; margin-bottom: 8px; }
+    p.sub { color: #666; margin-bottom: 28px; }
+
+    .count { font-size: 3.5em; font-weight: 800; color: var(--accent); margin-bottom: 24px; }
+
+    button {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 14px 32px;
+      font-size: 1.05em;
+      font-weight: 700;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.15s, filter 0.15s;
+    }
+    button:hover { transform: translateY(-2px); filter: brightness(1.08); }
+    button:active { transform: translateY(0); }
+    .reset { background: transparent; color: #888; font-weight: 500; padding: 8px; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <!-- TODO: replace this demo (a localStorage-backed counter) with your tool.
+       The demo shows the conventions: offline, persists state locally, no network. -->
+  <div class="container">
+    <h1>🛠️ My Tool</h1>
+    <p class="sub">A one-line description of what it does.</p>
+    <div class="count" id="count">0</div>
+    <button id="inc">Count up</button>
+    <div><button class="reset" id="reset">reset</button></div>
+  </div>
+
+  <script>
+    // Persist per-tool state in localStorage. Namespace your key so it never
+    // collides with another tool's state.
+    const KEY = 'my-tool:count';
+    const el = document.getElementById('count');
+    let n = Number(localStorage.getItem(KEY) || 0);
+
+    const render = () => { el.textContent = n; localStorage.setItem(KEY, n); };
+    document.getElementById('inc').onclick = () => { n++; render(); };
+    document.getElementById('reset').onclick = () => { n = 0; render(); };
+    render();
+  </script>
+</body>
+</html>

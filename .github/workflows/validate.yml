@@ -1,0 +1,40 @@
+name: Validate tools
+
+# Structural validation only — NO signing key, NO deploy. The Hillnote website
+# backend clones this repo to build + sign the published catalog; this workflow
+# just proves a PR's source is well-formed so that build will succeed.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # need base history for the version-bump check
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # No `npm ci` — validate.mjs uses only the Node standard library.
+      - name: Structural validation
+        run: node scripts/validate.mjs
+
+      - name: catalogVersion bump reminder (PRs)
+        if: github.event_name == 'pull_request'
+        run: |
+          base='${{ github.event.pull_request.base.sha }}'
+          cur=$(node -p "require('./tools.json').catalogVersion")
+          prev=$(git show "$base:tools.json" 2>/dev/null \
+            | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{console.log(JSON.parse(s).catalogVersion||0)}catch{console.log(0)}})")
+          echo "base catalogVersion=$prev, PR catalogVersion=$cur"
+          if [ "$cur" -le "$prev" ]; then
+            echo "::warning::catalogVersion did not increase ($prev → $cur). Bump it if this PR changes any tool (rollback defense)."
+          fi

@@ -3,11 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Static catalog of single-file Hillnote tools, plus a signed manifest for in-app verified install.",
+  "description": "Source for single-file Hillnote tools. The Hillnote website clones this repo to build + sign the published catalog; this repo holds only the tool sources, tools.json, and the public verify key.",
   "scripts": {
-    "keygen": "node scripts/keygen.mjs",
-    "build": "node scripts/build-catalog.mjs",
-    "verify": "node scripts/verify-catalog.mjs"
+    "validate": "node scripts/validate.mjs",
+    "screenshot": "node takescreenshot.js"
   },
   "devDependencies": {
     "puppeteer-core": "^24.43.1"
