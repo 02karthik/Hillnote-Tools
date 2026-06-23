@@ -1,5 +1,5 @@
 {
-  "catalogVersion": 13,
+  "catalogVersion": 14,
   "tools": [
     {
       "dir": "color-capture",
@@ -55,7 +55,7 @@
       "description": "Play the classic two-player game.",
       "glyph": "⭕",
       "color": "#14b8a6",
-      "version": 1
+      "version": 2
     },
     {
       "dir": "box-breathing",

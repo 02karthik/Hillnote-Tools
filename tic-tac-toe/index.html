@@ -4,18 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tic · Tac · Toe</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Spline+Sans+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --paper: #f4 ece1;
     --paper: #f4ece1;
     --ink: #211c17;
     --rust: #c8553d;
     --teal: #1f6e6e;
     --line: #c9bba6;
     --shadow: rgba(33, 28, 23, .18);
+    /* Self-contained: system fonts only, no network (the app runs tools under a
+       strict CSP). Display = warm book serif; labels = clean monospace. */
+    --font-display: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+    --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, 'Roboto Mono', monospace;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; }
@@ -25,7 +25,7 @@
       radial-gradient(circle at 20% 15%, rgba(200,85,61,.06), transparent 45%),
       radial-gradient(circle at 85% 80%, rgba(31,110,110,.07), transparent 45%);
     color: var(--ink);
-    font-family: 'Spline Sans Mono', monospace;
+    font-family: var(--font-mono);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -50,7 +50,7 @@
 
   header { text-align: center; margin-bottom: 22px; }
   h1 {
-    font-family: 'Fraunces', serif;
+    font-family: var(--font-display);
     font-weight: 900;
     font-size: clamp(2.4rem, 9vw, 3.2rem);
     letter-spacing: -.02em;
@@ -67,7 +67,7 @@
 
   .status {
     text-align: center;
-    font-family: 'Fraunces', serif;
+    font-family: var(--font-display);
     font-size: 1.15rem;
     font-weight: 600;
     height: 1.6em;
@@ -94,7 +94,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: 'Fraunces', serif;
+    font-family: var(--font-display);
     font-weight: 900;
     font-size: clamp(2.6rem, 16vw, 4rem);
     color: var(--ink);
@@ -135,7 +135,7 @@
     flex: 1;
     border: none;
     background: transparent;
-    font-family: 'Spline Sans Mono', monospace;
+    font-family: var(--font-mono);
     font-size: .72rem;
     letter-spacing: .08em;
     text-transform: uppercase;
@@ -154,7 +154,7 @@
     border: 2px solid var(--ink);
     background: transparent;
     color: var(--ink);
-    font-family: 'Spline Sans Mono', monospace;
+    font-family: var(--font-mono);
     font-size: .8rem;
     letter-spacing: .12em;
     text-transform: uppercase;
@@ -171,7 +171,7 @@
     margin-top: 18px; font-size:.74rem; letter-spacing:.1em;
     text-transform: uppercase; color:#8a7c66;
   }
-  .score b { display:block; font-family:'Fraunces',serif; font-size:1.5rem; color:var(--ink); font-weight:900; }
+  .score b { display:block; font-family:var(--font-display); font-size:1.5rem; color:var(--ink); font-weight:900; }
   .score .w b { color: var(--rust); }
   .score .l b { color: var(--teal); }
 </style>
