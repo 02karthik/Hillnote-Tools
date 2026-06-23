@@ -19,9 +19,7 @@ host anything. The signed, downloadable catalog is produced elsewhere.
 
 - **This repo** is the single source of truth. Merging a PR to `main` is all a
   contributor does.
-- The **Hillnote backend** clones `main`, zips each tool, hashes it,
-  assembles `catalog.json`, and **signs** it with a private key that lives only
-  in that backend's environment (never in this repo). It serves the `/tools`
+- The **Hillnote backend** **signs** tools with a private key. It serves the `/tools`
   storefront and the bundle downloads.
 - The **Hillnote app** pins the public key from `keys/public-key.json`, fetches
   the signed catalog, verifies the signature, then trusts each tool by its
