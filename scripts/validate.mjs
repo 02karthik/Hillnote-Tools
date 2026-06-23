@@ -31,8 +31,71 @@ const NON_TOOL_DIRS = new Set([
 const DIR_RE = /^[a-z0-9][a-z0-9-]*$/;        // safe slug — no traversal, lowercase-kebab
 const COLOR_RE = /^#[0-9a-fA-F]{6}$/;
 const B64_RE = /^[A-Za-z0-9+/]+={0,2}$/;
-// remote http(s) resource pulled into a tool (breaks "single-file / offline")
-const REMOTE_RE = /(?:src|href)\s*=\s*["']https?:\/\/|url\(\s*["']?https?:\/\/|@import\s+["']?https?:\/\/|(?:fetch|import)\s*\(?\s*["']https?:\/\//gi;
+
+// ── tool content security scan ─────────────────────────────────────────────
+// Tools run inside the app's WebView. This text-scan is a FIRST-PASS FILTER and a
+// human-review aid — NOT a sandbox: obfuscation can evade any regex, so the real
+// boundary is the app's runtime CSP. Hard errors = patterns with no legitimate use
+// in an offline, single-file tool (and zero hits across the current catalog).
+// Warnings = rare-but-sometimes-legit; they flag a tool for closer human review.
+const TEXT_EXT = /\.(html?|js|mjs|cjs|css|svg|json|xml)$/i;
+// w3.org URLs are XML/SVG namespace identifiers (never fetched over the network).
+const ALLOWED_URL_HOST = /^(?:www\.)?w3\.org\//;
+const OFFLINE = 'Tools must be fully offline & self-contained.';
+const NO_BRIDGE = 'Tools must never reference the app\'s native JS bridge.';
+const HARD_ERRORS = [
+  // network egress / remote code — no legitimate use in an offline single-file tool
+  { msg: 'a remote URL (network egress)', reason: OFFLINE, find: (s) => {
+      const re = /\bhttps?:\/\/([a-z0-9-]+(?:\.[a-z0-9-]+)+[^\s"'`)<>]*)/gi;
+      let m; while ((m = re.exec(s))) if (!ALLOWED_URL_HOST.test(m[1])) return m[0].slice(0, 60);
+      return null;
+    } },
+  { msg: 'fetch()',                reason: OFFLINE, re: /\bfetch\s*\(/ },
+  { msg: 'XMLHttpRequest',         reason: OFFLINE, re: /\bXMLHttpRequest\b/ },
+  { msg: 'navigator.sendBeacon()', reason: OFFLINE, re: /\.\s*sendBeacon\s*\(/ },
+  { msg: 'a WebSocket',            reason: OFFLINE, re: /\bnew\s+WebSocket\b|\bWebSocket\s*\(/ },
+  { msg: 'an EventSource',         reason: OFFLINE, re: /\bnew\s+EventSource\b|\bEventSource\s*\(/ },
+  { msg: 'a dynamic import()',     reason: OFFLINE, re: /\bimport\s*\(/ },
+  // native app JS bridge — a merged tool must not be able to reach the host bridge
+  { msg: 'the app JS bridge',      reason: NO_BRIDGE, re: /HillnoteBridge|webkit\.messageHandlers|window\.external|\bAndroid\.[A-Za-z]/ },
+];
+const REVIEW_WARNINGS = [
+  { msg: 'eval()',                                            re: /\beval\s*\(/ },
+  { msg: 'new Function()',                                    re: /\bnew\s+Function\s*\(/ },
+  { msg: 'document.write()',                                  re: /\bdocument\s*\.\s*write\s*\(/ },
+  { msg: 'a string-argument timer (eval-like)',               re: /\bset(?:Timeout|Interval)\s*\(\s*['"`]/ },
+  { msg: 'atob()/unescape() decoding (possible obfuscation)', re: /\b(?:atob|unescape)\s*\(/ },
+  { msg: 'String.fromCharCode (possible obfuscation)',        re: /\bString\s*\.\s*fromCharCode\s*\(/ },
+];
+
+function collectTextFiles(dir) {
+  const out = [];
+  (function walk(d) {
+    for (const ent of readdirSync(d, { withFileTypes: true })) {
+      const full = join(d, ent.name);
+      if (ent.isDirectory()) walk(full);
+      else if (TEXT_EXT.test(ent.name)) out.push(full);
+    }
+  })(dir);
+  return out;
+}
+
+function scanToolSecurity(dirPath, where) {
+  for (const file of collectTextFiles(dirPath)) {
+    const src = readFileSync(file, 'utf8');
+    const f = rel(file);
+    for (const p of HARD_ERRORS) {
+      const detail = p.find ? p.find(src) : (p.re.test(src) || null);
+      if (detail) {
+        const extra = typeof detail === 'string' ? ` — ${detail}` : '';
+        err(`${where}: ${f} contains ${p.msg}${extra}. ${p.reason}`);
+      }
+    }
+    for (const p of REVIEW_WARNINGS) {
+      if (p.re.test(src)) warn(`${where}: ${f} uses ${p.msg} — review this tool's script carefully`);
+    }
+  }
+}
 
 // ── tools.json ────────────────────────────────────────────────────────────
 const toolsPath = join(ROOT, 'tools.json');
@@ -91,11 +154,7 @@ for (const [i, t] of catalog.tools.entries()) {
       if (!existsSync(entryPath) || !statSync(entryPath).isFile()) {
         err(`${where}: entry file "${t.dir}/${entry}" does not exist`);
       } else {
-        const html = readFileSync(entryPath, 'utf8');
-        const remotes = [...new Set((html.match(REMOTE_RE) || []).map((s) => s.trim()))];
-        if (remotes.length) {
-          warn(`${where}: entry loads remote resource(s) — tools should be self-contained (the app's runtime CSP will block these): ${remotes.join(', ')}`);
-        }
+        scanToolSecurity(dirPath, where);   // network egress / remote code / obfuscation
       }
     }
     const shot = join(ROOT, 'screenshots', `${t.dir}.webp`);
