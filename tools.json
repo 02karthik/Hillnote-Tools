@@ -1,5 +1,5 @@
 {
-  "catalogVersion": 14,
+  "catalogVersion": 15,
   "tools": [
     {
       "dir": "color-capture",

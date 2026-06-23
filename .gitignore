@@ -6,5 +6,9 @@ node_modules/
 keys/ed25519-private.pem
 *.pem
 
+# Local tooling / IDE — never publish
+.claude/
+.idea/
+
 # OS
 .DS_Store
