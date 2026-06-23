@@ -19,7 +19,7 @@ host anything. The signed, downloadable catalog is produced elsewhere.
 
 - **This repo** is the single source of truth. Merging a PR to `main` is all a
   contributor does.
-- The **Hillnote website backend** clones `main`, zips each tool, hashes it,
+- The **Hillnote backend** clones `main`, zips each tool, hashes it,
   assembles `catalog.json`, and **signs** it with a private key that lives only
   in that backend's environment (never in this repo). It serves the `/tools`
   storefront and the bundle downloads.
@@ -61,7 +61,7 @@ them under a strict CSP, so nothing remote will load.
 | `npm run screenshot <slug>` | Render `<slug>/index.html` → `screenshots/<slug>.webp` (needs `npm install`). |
 
 There is intentionally **no build/sign/publish command here** — that all happens
-in the Hillnote website backend.
+in the Hillnote backend.
 
 ## Keys
 
