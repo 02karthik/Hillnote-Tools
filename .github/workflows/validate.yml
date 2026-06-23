@@ -1,31 +1,71 @@
 name: Validate tools
 
-# Structural validation only — NO signing key, NO deploy. The Hillnote website
-# backend clones this repo to build + sign the published catalog; this workflow
-# just proves a PR's source is well-formed so that build will succeed.
+# Structural + security validation. NO signing key, NO deploy.
+#
+# Trigger is `pull_request` (NOT `pull_request_target`): a PR runs with a
+# read-only token and no secrets, so a malicious PR can't exfiltrate secrets or
+# write to the repo. The website backend clones this repo to build + sign the
+# catalog; this workflow just proves a PR's source is well-formed and free of
+# remote/network/code-exec patterns before human review + the runtime CSP.
 on:
+  # Run the moment a PR is raised (and on every later push to it / reopen /
+  # draft→ready) so a tool with a hard-error pattern fails the check immediately.
   pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
   push:
     branches: [main]
 
+# Least privilege: the job only needs to read the checked-out code.
 permissions:
   contents: read
+
+concurrency:
+  group: validate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 10          # bound any runaway / abusive job
     steps:
+      # Consider pinning actions to a full commit SHA (e.g. actions/checkout@<sha>)
+      # to harden against tag-mutation supply-chain attacks.
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0          # need base history for the version-bump check
+          fetch-depth: 0             # base history: trusted-validator restore + version-bump check
+          persist-credentials: false # don't leave the git token in the runner for injected code
 
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
 
+      # Run the TRUSTED validator, not the PR's copy — otherwise a malicious PR
+      # could edit scripts/validate.mjs to disable its own checks. Restore scripts/
+      # from the base branch (skipped on the bootstrap PR where base has none).
+      - name: Use trusted validator from base (PRs)
+        if: github.event_name == 'pull_request'
+        run: |
+          base='${{ github.event.pull_request.base.sha }}'
+          if git rev-parse --verify --quiet "$base:scripts/validate.mjs" >/dev/null; then
+            git checkout "$base" -- scripts/
+            echo "restored trusted scripts/ from base $base"
+          else
+            echo "::warning::base has no scripts/validator — running the PR's copy (bootstrap only)"
+          fi
+
       # No `npm ci` — validate.mjs uses only the Node standard library.
-      - name: Structural validation
+      - name: Structural + security validation
         run: node scripts/validate.mjs
+
+      - name: Flag changes to CI / validator for manual review (PRs)
+        if: github.event_name == 'pull_request'
+        run: |
+          base='${{ github.event.pull_request.base.sha }}'
+          changed=$(git diff --name-only "$base"...HEAD -- scripts/ .github/ || true)
+          if [ -n "$changed" ]; then
+            echo "::warning::This PR modifies validation/CI files — review them before trusting the green check:"
+            echo "$changed"
+          fi
 
       - name: catalogVersion bump reminder (PRs)
         if: github.event_name == 'pull_request'

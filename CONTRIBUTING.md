@@ -25,6 +25,18 @@ A tool **must**:
 > Multi-file bundles are supported by the installer but not used today — keep it
 > to one file unless a maintainer asks otherwise.
 
+### What CI enforces
+
+`npm run validate` (and the PR check) **hard-fails** a tool that contains any
+network egress or remote code — an absolute `http(s)://` URL, `fetch`,
+`XMLHttpRequest`, `WebSocket`, `EventSource`, `navigator.sendBeacon`, or a dynamic
+`import()` — **or any reference to the app's native JS bridge** (`HillnoteBridge`,
+`webkit.messageHandlers`, `window.external`, `Android.*`). It also **flags for
+human review** (non-blocking) `eval`, `new Function`, `document.write`,
+string-argument `setTimeout`/`setInterval`, and `atob`/`unescape`/`String.fromCharCode`.
+These scans are a first-pass filter and a review aid — the runtime CSP in the app
+is the actual sandbox — so a reviewer still reads every tool's script.
+
 ## Add a tool — step by step
 
 1. **Copy the template** into a new folder named with your tool's slug
