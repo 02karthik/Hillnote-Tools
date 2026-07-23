@@ -1,5 +1,5 @@
 {
-  "catalogVersion": 15,
+  "catalogVersion": 16,
   "tools": [
     {
       "dir": "color-capture",
@@ -159,6 +159,14 @@
       "description": "Count down the days, hours, minutes, and seconds to any event — birthday, launch, vacation, or deadline.",
       "glyph": "⏳",
       "color": "#fb923c",
+      "version": 1
+    },
+    {
+      "dir": "markdown-table",
+      "name": "Markdown Table",
+      "description": "Build a table visually and get clean Markdown to paste into any note — with column alignment and two-way editing.",
+      "glyph": "▦",
+      "color": "#4d63ff",
       "version": 1
     }
   ]

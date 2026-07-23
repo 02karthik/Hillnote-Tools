@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#4d63ff" />
+  <title>Markdown Table</title>
+  <style>
+    /* Everything inline — one self-contained, fully offline file. No remote
+       fonts/scripts/styles, no network. System fonts stand in for the Hillnote
+       display faces (Manrope / Inter) so the tool works under the app's CSP. */
+
+    :root {
+      /* Hillnote design system */
+      --primary: #4d63ff;
+      --primary-active: #6f82ff;
+      --primary-pale: #e6ebff;
+      --on-primary: #f4f6ff;
+      --ink: #111318;
+      --body: #454852;
+      --mute: #868a93;
+      --canvas: #ffffff;
+      --canvas-soft: #eef0f4;
+      --line: #dfe3ec;
+      --positive: #22a559;
+      --positive-deep: #0c5230;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Manrope', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-feature-settings: 'calt';
+      background: var(--canvas-soft);
+      color: var(--ink);
+      min-height: 100dvh;
+      padding: 28px 22px 36px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    header { text-align: center; }
+    .title {
+      font-size: clamp(1.7rem, 5vw, 2.3rem);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+    }
+    .title .glyph { color: var(--primary); }
+    .subtitle {
+      margin-top: 6px;
+      font-size: 0.95rem;
+      font-weight: 400;
+      color: var(--body);
+    }
+
+    .workspace {
+      width: 100%;
+      max-width: 860px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--canvas);
+      border-radius: var(--radius-xl);
+      padding: 22px;
+    }
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .card-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--mute);
+    }
+
+    /* ── controls ─────────────────────────────────────────────── */
+    .controls { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    button {
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: var(--radius-xl);
+      padding: 9px 16px;
+      border: none;
+      transition: transform 0.12s, filter 0.15s, background 0.15s, color 0.15s, border-color 0.15s;
+      white-space: nowrap;
+    }
+    button:active { transform: translateY(1px); }
+
+    .btn-primary { background: var(--primary); color: var(--on-primary); }
+    .btn-primary:hover { background: var(--primary-active); }
+
+    .btn-secondary { background: var(--canvas-soft); color: var(--ink); }
+    .btn-secondary:hover { filter: brightness(0.96); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--body);
+      border: 1px solid var(--line);
+      padding: 8px 13px;
+    }
+    .btn-ghost:hover { border-color: var(--ink); color: var(--ink); }
+
+    /* ── grid editor ──────────────────────────────────────────── */
+    .grid-scroll { overflow-x: auto; padding-bottom: 4px; }
+    table.editor {
+      border-collapse: separate;
+      border-spacing: 6px;
+    }
+    table.editor th, table.editor td { padding: 0; vertical-align: middle; }
+
+    .cell {
+      width: 148px;
+      border: 1px solid var(--line);
+      background: var(--canvas);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      color: var(--ink);
+      resize: none;
+      overflow: hidden;
+      line-height: 1.4;
+    }
+    .cell::placeholder { color: var(--mute); }
+    .cell:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-pale); }
+    .cell.head { font-weight: 700; background: var(--canvas-soft); }
+
+    .col-tools, .row-tools {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+    .align-group { display: inline-flex; gap: 3px; }
+    .align-btn {
+      width: 30px; height: 28px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border: 1px solid var(--line);
+      background: var(--canvas);
+      border-radius: var(--radius-sm);
+      color: var(--mute);
+      font-size: 0.9rem;
+      cursor: pointer;
+      padding: 0;
+    }
+    .align-btn.active { background: var(--primary-pale); color: var(--primary); border-color: var(--primary); }
+
+    .icon-btn {
+      width: 28px; height: 28px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 9999px;
+      border: 1px solid var(--line);
+      background: var(--canvas);
+      color: var(--body);
+      font-size: 1rem;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0;
+    }
+    .icon-btn:hover { border-color: var(--ink); color: var(--ink); }
+    .icon-btn.danger:hover { border-color: #e0453f; color: #e0453f; }
+
+    .dims {
+      font-size: 0.8rem;
+      color: var(--mute);
+      font-weight: 600;
+    }
+
+    /* ── output ───────────────────────────────────────────────── */
+    .md-output {
+      width: 100%;
+      min-height: 120px;
+      background: var(--ink);
+      color: #e7e9f2;
+      border: none;
+      border-radius: var(--radius-lg);
+      padding: 16px 18px;
+      font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+      font-size: 0.85rem;
+      line-height: 1.65;
+      white-space: pre;
+      overflow-x: auto;
+      resize: vertical;
+      tab-size: 2;
+    }
+    .md-output:focus { outline: none; box-shadow: 0 0 0 3px var(--primary-pale); }
+
+    .copied-note {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: var(--positive-deep);
+      background: var(--primary-pale);
+      font-size: 0.75rem; font-weight: 700;
+      padding: 4px 12px; border-radius: 9999px;
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .copied-note.show { opacity: 1; }
+
+    /* ── preview ──────────────────────────────────────────────── */
+    .preview-scroll { overflow-x: auto; }
+    table.preview {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 0.9rem;
+    }
+    table.preview th, table.preview td {
+      border: 1px solid var(--line);
+      padding: 9px 13px;
+    }
+    table.preview th { background: var(--canvas-soft); font-weight: 700; }
+    table.preview tr:nth-child(even) td { background: #fafbfd; }
+
+    .footer-note {
+      font-size: 0.78rem;
+      color: var(--mute);
+      text-align: center;
+      max-width: 640px;
+    }
+    .footer-note code {
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      background: var(--canvas);
+      padding: 1px 6px; border-radius: 6px;
+      color: var(--body);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="title"><span class="glyph">▦</span> Markdown Table</div>
+    <div class="subtitle">Build a table visually — get clean Markdown to paste into any note.</div>
+  </header>
+
+  <div class="workspace">
+
+    <!-- Editor -->
+    <section class="card">
+      <div class="card-head">
+        <span class="card-label">Editor</span>
+        <div class="controls">
+          <button class="btn-secondary" id="addRow">+ Row</button>
+          <button class="btn-secondary" id="addCol">+ Column</button>
+          <button class="btn-ghost" id="clearBtn">Clear</button>
+        </div>
+      </div>
+      <div class="grid-scroll">
+        <table class="editor">
+          <thead><tr id="alignRow"></tr><tr id="headRow"></tr></thead>
+          <tbody id="bodyRows"></tbody>
+          <tfoot><tr id="colToolsRow"></tr></tfoot>
+        </table>
+      </div>
+      <div class="dims" id="dims"></div>
+    </section>
+
+    <!-- Markdown output -->
+    <section class="card">
+      <div class="card-head">
+        <span class="card-label">Markdown</span>
+        <div class="controls" style="align-items:center;">
+          <span class="copied-note" id="copiedNote">✓ Copied</span>
+          <button class="btn-primary" id="copyBtn">Copy Markdown</button>
+        </div>
+      </div>
+      <textarea class="md-output" id="mdOut" spellcheck="false" aria-label="Markdown output"></textarea>
+    </section>
+
+    <!-- Preview -->
+    <section class="card">
+      <div class="card-head"><span class="card-label">Preview</span></div>
+      <div class="preview-scroll"><table class="preview" id="preview"></table></div>
+    </section>
+
+  </div>
+
+  <p class="footer-note">
+    Tip: paste an existing Markdown table into the box above and it loads back into the editor.
+    Everything stays on your device — saved locally under <code>md-table:*</code>.
+  </p>
+
+  <script>
+    (function () {
+      'use strict';
+
+      var KEY = 'md-table:state';
+
+      // ── state ────────────────────────────────────────────────
+      var state = load() || {
+        headers: ['Column 1', 'Column 2', 'Column 3'],
+        aligns: ['left', 'left', 'left'],
+        rows: [
+          ['', '', ''],
+          ['', '', '']
+        ]
+      };
+
+      var ALIGN_GLYPH = { left: '⇤', center: '↔', right: '⇥' };
+      var ALIGN_ORDER = ['left', 'center', 'right'];
+
+      var el = {
+        alignRow: document.getElementById('alignRow'),
+        headRow: document.getElementById('headRow'),
+        bodyRows: document.getElementById('bodyRows'),
+        colToolsRow: document.getElementById('colToolsRow'),
+        dims: document.getElementById('dims'),
+        mdOut: document.getElementById('mdOut'),
+        preview: document.getElementById('preview'),
+        copiedNote: document.getElementById('copiedNote'),
+        copyBtn: document.getElementById('copyBtn')
+      };
+
+      function load() {
+        try {
+          var raw = localStorage.getItem(KEY);
+          if (!raw) return null;
+          var s = JSON.parse(raw);
+          if (!s || !Array.isArray(s.headers) || !Array.isArray(s.rows)) return null;
+          if (!Array.isArray(s.aligns)) s.aligns = s.headers.map(function () { return 'left'; });
+          return s;
+        } catch (e) { return null; }
+      }
+
+      function save() {
+        try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+      }
+
+      function cols() { return state.headers.length; }
+
+      // ── editor rendering ─────────────────────────────────────
+      function autoSize(ta) {
+        ta.style.height = 'auto';
+        ta.style.height = Math.max(38, ta.scrollHeight) + 'px';
+      }
+
+      function makeCell(value, isHead, onInput) {
+        var ta = document.createElement('textarea');
+        ta.className = 'cell' + (isHead ? ' head' : '');
+        ta.rows = 1;
+        ta.value = value;
+        ta.placeholder = isHead ? 'Heading' : '—';
+        ta.addEventListener('input', function () { autoSize(ta); onInput(ta.value); });
+        return ta;
+      }
+
+      function render() {
+        var c = cols();
+
+        // alignment controls row
+        el.alignRow.innerHTML = '';
+        el.alignRow.appendChild(document.createElement('th')); // spacer for row handle
+        for (var i = 0; i < c; i++) {
+          (function (idx) {
+            var th = document.createElement('th');
+            var group = document.createElement('div');
+            group.className = 'col-tools';
+            var ag = document.createElement('div');
+            ag.className = 'align-group';
+            ALIGN_ORDER.forEach(function (a) {
+              var b = document.createElement('button');
+              b.className = 'align-btn' + (state.aligns[idx] === a ? ' active' : '');
+              b.textContent = ALIGN_GLYPH[a];
+              b.title = a + ' align';
+              b.onclick = function () { state.aligns[idx] = a; sync(); };
+              ag.appendChild(b);
+            });
+            group.appendChild(ag);
+            th.appendChild(group);
+            el.alignRow.appendChild(th);
+          })(i);
+        }
+
+        // header row
+        el.headRow.innerHTML = '';
+        el.headRow.appendChild(document.createElement('th')); // spacer
+        for (var h = 0; h < c; h++) {
+          (function (idx) {
+            var th = document.createElement('th');
+            th.appendChild(makeCell(state.headers[idx], true, function (v) {
+              state.headers[idx] = v; syncOutputs();
+            }));
+            el.headRow.appendChild(th);
+          })(h);
+        }
+
+        // body rows
+        el.bodyRows.innerHTML = '';
+        state.rows.forEach(function (row, r) {
+          var tr = document.createElement('tr');
+          var handle = document.createElement('td');
+          var rm = document.createElement('button');
+          rm.className = 'icon-btn danger';
+          rm.textContent = '×';
+          rm.title = 'Remove row';
+          rm.onclick = function () { state.rows.splice(r, 1); if (!state.rows.length) state.rows.push(blankRow()); sync(); };
+          handle.appendChild(rm);
+          tr.appendChild(handle);
+
+          for (var k = 0; k < c; k++) {
+            (function (colIdx) {
+              var td = document.createElement('td');
+              td.appendChild(makeCell(row[colIdx] || '', false, function (v) {
+                state.rows[r][colIdx] = v; syncOutputs();
+              }));
+              tr.appendChild(td);
+            })(k);
+          }
+          el.bodyRows.appendChild(tr);
+        });
+
+        // column remove tools
+        el.colToolsRow.innerHTML = '';
+        el.colToolsRow.appendChild(document.createElement('td'));
+        for (var t = 0; t < c; t++) {
+          (function (idx) {
+            var td = document.createElement('td');
+            var wrap = document.createElement('div');
+            wrap.className = 'col-tools';
+            var rm = document.createElement('button');
+            rm.className = 'icon-btn danger';
+            rm.textContent = '×';
+            rm.title = 'Remove column';
+            rm.onclick = function () { removeCol(idx); };
+            wrap.appendChild(rm);
+            td.appendChild(wrap);
+            el.colToolsRow.appendChild(td);
+          })(t);
+        }
+
+        // size textareas after they are in the DOM
+        var areas = document.querySelectorAll('textarea.cell');
+        for (var a = 0; a < areas.length; a++) autoSize(areas[a]);
+
+        el.dims.textContent = c + ' column' + (c === 1 ? '' : 's') + ' × ' + state.rows.length + ' row' + (state.rows.length === 1 ? '' : 's');
+        syncOutputs();
+      }
+
+      function blankRow() { return state.headers.map(function () { return ''; }); }
+
+      function removeCol(idx) {
+        if (cols() <= 1) return;
+        state.headers.splice(idx, 1);
+        state.aligns.splice(idx, 1);
+        state.rows.forEach(function (row) { row.splice(idx, 1); });
+        sync();
+      }
+
+      // ── markdown generation ──────────────────────────────────
+      function esc(v) { return String(v == null ? '' : v).replace(/\|/g, '\\|').replace(/\n+/g, ' ').trim(); }
+
+      function sep(align) {
+        if (align === 'center') return ':---:';
+        if (align === 'right') return '---:';
+        return '---';
+      }
+
+      function toMarkdown() {
+        var heads = state.headers.map(esc);
+        var line1 = '| ' + heads.join(' | ') + ' |';
+        var line2 = '| ' + state.aligns.map(sep).join(' | ') + ' |';
+        var body = state.rows.map(function (row) {
+          var cells = [];
+          for (var i = 0; i < heads.length; i++) cells.push(esc(row[i]));
+          return '| ' + cells.join(' | ') + ' |';
+        });
+        return [line1, line2].concat(body).join('\n');
+      }
+
+      function renderPreview() {
+        var html = '<thead><tr>';
+        state.headers.forEach(function (h, i) {
+          html += '<th style="text-align:' + state.aligns[i] + '">' + escHtml(h || '') + '</th>';
+        });
+        html += '</tr></thead><tbody>';
+        state.rows.forEach(function (row) {
+          html += '<tr>';
+          for (var i = 0; i < state.headers.length; i++) {
+            html += '<td style="text-align:' + state.aligns[i] + '">' + escHtml(row[i] || '') + '</td>';
+          }
+          html += '</tr>';
+        });
+        html += '</tbody>';
+        el.preview.innerHTML = html;
+      }
+
+      function escHtml(s) {
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
+
+      // Update markdown + preview without a full editor re-render (keeps focus).
+      function syncOutputs() {
+        if (document.activeElement !== el.mdOut) el.mdOut.value = toMarkdown();
+        renderPreview();
+        save();
+      }
+
+      // Full re-render (structure changed) + outputs.
+      function sync() { render(); }
+
+      // ── parse pasted markdown back into the editor ───────────
+      function splitRow(line) {
+        var t = line.trim().replace(/^\|/, '').replace(/\|$/, '');
+        var out = [], cur = '', i = 0;
+        while (i < t.length) {
+          var ch = t[i];
+          if (ch === '\\' && t[i + 1] === '|') { cur += '|'; i += 2; continue; }
+          if (ch === '|') { out.push(cur.trim()); cur = ''; i++; continue; }
+          cur += ch; i++;
+        }
+        out.push(cur.trim());
+        return out;
+      }
+
+      function isSeparator(cells) {
+        return cells.length > 0 && cells.every(function (c) { return /^:?-{1,}:?$/.test(c.replace(/\s/g, '')); });
+      }
+
+      function alignOf(cell) {
+        var c = cell.replace(/\s/g, '');
+        var l = c.charAt(0) === ':', r = c.charAt(c.length - 1) === ':';
+        if (l && r) return 'center';
+        if (r) return 'right';
+        if (l) return 'left';
+        return 'left';
+      }
+
+      function tryParse(text) {
+        var lines = text.split(/\r?\n/).map(function (l) { return l.trim(); }).filter(function (l) { return l.indexOf('|') !== -1; });
+        if (lines.length < 2) return false;
+        var header = splitRow(lines[0]);
+        var second = splitRow(lines[1]);
+        if (!isSeparator(second)) return false;
+        var n = header.length;
+        state.headers = header.slice(0, n).map(function (h) { return h; });
+        state.aligns = second.slice(0, n).map(alignOf);
+        while (state.aligns.length < n) state.aligns.push('left');
+        var rows = [];
+        for (var i = 2; i < lines.length; i++) {
+          var cells = splitRow(lines[i]);
+          var row = [];
+          for (var k = 0; k < n; k++) row.push((cells[k] || '').replace(/\\\|/g, '|'));
+          rows.push(row);
+        }
+        state.rows = rows.length ? rows : [blankRow()];
+        return true;
+      }
+
+      // ── events ───────────────────────────────────────────────
+      document.getElementById('addRow').onclick = function () { state.rows.push(blankRow()); sync(); };
+      document.getElementById('addCol').onclick = function () {
+        state.headers.push('Column ' + (cols() + 1));
+        state.aligns.push('left');
+        state.rows.forEach(function (row) { row.push(''); });
+        sync();
+      };
+      document.getElementById('clearBtn').onclick = function () {
+        state = { headers: ['Column 1', 'Column 2', 'Column 3'], aligns: ['left', 'left', 'left'], rows: [['', '', ''], ['', '', '']] };
+        sync();
+      };
+
+      el.copyBtn.onclick = function () {
+        var text = el.mdOut.value;
+        var done = function () {
+          el.copiedNote.classList.add('show');
+          setTimeout(function () { el.copiedNote.classList.remove('show'); }, 1400);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text); done(); });
+        } else { fallbackCopy(text); done(); }
+      };
+
+      function fallbackCopy(text) {
+        el.mdOut.focus();
+        el.mdOut.select();
+        try { document.execCommand('copy'); } catch (e) {}
+        el.mdOut.setSelectionRange(0, 0);
+        el.mdOut.blur();
+      }
+
+      // editing the markdown box directly re-parses into the editor on blur
+      el.mdOut.addEventListener('blur', function () {
+        var text = el.mdOut.value;
+        if (tryParse(text)) { render(); }
+        else { el.mdOut.value = toMarkdown(); }
+      });
+      // paste into markdown box: try to parse live
+      el.mdOut.addEventListener('paste', function () {
+        setTimeout(function () { if (tryParse(el.mdOut.value)) render(); }, 0);
+      });
+
+      render();
+    })();
+  </script>
+
+</body>
+</html>
