@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#eef0f4" />
+  <title>Markdown Table Builder</title>
+  <style>
+    /* Single self-contained file — no remote fonts, scripts, styles or images.
+       The app runs tools under a strict CSP, so anything remote won't load.
+       Colours and geometry follow the Hillnote design system: azure primary,
+       cool-mist canvas, white cards, 24px pill radius. */
+    :root {
+      --primary: #4d63ff;
+      --primary-active: #6f82ff;
+      --primary-pale: #e6ebff;
+      --on-primary: #f4f6ff;
+      --ink: #111318;
+      --body: #454852;
+      --mute: #868a93;
+      --canvas: #ffffff;
+      --canvas-soft: #eef0f4;
+      --negative: #e0453f;
+      --line: #e2e5ec;
+      --radius-xl: 24px;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+      --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --display: 'Manrope', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --mono: 'SF Mono', 'Fira Code', 'Menlo', ui-monospace, monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--canvas-soft);
+      color: var(--ink);
+      font-family: var(--sans);
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 20px 48px;
+      gap: 20px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    header { text-align: center; max-width: 640px; }
+
+    h1 {
+      font-family: var(--display);
+      font-weight: 900;
+      font-size: clamp(1.7rem, 6vw, 2.4rem);
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    h1 .glyph {
+      display: inline-grid;
+      place-items: center;
+      width: 1.35em;
+      height: 1.35em;
+      border-radius: var(--radius-md);
+      background: var(--primary-pale);
+      color: var(--primary);
+      font-size: 0.8em;
+      flex-shrink: 0;
+    }
+
+    header p {
+      margin-top: 10px;
+      color: var(--body);
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 760px;
+      background: var(--canvas);
+      border-radius: var(--radius-xl);
+      padding: 20px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .toolbar .spacer { flex: 1; }
+
+    button {
+      font-family: var(--sans);
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: transform 0.12s, filter 0.15s, background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    button:active { transform: translateY(1px); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.9rem;
+      padding: 9px 16px;
+      border-radius: var(--radius-xl);
+    }
+    .btn-primary { background: var(--primary); color: var(--on-primary); }
+    .btn-primary:hover { background: var(--primary-active); }
+    .btn-secondary { background: var(--canvas-soft); color: var(--ink); }
+    .btn-secondary:hover { filter: brightness(0.96); }
+    .btn-ghost { background: transparent; color: var(--mute); }
+    .btn-ghost:hover { color: var(--negative); }
+
+    /* ── grid editor ─────────────────────────────────────────── */
+    .grid-scroll { overflow-x: auto; padding-bottom: 4px; }
+
+    table.grid { border-collapse: separate; border-spacing: 6px; }
+
+    table.grid td { padding: 0; }
+
+    .cell-input, .head-input {
+      width: 148px;
+      max-width: 148px;
+      background: var(--canvas-soft);
+      border: 1.5px solid transparent;
+      border-radius: var(--radius-sm);
+      padding: 9px 11px;
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 0.88rem;
+      outline: none;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .cell-input:focus, .head-input:focus { border-color: var(--primary); background: var(--canvas); }
+    .head-input { font-weight: 700; background: var(--primary-pale); color: var(--ink); }
+    .head-input::placeholder { color: var(--mute); font-weight: 500; }
+    .cell-input::placeholder { color: var(--mute); }
+
+    .col-tools, .row-tools { display: flex; gap: 4px; align-items: center; justify-content: center; }
+
+    .align-group { display: inline-flex; background: var(--canvas-soft); border-radius: var(--radius-sm); padding: 2px; gap: 2px; }
+    .align-btn {
+      width: 28px; height: 26px;
+      display: grid; place-items: center;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--mute);
+      font-size: 0.8rem;
+      line-height: 1;
+    }
+    .align-btn.active { background: var(--canvas); color: var(--primary); box-shadow: 0 1px 2px rgba(17,19,24,0.08); }
+
+    .icon-btn {
+      width: 28px; height: 28px;
+      display: grid; place-items: center;
+      border-radius: 50%;
+      background: var(--canvas-soft);
+      color: var(--mute);
+      font-size: 1rem;
+      line-height: 1;
+    }
+    .icon-btn:hover { background: #fde8e7; color: var(--negative); }
+    .icon-btn:disabled { opacity: 0.35; cursor: default; }
+    .icon-btn:disabled:hover { background: var(--canvas-soft); color: var(--mute); }
+
+    .corner { width: 40px; }
+
+    /* ── output ─────────────────────────────────────────────── */
+    .out-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 12px; }
+    .out-head .label {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--mute);
+    }
+
+    textarea#out {
+      width: 100%;
+      background: var(--ink);
+      color: #e8eaf0;
+      border: none;
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      line-height: 1.7;
+      resize: vertical;
+      min-height: 140px;
+      outline: none;
+      white-space: pre;
+      overflow-wrap: normal;
+      overflow-x: auto;
+    }
+
+    .copy-btn { min-width: 92px; justify-content: center; }
+    .copy-btn.copied { background: #dbf0e3; color: #0c5230; }
+
+    footer { color: var(--mute); font-size: 0.78rem; text-align: center; }
+
+    @media (max-width: 520px) {
+      .card { padding: 16px; }
+      .cell-input, .head-input { width: 120px; max-width: 120px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1><span class="glyph">&#9638;</span> Markdown Table Builder</h1>
+    <p>Fill in the grid, pick each column's alignment, and copy clean, perfectly-formatted Markdown. Everything stays on your device.</p>
+  </header>
+
+  <section class="card">
+    <div class="toolbar">
+      <button class="btn btn-secondary" id="addRow">+ Row</button>
+      <button class="btn btn-secondary" id="addCol">+ Column</button>
+      <span class="spacer"></span>
+      <button class="btn btn-ghost" id="clearAll">Clear all</button>
+    </div>
+    <div class="grid-scroll">
+      <table class="grid" id="grid"></table>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="out-head">
+      <span class="label">Markdown</span>
+      <button class="btn btn-primary copy-btn" id="copyBtn">Copy</button>
+    </div>
+    <textarea id="out" readonly spellcheck="false"></textarea>
+  </section>
+
+  <footer>Runs fully offline &middot; Autosaves in this browser</footer>
+
+  <script>
+    'use strict';
+
+    const KEY = 'markdown-table:state';
+    const ALIGNS = ['left', 'center', 'right'];
+
+    const STARTER = {
+      headers: ['Feature', 'Status', 'Owner'],
+      rows: [
+        ['Search', 'Shipped', 'Ana'],
+        ['Dark mode', 'In progress', 'Ravi'],
+      ],
+      aligns: ['left', 'center', 'left'],
+    };
+
+    let state = load();
+
+    function load() {
+      try {
+        const raw = localStorage.getItem(KEY);
+        if (raw) {
+          const s = JSON.parse(raw);
+          if (Array.isArray(s.headers) && Array.isArray(s.rows) && Array.isArray(s.aligns)
+              && s.headers.length && s.headers.length === s.aligns.length) {
+            return s;
+          }
+        }
+      } catch (e) { /* ignore corrupt state → fall back to starter */ }
+      return structuredCopy(STARTER);
+    }
+
+    function structuredCopy(o) { return JSON.parse(JSON.stringify(o)); }
+
+    function save() { localStorage.setItem(KEY, JSON.stringify(state)); }
+
+    const cols = () => state.headers.length;
+
+    // ── mutations ───────────────────────────────────────────────
+    function addRow() { state.rows.push(new Array(cols()).fill('')); render(); }
+
+    function addCol() {
+      state.headers.push('');
+      state.aligns.push('left');
+      state.rows.forEach(r => r.push(''));
+      render();
+    }
+
+    function removeRow(i) {
+      if (state.rows.length <= 1) { state.rows[0] = new Array(cols()).fill(''); }
+      else { state.rows.splice(i, 1); }
+      render();
+    }
+
+    function removeCol(c) {
+      if (cols() <= 1) return;
+      state.headers.splice(c, 1);
+      state.aligns.splice(c, 1);
+      state.rows.forEach(r => r.splice(c, 1));
+      render();
+    }
+
+    function setAlign(c, a) { state.aligns[c] = a; render(); }
+
+    function clearAll() {
+      state = { headers: [''], aligns: ['left'], rows: [['']] };
+      render();
+    }
+
+    // ── render ──────────────────────────────────────────────────
+    const grid = document.getElementById('grid');
+
+    function alignGroup(c) {
+      const wrap = document.createElement('div');
+      wrap.className = 'align-group';
+      const marks = { left: '←', center: '↔', right: '→' };
+      ALIGNS.forEach(a => {
+        const b = document.createElement('button');
+        b.className = 'align-btn' + (state.aligns[c] === a ? ' active' : '');
+        b.textContent = marks[a];
+        b.title = a[0].toUpperCase() + a.slice(1) + '-aligned column';
+        b.setAttribute('aria-label', a + ' align');
+        b.onclick = () => setAlign(c, a);
+        wrap.appendChild(b);
+      });
+      return wrap;
+    }
+
+    function render() {
+      grid.innerHTML = '';
+
+      // Row 1 — per-column alignment controls + delete-column
+      const alignRow = document.createElement('tr');
+      alignRow.appendChild(cell('td', 'corner'));
+      for (let c = 0; c < cols(); c++) {
+        const td = document.createElement('td');
+        const tools = document.createElement('div');
+        tools.className = 'col-tools';
+        tools.appendChild(alignGroup(c));
+        const del = iconBtn('×', 'Delete column', () => removeCol(c));
+        del.disabled = cols() <= 1;
+        tools.appendChild(del);
+        td.appendChild(tools);
+        alignRow.appendChild(td);
+      }
+      grid.appendChild(alignRow);
+
+      // Row 2 — header inputs
+      const headRow = document.createElement('tr');
+      headRow.appendChild(cell('td', 'corner'));
+      for (let c = 0; c < cols(); c++) {
+        const td = document.createElement('td');
+        const inp = document.createElement('input');
+        inp.className = 'head-input';
+        inp.value = state.headers[c];
+        inp.placeholder = 'Header ' + (c + 1);
+        inp.style.textAlign = state.aligns[c];
+        inp.oninput = () => { state.headers[c] = inp.value; syncOut(); };
+        td.appendChild(inp);
+        headRow.appendChild(td);
+      }
+      grid.appendChild(headRow);
+
+      // Body rows — cells + delete-row
+      state.rows.forEach((row, r) => {
+        const tr = document.createElement('tr');
+        const tools = document.createElement('td');
+        const rt = document.createElement('div');
+        rt.className = 'row-tools';
+        const del = iconBtn('×', 'Delete row', () => removeRow(r));
+        del.disabled = state.rows.length <= 1;
+        rt.appendChild(del);
+        tools.appendChild(rt);
+        tr.appendChild(tools);
+
+        for (let c = 0; c < cols(); c++) {
+          const td = document.createElement('td');
+          const inp = document.createElement('input');
+          inp.className = 'cell-input';
+          inp.value = row[c] != null ? row[c] : '';
+          inp.placeholder = '–';
+          inp.style.textAlign = state.aligns[c];
+          inp.oninput = () => { state.rows[r][c] = inp.value; syncOut(); };
+          td.appendChild(inp);
+          tr.appendChild(td);
+        }
+        grid.appendChild(tr);
+      });
+
+      syncOut();
+    }
+
+    function cell(tag, cls) { const el = document.createElement(tag); if (cls) el.className = cls; return el; }
+
+    function iconBtn(label, title, onClick) {
+      const b = document.createElement('button');
+      b.className = 'icon-btn';
+      b.textContent = label;
+      b.title = title;
+      b.setAttribute('aria-label', title);
+      b.onclick = onClick;
+      return b;
+    }
+
+    // ── markdown generation ─────────────────────────────────────
+    // Escape pipes so cell content can't break the table structure.
+    function esc(v) { return String(v == null ? '' : v).replace(/\|/g, '\\|').replace(/\n/g, ' ').trim(); }
+
+    function buildMarkdown() {
+      const n = cols();
+      const headers = state.headers.map(esc);
+      const bodyRows = state.rows.map(r => {
+        const cells = [];
+        for (let c = 0; c < n; c++) cells.push(esc(r[c]));
+        return cells;
+      });
+
+      // Column widths for a tidy, aligned source (readable even before render).
+      const widths = [];
+      for (let c = 0; c < n; c++) {
+        let w = Math.max(3, headers[c].length);
+        for (const r of bodyRows) w = Math.max(w, r[c].length);
+        widths.push(w);
+      }
+
+      const pad = (text, c) => {
+        const a = state.aligns[c];
+        const gap = widths[c] - text.length;
+        if (gap <= 0) return text;
+        if (a === 'right') return ' '.repeat(gap) + text;
+        if (a === 'center') { const l = Math.floor(gap / 2); return ' '.repeat(l) + text + ' '.repeat(gap - l); }
+        return text + ' '.repeat(gap);
+      };
+
+      const padDivider = (c) => {
+        const a = state.aligns[c];
+        const w = widths[c];
+        if (a === 'center') return ':' + '-'.repeat(Math.max(1, w - 2)) + ':';
+        if (a === 'right') return '-'.repeat(Math.max(1, w - 1)) + ':';
+        return '-'.repeat(w);
+      };
+
+      const line = (cellsPadded) => '| ' + cellsPadded.join(' | ') + ' |';
+
+      const lines = [];
+      lines.push(line(headers.map((h, c) => pad(h, c))));
+      lines.push(line(state.aligns.map((_, c) => padDivider(c))));
+      for (const r of bodyRows) lines.push(line(r.map((t, c) => pad(t, c))));
+      return lines.join('\n');
+    }
+
+    const out = document.getElementById('out');
+    function syncOut() {
+      out.value = buildMarkdown();
+      save();
+    }
+
+    // ── events ──────────────────────────────────────────────────
+    document.getElementById('addRow').onclick = addRow;
+    document.getElementById('addCol').onclick = addCol;
+    document.getElementById('clearAll').onclick = clearAll;
+
+    const copyBtn = document.getElementById('copyBtn');
+    copyBtn.onclick = () => {
+      const text = out.value;
+      const done = () => {
+        copyBtn.textContent = 'Copied!';
+        copyBtn.classList.add('copied');
+        setTimeout(() => { copyBtn.textContent = 'Copy'; copyBtn.classList.remove('copied'); }, 1500);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(() => { fallbackCopy(); done(); });
+      } else { fallbackCopy(); done(); }
+    };
+
+    function fallbackCopy() {
+      out.removeAttribute('readonly');
+      out.select();
+      try { document.execCommand('copy'); } catch (e) { /* no-op */ }
+      out.setAttribute('readonly', '');
+      window.getSelection().removeAllRanges();
+    }
+
+    render();
+  </script>
+
+</body>
+</html>
