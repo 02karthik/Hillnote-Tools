@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#eef0f4" />
+  <title>Markdown Table Generator</title>
+  <style>
+    /* Single-file, fully offline. No remote fonts/scripts/images — the app runs
+       tools under a strict CSP. System fonts only. State lives in localStorage.
+       Palette + shapes follow the Hillnote design system: azure primary,
+       cool-mist canvas, near-black ink, generous 24px card radius. */
+    :root {
+      --primary: #4d63ff;
+      --primary-active: #6f82ff;
+      --primary-pale: #e6ebff;
+      --on-primary: #f4f6ff;
+      --ink: #111318;
+      --body: #454852;
+      --mute: #868a93;
+      --canvas: #ffffff;
+      --canvas-soft: #eef0f4;
+      --line: #dfe3ec;
+      --positive: #22a559;
+      --r-md: 12px;
+      --r-lg: 16px;
+      --r-xl: 24px;
+      --display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--canvas-soft);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-feature-settings: "calt";
+      min-height: 100dvh;
+      padding: 28px 20px 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 22px;
+    }
+
+    header { text-align: center; max-width: 640px; }
+    header .eyebrow {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--primary);
+    }
+    header h1 {
+      font-family: var(--display);
+      font-weight: 900;
+      font-size: clamp(1.9rem, 6vw, 2.6rem);
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+      margin-top: 6px;
+    }
+    header p {
+      color: var(--body);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-top: 8px;
+    }
+
+    .layout {
+      width: 100%;
+      max-width: 960px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+    @media (min-width: 860px) {
+      .layout { grid-template-columns: 1.15fr 1fr; align-items: start; }
+    }
+
+    .card {
+      background: var(--canvas);
+      border-radius: var(--r-xl);
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .card-title h2 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .card-title .hint { font-size: 0.75rem; color: var(--mute); }
+
+    /* Toolbar */
+    .toolbar { display: flex; flex-wrap: wrap; gap: 10px; }
+    .stepper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--canvas-soft);
+      border-radius: var(--r-lg);
+      padding: 6px 8px;
+    }
+    .stepper .label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--mute);
+      padding-left: 4px;
+    }
+    .stepper .value {
+      min-width: 22px;
+      text-align: center;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    button {
+      font-family: var(--sans);
+      cursor: pointer;
+      border: none;
+      transition: background 0.15s, color 0.15s, transform 0.1s, border-color 0.15s;
+    }
+    button:active { transform: scale(0.96); }
+
+    .icon-btn {
+      width: 30px; height: 30px;
+      border-radius: 9999px;
+      background: var(--canvas);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      font-size: 1.05rem;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .icon-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .icon-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .icon-btn:disabled:hover { border-color: var(--line); color: var(--ink); }
+
+    /* Editable grid */
+    .grid-wrap { overflow-x: auto; }
+    table.grid { border-collapse: separate; border-spacing: 6px; width: 100%; }
+    table.grid th, table.grid td { padding: 0; }
+
+    .cell {
+      width: 100%;
+      min-width: 92px;
+      border: 1px solid var(--line);
+      border-radius: var(--r-md);
+      background: var(--canvas);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 0.9rem;
+      padding: 9px 11px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .cell:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-pale); }
+    .cell.head { font-weight: 600; background: var(--canvas-soft); }
+
+    .col-controls { display: flex; align-items: center; justify-content: center; gap: 4px; }
+    .align-group {
+      display: inline-flex;
+      background: var(--canvas-soft);
+      border-radius: 9999px;
+      padding: 2px;
+    }
+    .align-group button {
+      width: 26px; height: 24px;
+      border-radius: 9999px;
+      background: transparent;
+      color: var(--mute);
+      font-size: 0.78rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .align-group button.active { background: var(--primary); color: var(--on-primary); }
+
+    .row-remove {
+      width: 26px; height: 26px;
+      border-radius: 9999px;
+      background: transparent;
+      color: var(--mute);
+      font-size: 0.95rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .row-remove:hover { color: #e0453f; background: #fff0f0; }
+
+    /* Output */
+    .output {
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      line-height: 1.6;
+      background: var(--ink);
+      color: #e7e9f2;
+      border-radius: var(--r-lg);
+      padding: 16px;
+      white-space: pre;
+      overflow-x: auto;
+      min-height: 120px;
+    }
+
+    .preview-wrap { overflow-x: auto; }
+    table.preview { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+    table.preview th, table.preview td {
+      border: 1px solid var(--line);
+      padding: 7px 11px;
+    }
+    table.preview th { background: var(--canvas-soft); font-weight: 600; }
+
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--primary);
+      color: var(--on-primary);
+      border-radius: var(--r-xl);
+      font-size: 0.92rem;
+      font-weight: 600;
+      padding: 11px 22px;
+      flex: 1;
+      min-width: 130px;
+    }
+    .btn-primary:hover { background: var(--primary-active); }
+    .btn-primary.copied { background: var(--positive); }
+    .btn-ghost {
+      background: var(--canvas);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      border-radius: var(--r-xl);
+      font-size: 0.92rem;
+      font-weight: 600;
+      padding: 11px 20px;
+    }
+    .btn-ghost:hover { border-color: var(--ink); }
+
+    .section-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--mute);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="eyebrow">Writing &middot; Markdown</div>
+    <h1>Markdown Table Generator</h1>
+    <p>Build a table visually, set per-column alignment, and copy clean, ready-to-paste Markdown.</p>
+  </header>
+
+  <div class="layout">
+    <!-- Editor -->
+    <section class="card">
+      <div class="card-title">
+        <h2>Editor</h2>
+        <span class="hint">Click any cell to edit</span>
+      </div>
+
+      <div class="toolbar">
+        <div class="stepper">
+          <span class="label">Rows</span>
+          <button class="icon-btn" id="rowMinus" title="Remove row" aria-label="Remove row">&minus;</button>
+          <span class="value" id="rowCount">0</span>
+          <button class="icon-btn" id="rowPlus" title="Add row" aria-label="Add row">+</button>
+        </div>
+        <div class="stepper">
+          <span class="label">Cols</span>
+          <button class="icon-btn" id="colMinus" title="Remove column" aria-label="Remove column">&minus;</button>
+          <span class="value" id="colCount">0</span>
+          <button class="icon-btn" id="colPlus" title="Add column" aria-label="Add column">+</button>
+        </div>
+      </div>
+
+      <div class="grid-wrap">
+        <table class="grid" id="grid"></table>
+      </div>
+    </section>
+
+    <!-- Output -->
+    <section class="card">
+      <div class="card-title">
+        <h2>Markdown</h2>
+        <span class="hint">Updates live</span>
+      </div>
+
+      <div class="output" id="output"></div>
+
+      <div class="actions">
+        <button class="btn-primary" id="copyBtn">Copy Markdown</button>
+        <button class="btn-ghost" id="resetBtn">Reset</button>
+      </div>
+
+      <div class="section-label">Preview</div>
+      <div class="preview-wrap">
+        <table class="preview" id="preview"></table>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    'use strict';
+
+    var KEY = 'markdown-table:v1';
+    var ALIGNS = ['left', 'center', 'right'];
+    var ALIGN_GLYPH = { left: '←', center: '↔', right: '→' };
+    var MAX_ROWS = 20;   // data rows (excludes the header row)
+    var MAX_COLS = 8;
+    var MIN_ROWS = 1;
+    var MIN_COLS = 1;
+
+    // Model: headers[], rows[][], aligns[]
+    var state = load() || defaults();
+
+    function defaults() {
+      return {
+        headers: ['Name', 'Role', 'Status'],
+        aligns: ['left', 'left', 'left'],
+        rows: [
+          ['Ada', 'Author', 'Active'],
+          ['Grace', 'Editor', 'Invited']
+        ]
+      };
+    }
+
+    function load() {
+      try {
+        var raw = localStorage.getItem(KEY);
+        if (!raw) return null;
+        var s = JSON.parse(raw);
+        if (!s || !Array.isArray(s.headers) || !Array.isArray(s.rows) || !Array.isArray(s.aligns)) return null;
+        return s;
+      } catch (e) { return null; }
+    }
+
+    function save() {
+      try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* storage full or blocked */ }
+    }
+
+    function colCount() { return state.headers.length; }
+    function rowCount() { return state.rows.length; }
+
+    // ── mutations ──────────────────────────────────────────────
+    function addRow() {
+      if (rowCount() >= MAX_ROWS) return;
+      var r = [];
+      for (var i = 0; i < colCount(); i++) r.push('');
+      state.rows.push(r);
+      commit();
+    }
+    function removeRow(index) {
+      if (rowCount() <= MIN_ROWS) return;
+      var i = (typeof index === 'number') ? index : rowCount() - 1;
+      state.rows.splice(i, 1);
+      commit();
+    }
+    function addCol() {
+      if (colCount() >= MAX_COLS) return;
+      state.headers.push('Column ' + (colCount() + 1));
+      state.aligns.push('left');
+      for (var i = 0; i < state.rows.length; i++) state.rows[i].push('');
+      commit();
+    }
+    function removeCol() {
+      if (colCount() <= MIN_COLS) return;
+      state.headers.pop();
+      state.aligns.pop();
+      for (var i = 0; i < state.rows.length; i++) state.rows[i].pop();
+      commit();
+    }
+    function cycleAlign(c) {
+      var next = (ALIGNS.indexOf(state.aligns[c]) + 1) % ALIGNS.length;
+      state.aligns[c] = ALIGNS[next];
+      commit();
+    }
+
+    function commit() { save(); renderGrid(); renderOutput(); }
+
+    // ── editable grid ──────────────────────────────────────────
+    function renderGrid() {
+      var grid = document.getElementById('grid');
+      grid.textContent = '';
+      var cols = colCount();
+
+      // Header row of cell inputs
+      var headTr = document.createElement('tr');
+      for (var c = 0; c < cols; c++) {
+        headTr.appendChild(cellTh(c));
+      }
+      // spacer cell above the per-row remove buttons
+      headTr.appendChild(document.createElement('th'));
+      grid.appendChild(headTr);
+
+      // Alignment controls row
+      var alignTr = document.createElement('tr');
+      for (var c2 = 0; c2 < cols; c2++) {
+        alignTr.appendChild(alignTd(c2));
+      }
+      alignTr.appendChild(document.createElement('td'));
+      grid.appendChild(alignTr);
+
+      // Data rows
+      for (var r = 0; r < state.rows.length; r++) {
+        var tr = document.createElement('tr');
+        for (var c3 = 0; c3 < cols; c3++) {
+          tr.appendChild(cellTd(r, c3));
+        }
+        tr.appendChild(removeTd(r));
+        grid.appendChild(tr);
+      }
+
+      document.getElementById('rowCount').textContent = String(rowCount());
+      document.getElementById('colCount').textContent = String(cols);
+      document.getElementById('rowMinus').disabled = rowCount() <= MIN_ROWS;
+      document.getElementById('rowPlus').disabled = rowCount() >= MAX_ROWS;
+      document.getElementById('colMinus').disabled = cols <= MIN_COLS;
+      document.getElementById('colPlus').disabled = cols >= MAX_COLS;
+    }
+
+    function makeInput(value, isHead) {
+      var input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'cell' + (isHead ? ' head' : '');
+      input.value = value;
+      input.autocomplete = 'off';
+      input.spellcheck = false;
+      return input;
+    }
+
+    function cellTh(c) {
+      var th = document.createElement('th');
+      var input = makeInput(state.headers[c], true);
+      input.setAttribute('aria-label', 'Header for column ' + (c + 1));
+      input.addEventListener('input', function () {
+        state.headers[c] = input.value;
+        save(); renderOutput();
+      });
+      th.appendChild(input);
+      return th;
+    }
+
+    function cellTd(r, c) {
+      var td = document.createElement('td');
+      var input = makeInput(state.rows[r][c], false);
+      input.setAttribute('aria-label', 'Row ' + (r + 1) + ' column ' + (c + 1));
+      input.addEventListener('input', function () {
+        state.rows[r][c] = input.value;
+        save(); renderOutput();
+      });
+      td.appendChild(input);
+      return td;
+    }
+
+    function alignTd(c) {
+      var td = document.createElement('td');
+      var group = document.createElement('div');
+      group.className = 'align-group';
+      for (var i = 0; i < ALIGNS.length; i++) {
+        (function (a) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.textContent = ALIGN_GLYPH[a];
+          b.title = a.charAt(0).toUpperCase() + a.slice(1) + ' align';
+          b.setAttribute('aria-label', a + ' align column ' + (c + 1));
+          if (state.aligns[c] === a) b.className = 'active';
+          b.addEventListener('click', function () {
+            state.aligns[c] = a;
+            commit();
+          });
+          group.appendChild(b);
+        })(ALIGNS[i]);
+      }
+      var wrap = document.createElement('div');
+      wrap.className = 'col-controls';
+      wrap.appendChild(group);
+      td.appendChild(wrap);
+      return td;
+    }
+
+    function removeTd(r) {
+      var td = document.createElement('td');
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'row-remove';
+      b.textContent = '×';
+      b.title = 'Remove this row';
+      b.setAttribute('aria-label', 'Remove row ' + (r + 1));
+      b.disabled = rowCount() <= MIN_ROWS;
+      if (b.disabled) b.style.opacity = '0.3';
+      b.addEventListener('click', function () { removeRow(r); });
+      td.appendChild(b);
+      return td;
+    }
+
+    // ── markdown + preview output ──────────────────────────────
+    function escapeCell(text) {
+      return String(text == null ? '' : text)
+        .replace(/\\/g, '\\\\')
+        .replace(/\|/g, '\\|')
+        .replace(/\r?\n/g, '<br>');
+    }
+
+    function sepFor(align, width) {
+      var dashes = Math.max(width, 3);
+      if (align === 'center') return ':' + repeat('-', dashes - 2) + ':';
+      if (align === 'right') return repeat('-', dashes - 1) + ':';
+      if (align === 'left') return ':' + repeat('-', dashes - 1);
+      return repeat('-', dashes);
+    }
+
+    function repeat(ch, n) {
+      var s = '';
+      for (var i = 0; i < n; i++) s += ch;
+      return s;
+    }
+
+    function pad(text, width, align) {
+      var extra = width - text.length;
+      if (extra <= 0) return text;
+      if (align === 'right') return repeat(' ', extra) + text;
+      if (align === 'center') {
+        var left = Math.floor(extra / 2);
+        return repeat(' ', left) + text + repeat(' ', extra - left);
+      }
+      return text + repeat(' ', extra);
+    }
+
+    function buildMarkdown() {
+      var cols = colCount();
+      var heads = [];
+      for (var c = 0; c < cols; c++) heads.push(escapeCell(state.headers[c]));
+      var body = [];
+      for (var r = 0; r < state.rows.length; r++) {
+        var row = [];
+        for (var c2 = 0; c2 < cols; c2++) row.push(escapeCell(state.rows[r][c2]));
+        body.push(row);
+      }
+
+      // Column widths for pretty, aligned source.
+      var widths = [];
+      for (var c3 = 0; c3 < cols; c3++) {
+        var w = heads[c3].length;
+        for (var r2 = 0; r2 < body.length; r2++) w = Math.max(w, body[r2][c3].length);
+        widths[c3] = Math.max(w, 3);
+      }
+
+      var lines = [];
+      lines.push(rowLine(heads, widths, state.aligns));
+      var seps = [];
+      for (var c4 = 0; c4 < cols; c4++) seps.push(sepFor(state.aligns[c4], widths[c4]));
+      lines.push('| ' + seps.join(' | ') + ' |');
+      for (var r3 = 0; r3 < body.length; r3++) {
+        lines.push(rowLine(body[r3], widths, state.aligns));
+      }
+      return lines.join('\n');
+    }
+
+    function rowLine(cells, widths, aligns) {
+      var out = [];
+      for (var c = 0; c < cells.length; c++) out.push(pad(cells[c], widths[c], aligns[c]));
+      return '| ' + out.join(' | ') + ' |';
+    }
+
+    function renderOutput() {
+      document.getElementById('output').textContent = buildMarkdown();
+      renderPreview();
+    }
+
+    function renderPreview() {
+      var table = document.getElementById('preview');
+      table.textContent = '';
+      var cols = colCount();
+
+      var thead = document.createElement('thead');
+      var htr = document.createElement('tr');
+      for (var c = 0; c < cols; c++) {
+        var th = document.createElement('th');
+        th.textContent = state.headers[c];
+        th.style.textAlign = state.aligns[c];
+        htr.appendChild(th);
+      }
+      thead.appendChild(htr);
+      table.appendChild(thead);
+
+      var tbody = document.createElement('tbody');
+      for (var r = 0; r < state.rows.length; r++) {
+        var tr = document.createElement('tr');
+        for (var c2 = 0; c2 < cols; c2++) {
+          var td = document.createElement('td');
+          td.textContent = state.rows[r][c2];
+          td.style.textAlign = state.aligns[c2];
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      }
+      table.appendChild(tbody);
+    }
+
+    // ── wiring ─────────────────────────────────────────────────
+    document.getElementById('rowPlus').addEventListener('click', addRow);
+    document.getElementById('rowMinus').addEventListener('click', function () { removeRow(); });
+    document.getElementById('colPlus').addEventListener('click', addCol);
+    document.getElementById('colMinus').addEventListener('click', removeCol);
+
+    document.getElementById('copyBtn').addEventListener('click', function () {
+      var btn = document.getElementById('copyBtn');
+      var text = buildMarkdown();
+      var done = function () {
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Copy Markdown'; btn.classList.remove('copied'); }, 1500);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, fallbackCopy);
+      } else {
+        fallbackCopy();
+      }
+      function fallbackCopy() {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); done(); } catch (e) { /* ignore */ }
+        document.body.removeChild(ta);
+      }
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', function () {
+      state = defaults();
+      commit();
+    });
+
+    // First paint
+    commit();
+  </script>
+
+</body>
+</html>
