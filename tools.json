@@ -162,6 +162,14 @@
       "version": 1
     },
     {
+      "dir": "markdown-table",
+      "name": "Markdown Table Generator",
+      "description": "Build a table visually, set per-column alignment, and copy clean, ready-to-paste Markdown.",
+      "glyph": "📋",
+      "color": "#4d63ff",
+      "version": 1
+    },
+    {
       "dir": "speed-reader",
       "name": "Speed Reader",
       "description": "Read any text faster with RSVP — words flash one at a time, at the pace you choose.",
