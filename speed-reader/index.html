@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#eef0f4" />
+  <title>Speed Reader</title>
+  <style>
+    /* Single, self-contained, offline file — no remote fonts, scripts, images or
+       network calls (the app runs tools under a strict CSP). Manrope is named
+       first only as a progressive hint; it is never fetched, so it falls back to
+       the heavy system UI face. Palette + shapes follow the Hillnote design
+       system: azure primary, cool mist canvas, white rounded-24px cards. */
+    :root {
+      --primary: #4d63ff;
+      --primary-active: #6f82ff;
+      --primary-pale: #e6ebff;
+      --ink: #111318;
+      --body: #454852;
+      --mute: #868a93;
+      --canvas: #ffffff;
+      --canvas-soft: #eef0f4;
+      --line: #e2e5ec;
+      --radius-xl: 24px;
+      --radius-md: 12px;
+      --display: 'Manrope', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      --text: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body { height: 100%; }
+
+    body {
+      font-family: var(--text);
+      background: var(--canvas-soft);
+      color: var(--ink);
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .card {
+      background: var(--canvas);
+      width: 100%;
+      max-width: 620px;
+      border-radius: var(--radius-xl);
+      padding: 28px 30px 26px;
+      box-shadow: 0 18px 50px rgba(17, 19, 24, 0.10);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* ── Header ── */
+    header { display: flex; align-items: center; gap: 12px; }
+    .badge {
+      width: 40px; height: 40px; flex: none;
+      border-radius: var(--radius-md);
+      background: var(--primary-pale);
+      display: grid; place-items: center;
+      font-size: 20px;
+    }
+    header h1 {
+      font-family: var(--display);
+      font-weight: 900;
+      font-size: 1.5rem;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    header p { color: var(--mute); font-size: 0.8rem; margin-top: 3px; }
+
+    /* ── Reader stage ── */
+    .stage {
+      position: relative;
+      background: var(--canvas-soft);
+      border-radius: var(--radius-xl);
+      padding: 34px 20px;
+      text-align: center;
+      overflow: hidden;
+    }
+    /* focus guides above & below the pivot column */
+    .guide {
+      position: absolute;
+      left: 50%;
+      width: 2px;
+      height: 12px;
+      background: var(--primary);
+      opacity: 0.55;
+      transform: translateX(-50%);
+    }
+    .guide.top { top: 14px; }
+    .guide.bottom { bottom: 14px; }
+
+    .word {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: clamp(2.1rem, 9vw, 3.4rem);
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      white-space: nowrap;
+      /* the three spans are laid so the pivot letter sits on the centre line */
+      display: inline-flex;
+      justify-content: center;
+      user-select: none;
+    }
+    .word .pre  { color: var(--ink); text-align: right; }
+    .word .piv  { color: var(--primary); }
+    .word .post { color: var(--ink); text-align: left; }
+    /* fixed columns keep the pivot letter pinned to centre regardless of length */
+    .word .pre  { width: 46%; }
+    .word .post { width: 46%; }
+    .word .piv  { width: 8%; min-width: 1ch; }
+
+    .word.idle { color: var(--mute); font-weight: 800; }
+    .word.idle .pre, .word.idle .piv, .word.idle .post { color: var(--mute); }
+
+    /* ── Progress ── */
+    .track {
+      height: 6px;
+      border-radius: 9999px;
+      background: var(--line);
+      overflow: hidden;
+    }
+    .fill {
+      height: 100%;
+      width: 0%;
+      background: var(--primary);
+      border-radius: 9999px;
+      transition: width 0.12s linear;
+    }
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.76rem;
+      color: var(--mute);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── Controls ── */
+    .controls { display: flex; align-items: center; gap: 10px; }
+    button {
+      font-family: var(--text);
+      cursor: pointer;
+      border: none;
+      border-radius: 9999px;
+      font-weight: 600;
+      transition: transform 0.12s ease, filter 0.12s ease, background 0.12s ease;
+    }
+    button:active { transform: translateY(1px); }
+    .btn-primary {
+      flex: 1;
+      background: var(--primary);
+      color: #f4f6ff;
+      padding: 13px 20px;
+      font-size: 1rem;
+    }
+    .btn-primary:hover { background: var(--primary-active); }
+    .btn-ghost {
+      background: var(--canvas-soft);
+      color: var(--ink);
+      padding: 13px 16px;
+      font-size: 0.9rem;
+    }
+    .btn-ghost:hover { filter: brightness(0.97); }
+
+    /* ── Speed row ── */
+    .speed {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .speed label {
+      font-size: 0.78rem;
+      color: var(--body);
+      white-space: nowrap;
+      font-weight: 600;
+    }
+    .speed .wpm {
+      font-family: var(--display);
+      font-weight: 800;
+      color: var(--primary);
+      font-variant-numeric: tabular-nums;
+      min-width: 3.4ch;
+      text-align: right;
+      font-size: 1rem;
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      flex: 1;
+      height: 6px;
+      border-radius: 9999px;
+      background: var(--line);
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: 3px solid var(--canvas);
+      box-shadow: 0 1px 4px rgba(77, 99, 255, 0.5);
+      cursor: pointer;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: 3px solid var(--canvas);
+      cursor: pointer;
+    }
+
+    /* ── Text editor ── */
+    .editor { display: flex; flex-direction: column; gap: 8px; }
+    .editor summary {
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--primary);
+      list-style: none;
+      user-select: none;
+      width: fit-content;
+    }
+    .editor summary::-webkit-details-marker { display: none; }
+    .editor summary::before { content: '✎  '; }
+    textarea {
+      font-family: var(--text);
+      width: 100%;
+      min-height: 96px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      font-size: 0.9rem;
+      color: var(--ink);
+      background: var(--canvas);
+      line-height: 1.5;
+    }
+    textarea:focus { outline: none; border-color: var(--primary); }
+    .editor .row { display: flex; gap: 8px; }
+    .editor button { padding: 9px 16px; font-size: 0.82rem; }
+    .hint { font-size: 0.72rem; color: var(--mute); }
+    kbd {
+      font-family: var(--text);
+      background: var(--canvas-soft);
+      border: 1px solid var(--line);
+      border-bottom-width: 2px;
+      border-radius: 6px;
+      padding: 1px 6px;
+      font-size: 0.72rem;
+      color: var(--body);
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <header>
+      <div class="badge">⚡</div>
+      <div>
+        <h1>Speed Reader</h1>
+        <p>Read any text faster, one word at a time.</p>
+      </div>
+    </header>
+
+    <div class="stage">
+      <span class="guide top"></span>
+      <span class="guide bottom"></span>
+      <div class="word idle" id="word"><span class="pre"></span><span class="piv">ready</span><span class="post"></span></div>
+    </div>
+
+    <div>
+      <div class="track"><div class="fill" id="fill"></div></div>
+      <div class="meta">
+        <span id="position">0 / 0 words</span>
+        <span id="remaining">—</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn-primary" id="playBtn">Start</button>
+      <button class="btn-ghost" id="restartBtn" title="Restart from the beginning">↺ Restart</button>
+    </div>
+
+    <div class="speed">
+      <label for="wpm">Speed</label>
+      <input type="range" id="wpm" min="100" max="900" step="10" value="300" />
+      <span class="wpm"><span id="wpmVal">300</span></span>
+    </div>
+
+    <details class="editor" id="editor">
+      <summary>Edit text</summary>
+      <textarea id="input" spellcheck="false" placeholder="Paste or type the text you want to read…"></textarea>
+      <div class="row">
+        <button class="btn-primary" id="loadBtn" style="flex:0 0 auto;">Load text</button>
+        <span class="hint" style="align-self:center;">Tip: press <kbd>Space</kbd> to play / pause · <kbd>←</kbd> <kbd>→</kbd> to step</span>
+      </div>
+    </details>
+  </div>
+
+  <script>
+    'use strict';
+
+    const KEY_WPM  = 'speed-reader:wpm';
+    const KEY_TEXT = 'speed-reader:text';
+
+    const SAMPLE = "Reading one word at a time removes the small eye movements — the saccades — that normal reading depends on. With those jumps gone, the words can arrive far faster than a page allows. Paste something you want to get through, pick a comfortable speed, and let each word land on the highlighted pivot. Start slow, then push the pace as your eyes learn to trust the centre line.";
+
+    // ── DOM ──
+    const wordEl     = document.getElementById('word');
+    const preEl      = () => wordEl.querySelector('.pre');
+    const pivEl      = () => wordEl.querySelector('.piv');
+    const postEl     = () => wordEl.querySelector('.post');
+    const fillEl     = document.getElementById('fill');
+    const positionEl = document.getElementById('position');
+    const remainingEl= document.getElementById('remaining');
+    const playBtn    = document.getElementById('playBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const wpmInput   = document.getElementById('wpm');
+    const wpmValEl   = document.getElementById('wpmVal');
+    const inputEl    = document.getElementById('input');
+    const loadBtn    = document.getElementById('loadBtn');
+    const editorEl   = document.getElementById('editor');
+
+    // ── State ──
+    let words   = [];
+    let index   = 0;
+    let playing = false;
+    let timer   = null;
+    let wpm     = clampWpm(Number(localStorage.getItem(KEY_WPM)) || 300);
+
+    function clampWpm(v) { return Math.min(900, Math.max(100, Math.round(v / 10) * 10)); }
+
+    function tokenize(text) {
+      return String(text).trim().split(/\s+/).filter(Boolean);
+    }
+
+    // Optimal Recognition Point — the letter the eye should fixate on.
+    function pivotIndex(word) {
+      const n = word.length;
+      if (n <= 1) return 0;
+      if (n <= 5) return 1;
+      if (n <= 9) return 2;
+      if (n <= 13) return 3;
+      return 4;
+    }
+
+    // Longer words linger a little; punctuation gets a short pause.
+    function delayFor(word) {
+      const base = 60000 / wpm;
+      let d = base;
+      if (word.length > 8) d *= 1.35;
+      if (/[.,;:!?…]$/.test(word)) d *= 1.55;
+      return d;
+    }
+
+    function showWord(word) {
+      wordEl.classList.remove('idle');
+      const p = pivotIndex(word);
+      preEl().textContent  = word.slice(0, p);
+      pivEl().textContent  = word[p];
+      postEl().textContent = word.slice(p + 1);
+    }
+
+    function showIdle(label) {
+      wordEl.classList.add('idle');
+      preEl().textContent = '';
+      pivEl().textContent = label;
+      postEl().textContent = '';
+    }
+
+    function fmtTime(sec) {
+      sec = Math.max(0, Math.round(sec));
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return m + ':' + String(s).padStart(2, '0');
+    }
+
+    function renderMeta() {
+      const total = words.length;
+      positionEl.textContent = (total ? Math.min(index + 1, total) : 0) + ' / ' + total + ' words';
+      fillEl.style.width = total ? (index / total) * 100 + '%' : '0%';
+      const left = Math.max(0, total - index);
+      remainingEl.textContent = total ? '~' + fmtTime((left / wpm) * 60) + ' left' : '—';
+    }
+
+    function step() {
+      if (index >= words.length) { finish(); return; }
+      const word = words[index];
+      showWord(word);
+      renderMeta();
+      const wait = delayFor(word);
+      index++;
+      timer = setTimeout(step, wait);
+    }
+
+    function play() {
+      if (!words.length) return;
+      if (index >= words.length) index = 0;   // replay after finishing
+      playing = true;
+      playBtn.textContent = 'Pause';
+      step();
+    }
+
+    function pause() {
+      playing = false;
+      clearTimeout(timer);
+      playBtn.textContent = index > 0 && index < words.length ? 'Resume' : 'Start';
+    }
+
+    function finish() {
+      playing = false;
+      clearTimeout(timer);
+      index = words.length;
+      fillEl.style.width = '100%';
+      positionEl.textContent = words.length + ' / ' + words.length + ' words';
+      remainingEl.textContent = 'done';
+      showIdle('done');
+      playBtn.textContent = 'Restart';
+    }
+
+    function restart() {
+      pause();
+      index = 0;
+      if (words.length) { showIdle('ready'); }
+      playBtn.textContent = 'Start';
+      renderMeta();
+    }
+
+    function toggle() { playing ? pause() : play(); }
+
+    function stepBy(delta) {
+      pause();
+      index = Math.min(words.length, Math.max(0, index + delta));
+      if (index < words.length) showWord(words[index]);
+      else showIdle('done');
+      renderMeta();
+      playBtn.textContent = index > 0 && index < words.length ? 'Resume' : 'Start';
+    }
+
+    function loadText(text, { keepPlaying = false } = {}) {
+      const wasPlaying = playing && keepPlaying;
+      pause();
+      words = tokenize(text);
+      index = 0;
+      localStorage.setItem(KEY_TEXT, text);
+      showIdle(words.length ? 'ready' : 'no text');
+      playBtn.textContent = 'Start';
+      renderMeta();
+      if (wasPlaying) play();
+    }
+
+    // ── Wire up ──
+    playBtn.addEventListener('click', toggle);
+    restartBtn.addEventListener('click', restart);
+
+    wpmInput.addEventListener('input', () => {
+      wpm = clampWpm(Number(wpmInput.value));
+      wpmValEl.textContent = wpm;
+      localStorage.setItem(KEY_WPM, wpm);
+      renderMeta();
+    });
+
+    loadBtn.addEventListener('click', () => {
+      loadText(inputEl.value);
+      editorEl.open = false;
+    });
+
+    document.addEventListener('keydown', (e) => {
+      const typing = document.activeElement === inputEl;
+      if (e.code === 'Space' && !typing) { e.preventDefault(); toggle(); }
+      else if (e.key === 'ArrowRight' && !typing) { e.preventDefault(); stepBy(1); }
+      else if (e.key === 'ArrowLeft' && !typing) { e.preventDefault(); stepBy(-1); }
+    });
+
+    // ── Init ──
+    const savedText = localStorage.getItem(KEY_TEXT);
+    const startText = (savedText && savedText.trim()) ? savedText : SAMPLE;
+    wpmInput.value = wpm;
+    wpmValEl.textContent = wpm;
+    inputEl.value = startText;
+    words = tokenize(startText);
+    index = 0;
+    // Show the opening word so the tool reads as "ready to go" at a glance.
+    if (words.length) showWord(words[0]);
+    renderMeta();
+    playBtn.textContent = 'Start';
+  </script>
+</body>
+</html>

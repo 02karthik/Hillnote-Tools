@@ -168,6 +168,14 @@
       "glyph": "📋",
       "color": "#4d63ff",
       "version": 1
+    },
+    {
+      "dir": "speed-reader",
+      "name": "Speed Reader",
+      "description": "Read any text faster with RSVP — words flash one at a time, at the pace you choose.",
+      "glyph": "⚡",
+      "color": "#4d63ff",
+      "version": 1
     }
   ]
 }
