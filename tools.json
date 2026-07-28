@@ -1,5 +1,5 @@
 {
-  "catalogVersion": 17,
+  "catalogVersion": 18,
   "tools": [
     {
       "dir": "color-capture",
@@ -182,6 +182,14 @@
       "name": "Decision Wheel",
       "description": "Add your own choices, spin the wheel, and let it decide for you.",
       "glyph": "🎡",
+      "color": "#4d63ff",
+      "version": 1
+    },
+    {
+      "dir": "world-clock",
+      "name": "World Clock",
+      "description": "See the time across cities worldwide and drag the planner to find a slot that works in every time zone.",
+      "glyph": "🌍",
       "color": "#4d63ff",
       "version": 1
     }
