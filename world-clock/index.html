@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#eef0f4" />
+  <title>World Clock</title>
+  <style>
+    /* Single-file, fully offline. No remote fonts/scripts/images — the app runs
+       tools under a strict CSP. System fonts only. State lives in localStorage.
+       All time-zone math is done with the built-in Intl API, so it is DST-safe
+       and needs no network. Palette + shapes follow the Hillnote design system:
+       azure primary, cool-mist canvas, near-black ink, generous 24px card radius. */
+    :root {
+      --primary: #4d63ff;
+      --primary-active: #6f82ff;
+      --primary-pale: #e6ebff;
+      --on-primary: #f4f6ff;
+      --ink: #111318;
+      --body: #454852;
+      --mute: #868a93;
+      --canvas: #ffffff;
+      --canvas-soft: #eef0f4;
+      --line: #dfe3ec;
+      --positive: #22a559;
+      --warning: #f5b62a;
+      --r-md: 12px;
+      --r-lg: 16px;
+      --r-xl: 24px;
+      --display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--canvas-soft);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-feature-settings: "calt";
+      min-height: 100dvh;
+      padding: 28px 20px 44px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 22px;
+    }
+
+    header { text-align: center; max-width: 640px; }
+    header .eyebrow {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--primary);
+    }
+    header h1 {
+      font-family: var(--display);
+      font-weight: 900;
+      font-size: clamp(1.9rem, 6vw, 2.6rem);
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+      margin-top: 6px;
+    }
+    header p {
+      color: var(--body);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-top: 8px;
+    }
+
+    .layout {
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--canvas);
+      border-radius: var(--r-xl);
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ── Planner ─────────────────────────────────────────── */
+    .planner-top {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .planner-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--mute);
+    }
+    .planner-value {
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--primary);
+    }
+    .planner-value.is-now { color: var(--positive); }
+
+    .slider-row { display: flex; align-items: center; gap: 12px; }
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      flex: 1;
+      height: 6px;
+      border-radius: 9999px;
+      background: linear-gradient(90deg, var(--primary-pale), var(--primary-pale));
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px; height: 22px;
+      border-radius: 9999px;
+      background: var(--primary);
+      border: 3px solid var(--canvas);
+      box-shadow: 0 1px 4px rgba(17, 19, 24, 0.28);
+      cursor: pointer;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 22px; height: 22px;
+      border-radius: 9999px;
+      background: var(--primary);
+      border: 3px solid var(--canvas);
+      box-shadow: 0 1px 4px rgba(17, 19, 24, 0.28);
+      cursor: pointer;
+    }
+    .btn-now {
+      background: var(--canvas-soft);
+      color: var(--ink);
+      border: none;
+      border-radius: var(--r-xl);
+      font-family: var(--sans);
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 9px 16px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, transform 0.1s;
+      white-space: nowrap;
+    }
+    .btn-now:hover { background: var(--primary-pale); color: var(--primary); }
+    .btn-now:active { transform: scale(0.96); }
+
+    /* ── Zone rows ───────────────────────────────────────── */
+    .zones { display: flex; flex-direction: column; gap: 10px; }
+    .zone {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      border-radius: var(--r-lg);
+      background: var(--canvas-soft);
+      border: 1.5px solid transparent;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .zone.home {
+      background: var(--primary-pale);
+      border-color: var(--primary);
+    }
+    .zone .daynight {
+      font-size: 1.5rem;
+      line-height: 1;
+      width: 30px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .zone .meta { flex: 1; min-width: 0; }
+    .zone .city {
+      font-weight: 600;
+      font-size: 1rem;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .home-pill {
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--primary);
+      background: var(--canvas);
+      border-radius: 9999px;
+      padding: 2px 8px;
+    }
+    .zone .sub {
+      font-size: 0.78rem;
+      color: var(--body);
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .offset-pill {
+      font-variant-numeric: tabular-nums;
+      color: var(--mute);
+    }
+    .day-diff {
+      font-weight: 600;
+      color: var(--warning);
+    }
+    .day-diff.behind { color: var(--primary); }
+
+    .zone .clock { text-align: right; flex-shrink: 0; }
+    .zone .time {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 1.5rem;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    .zone .ampm { font-size: 0.7rem; font-weight: 700; color: var(--mute); margin-left: 3px; }
+    .zone .date { font-size: 0.74rem; color: var(--mute); margin-top: 4px; }
+
+    .zone-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+    .mini-btn {
+      width: 30px; height: 30px;
+      border-radius: 9999px;
+      background: transparent;
+      border: none;
+      color: var(--mute);
+      font-size: 1rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, color 0.15s, transform 0.1s;
+    }
+    .mini-btn:hover { background: var(--canvas); color: var(--primary); }
+    .mini-btn:active { transform: scale(0.9); }
+    .mini-btn.remove:hover { color: var(--negative, #e0453f); background: #fff0f0; }
+    .mini-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+    .mini-btn:disabled:hover { background: transparent; color: var(--mute); }
+
+    /* ── Add city ────────────────────────────────────────── */
+    .add-row { display: flex; gap: 10px; }
+    select {
+      flex: 1;
+      font-family: var(--sans);
+      font-size: 0.9rem;
+      color: var(--ink);
+      background: var(--canvas);
+      border: 1px solid var(--line);
+      border-radius: var(--r-md);
+      padding: 11px 12px;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-pale); }
+    .btn-add {
+      background: var(--primary);
+      color: var(--on-primary);
+      border: none;
+      border-radius: var(--r-xl);
+      font-family: var(--sans);
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 11px 20px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      white-space: nowrap;
+    }
+    .btn-add:hover { background: var(--primary-active); }
+    .btn-add:active { transform: scale(0.97); }
+    .btn-add:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .card-title {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--mute);
+    }
+    .empty {
+      text-align: center;
+      color: var(--mute);
+      font-size: 0.9rem;
+      padding: 20px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="eyebrow">Productive &middot; Time</div>
+    <h1>World Clock</h1>
+    <p>See the current time across cities worldwide, then drag the planner to find a time that works everywhere.</p>
+  </header>
+
+  <div class="layout">
+    <section class="card">
+      <div class="planner-top">
+        <span class="planner-label">Meeting planner</span>
+        <span class="planner-value is-now" id="plannerValue">Right now</span>
+      </div>
+      <div class="slider-row">
+        <input type="range" id="slider" min="-720" max="720" step="15" value="0"
+               aria-label="Shift the planned time earlier or later" />
+        <button class="btn-now" id="nowBtn" type="button">Now</button>
+      </div>
+
+      <div class="zones" id="zones"></div>
+
+      <div>
+        <div class="card-title" style="margin-bottom: 10px;">Add a city</div>
+        <div class="add-row">
+          <select id="citySelect" aria-label="Choose a city to add"></select>
+          <button class="btn-add" id="addBtn" type="button">Add</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    'use strict';
+
+    var KEY = 'world-clock:v1';
+
+    // Curated list of IANA zones + friendly city labels. All resolved by the
+    // built-in Intl engine, so offsets stay DST-correct without any network.
+    var ZONES = [
+      { id: 'Pacific/Honolulu',                 label: 'Honolulu' },
+      { id: 'America/Anchorage',                label: 'Anchorage' },
+      { id: 'America/Los_Angeles',              label: 'Los Angeles' },
+      { id: 'America/Denver',                   label: 'Denver' },
+      { id: 'America/Chicago',                  label: 'Chicago' },
+      { id: 'America/New_York',                 label: 'New York' },
+      { id: 'America/Toronto',                  label: 'Toronto' },
+      { id: 'America/Mexico_City',              label: 'Mexico City' },
+      { id: 'America/Bogota',                   label: 'Bogotá' },
+      { id: 'America/Sao_Paulo',                label: 'São Paulo' },
+      { id: 'America/Argentina/Buenos_Aires',   label: 'Buenos Aires' },
+      { id: 'Atlantic/Reykjavik',               label: 'Reykjavík' },
+      { id: 'Europe/London',                    label: 'London' },
+      { id: 'Europe/Lisbon',                    label: 'Lisbon' },
+      { id: 'Europe/Paris',                     label: 'Paris' },
+      { id: 'Europe/Madrid',                    label: 'Madrid' },
+      { id: 'Europe/Berlin',                    label: 'Berlin' },
+      { id: 'Europe/Rome',                      label: 'Rome' },
+      { id: 'Europe/Amsterdam',                 label: 'Amsterdam' },
+      { id: 'Europe/Athens',                    label: 'Athens' },
+      { id: 'Europe/Istanbul',                  label: 'Istanbul' },
+      { id: 'Europe/Moscow',                    label: 'Moscow' },
+      { id: 'Africa/Lagos',                     label: 'Lagos' },
+      { id: 'Africa/Cairo',                     label: 'Cairo' },
+      { id: 'Africa/Nairobi',                   label: 'Nairobi' },
+      { id: 'Africa/Johannesburg',              label: 'Johannesburg' },
+      { id: 'Asia/Jerusalem',                   label: 'Jerusalem' },
+      { id: 'Asia/Dubai',                       label: 'Dubai' },
+      { id: 'Asia/Karachi',                     label: 'Karachi' },
+      { id: 'Asia/Kolkata',                     label: 'Mumbai' },
+      { id: 'Asia/Dhaka',                       label: 'Dhaka' },
+      { id: 'Asia/Bangkok',                     label: 'Bangkok' },
+      { id: 'Asia/Jakarta',                     label: 'Jakarta' },
+      { id: 'Asia/Singapore',                   label: 'Singapore' },
+      { id: 'Asia/Hong_Kong',                   label: 'Hong Kong' },
+      { id: 'Asia/Shanghai',                    label: 'Beijing' },
+      { id: 'Asia/Tokyo',                       label: 'Tokyo' },
+      { id: 'Asia/Seoul',                       label: 'Seoul' },
+      { id: 'Australia/Perth',                  label: 'Perth' },
+      { id: 'Australia/Sydney',                 label: 'Sydney' },
+      { id: 'Pacific/Auckland',                 label: 'Auckland' }
+    ];
+
+    function labelFor(id) {
+      for (var i = 0; i < ZONES.length; i++) if (ZONES[i].id === id) return ZONES[i].label;
+      // Unknown zone (e.g. the user's detected home): derive a name from the id.
+      var seg = String(id).split('/').pop() || id;
+      return seg.replace(/_/g, ' ');
+    }
+
+    // ── state ──────────────────────────────────────────────────
+    var state = load() || defaults();
+    var offsetMin = 0; // planner shift, minutes from "now"
+
+    function detectHome() {
+      try {
+        var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (tz) return tz;
+      } catch (e) { /* fall through */ }
+      return 'America/New_York';
+    }
+
+    function defaults() {
+      var home = detectHome();
+      // A useful global starter set alongside the user's own zone.
+      var starters = ['America/Los_Angeles', 'America/New_York', 'Europe/London', 'Asia/Tokyo'];
+      var zones = [home];
+      for (var i = 0; i < starters.length; i++) {
+        if (starters[i] !== home && zones.indexOf(starters[i]) === -1) zones.push(starters[i]);
+      }
+      return { home: home, zones: zones };
+    }
+
+    function load() {
+      try {
+        var raw = localStorage.getItem(KEY);
+        if (!raw) return null;
+        var s = JSON.parse(raw);
+        if (!s || typeof s.home !== 'string' || !Array.isArray(s.zones) || s.zones.length === 0) return null;
+        if (s.zones.indexOf(s.home) === -1) s.zones.unshift(s.home);
+        return s;
+      } catch (e) { return null; }
+    }
+
+    function save() {
+      try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* storage blocked */ }
+    }
+
+    // ── time helpers (Intl-based, DST-safe) ─────────────────────
+    function referenceInstant() {
+      return new Date(Date.now() + offsetMin * 60000);
+    }
+
+    // Wall-clock parts of an instant, as seen in a given zone.
+    function partsInZone(instant, tz) {
+      var fmt = new Intl.DateTimeFormat('en-US', {
+        timeZone: tz, hour12: false,
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+      });
+      var map = {};
+      var parts = fmt.formatToParts(instant);
+      for (var i = 0; i < parts.length; i++) map[parts[i].type] = parts[i].value;
+      var h = parseInt(map.hour, 10);
+      if (h === 24) h = 0; // some engines emit "24" at midnight
+      return {
+        year: parseInt(map.year, 10),
+        month: parseInt(map.month, 10),
+        day: parseInt(map.day, 10),
+        hour: h,
+        minute: parseInt(map.minute, 10)
+      };
+    }
+
+    // Offset (minutes) of a zone from UTC at a given instant.
+    function offsetMinutesOf(instant, tz) {
+      var p = partsInZone(instant, tz);
+      var asUTC = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, 0);
+      return Math.round((asUTC - instant.getTime()) / 60000);
+    }
+
+    function fmtTime(instant, tz) {
+      return new Intl.DateTimeFormat('en-US', {
+        timeZone: tz, hour: 'numeric', minute: '2-digit', hour12: true
+      }).format(instant);
+    }
+
+    function fmtDate(instant, tz) {
+      return new Intl.DateTimeFormat('en-US', {
+        timeZone: tz, weekday: 'short', month: 'short', day: 'numeric'
+      }).format(instant);
+    }
+
+    // Whole-day difference of a zone vs the home zone for the same instant.
+    function dayDiff(instant, tz, home) {
+      var a = partsInZone(instant, tz);
+      var b = partsInZone(instant, home);
+      var da = Date.UTC(a.year, a.month - 1, a.day);
+      var db = Date.UTC(b.year, b.month - 1, b.day);
+      return Math.round((da - db) / 86400000);
+    }
+
+    function fmtOffsetDelta(mins) {
+      if (mins === 0) return 'same time';
+      var sign = mins > 0 ? '+' : '−';
+      var abs = Math.abs(mins);
+      var h = Math.floor(abs / 60);
+      var m = abs % 60;
+      var body = m ? (h + 'h ' + m + 'm') : (h + 'h');
+      return sign + body;
+    }
+
+    // ── rendering ───────────────────────────────────────────────
+    function renderPlannerValue() {
+      var el = document.getElementById('plannerValue');
+      if (offsetMin === 0) {
+        el.textContent = 'Right now';
+        el.classList.add('is-now');
+        return;
+      }
+      el.classList.remove('is-now');
+      var sign = offsetMin > 0 ? '+' : '−';
+      var abs = Math.abs(offsetMin);
+      var h = Math.floor(abs / 60);
+      var m = abs % 60;
+      var body = h ? (h + 'h' + (m ? ' ' + m + 'm' : '')) : (m + 'm');
+      el.textContent = sign + body + ' from now';
+    }
+
+    function renderZones() {
+      var wrap = document.getElementById('zones');
+      wrap.textContent = '';
+
+      if (!state.zones.length) {
+        var empty = document.createElement('div');
+        empty.className = 'empty';
+        empty.textContent = 'No cities yet — add one below.';
+        wrap.appendChild(empty);
+        return;
+      }
+
+      var instant = referenceInstant();
+      var homeOff = offsetMinutesOf(instant, state.home);
+
+      for (var i = 0; i < state.zones.length; i++) {
+        wrap.appendChild(buildZoneRow(state.zones[i], instant, homeOff));
+      }
+    }
+
+    function buildZoneRow(tz, instant, homeOff) {
+      var isHome = tz === state.home;
+      var p = partsInZone(instant, tz);
+      var isDay = p.hour >= 6 && p.hour < 18;
+
+      var row = document.createElement('div');
+      row.className = 'zone' + (isHome ? ' home' : '');
+
+      var dn = document.createElement('div');
+      dn.className = 'daynight';
+      dn.textContent = isDay ? '☀️' : '🌙';
+      dn.setAttribute('aria-hidden', 'true');
+      row.appendChild(dn);
+
+      // Meta: city + sub-line
+      var meta = document.createElement('div');
+      meta.className = 'meta';
+
+      var city = document.createElement('div');
+      city.className = 'city';
+      city.appendChild(document.createTextNode(labelFor(tz)));
+      if (isHome) {
+        var pill = document.createElement('span');
+        pill.className = 'home-pill';
+        pill.textContent = 'Home';
+        city.appendChild(pill);
+      }
+      meta.appendChild(city);
+
+      var sub = document.createElement('div');
+      sub.className = 'sub';
+      var offPill = document.createElement('span');
+      offPill.className = 'offset-pill';
+      var delta = offsetMinutesOf(instant, tz) - homeOff;
+      offPill.textContent = isHome ? 'Your time zone' : fmtOffsetDelta(delta);
+      sub.appendChild(offPill);
+
+      if (!isHome) {
+        var diff = dayDiff(instant, tz, state.home);
+        if (diff !== 0) {
+          var dd = document.createElement('span');
+          dd.className = 'day-diff' + (diff < 0 ? ' behind' : '');
+          dd.textContent = diff > 0 ? 'Next day' : 'Prev day';
+          sub.appendChild(dd);
+        }
+      }
+      meta.appendChild(sub);
+      row.appendChild(meta);
+
+      // Clock
+      var clock = document.createElement('div');
+      clock.className = 'clock';
+      var raw = fmtTime(instant, tz); // e.g. "3:45 PM"
+      var m = raw.match(/^(.*?)\s*(AM|PM)$/i);
+      var time = document.createElement('div');
+      time.className = 'time';
+      if (m) {
+        time.appendChild(document.createTextNode(m[1]));
+        var ap = document.createElement('span');
+        ap.className = 'ampm';
+        ap.textContent = m[2];
+        time.appendChild(ap);
+      } else {
+        time.textContent = raw;
+      }
+      clock.appendChild(time);
+
+      var date = document.createElement('div');
+      date.className = 'date';
+      date.textContent = fmtDate(instant, tz);
+      clock.appendChild(date);
+      row.appendChild(clock);
+
+      // Actions: make home / remove
+      var actions = document.createElement('div');
+      actions.className = 'zone-actions';
+
+      var homeBtn = document.createElement('button');
+      homeBtn.className = 'mini-btn';
+      homeBtn.type = 'button';
+      homeBtn.textContent = '⌂'; // house
+      homeBtn.title = isHome ? 'This is your home zone' : 'Set as home zone';
+      homeBtn.setAttribute('aria-label', isHome ? 'Home zone' : 'Set ' + labelFor(tz) + ' as home');
+      homeBtn.disabled = isHome;
+      homeBtn.addEventListener('click', function () { setHome(tz); });
+      actions.appendChild(homeBtn);
+
+      var rm = document.createElement('button');
+      rm.className = 'mini-btn remove';
+      rm.type = 'button';
+      rm.textContent = '×';
+      rm.title = 'Remove city';
+      rm.setAttribute('aria-label', 'Remove ' + labelFor(tz));
+      rm.disabled = state.zones.length <= 1;
+      rm.addEventListener('click', function () { removeZone(tz); });
+      actions.appendChild(rm);
+
+      row.appendChild(actions);
+      return row;
+    }
+
+    function renderCitySelect() {
+      var sel = document.getElementById('citySelect');
+      sel.textContent = '';
+      var added = 0;
+      for (var i = 0; i < ZONES.length; i++) {
+        if (state.zones.indexOf(ZONES[i].id) !== -1) continue;
+        var opt = document.createElement('option');
+        opt.value = ZONES[i].id;
+        opt.textContent = ZONES[i].label;
+        sel.appendChild(opt);
+        added++;
+      }
+      var addBtn = document.getElementById('addBtn');
+      if (added === 0) {
+        var opt2 = document.createElement('option');
+        opt2.textContent = 'All cities added';
+        opt2.value = '';
+        sel.appendChild(opt2);
+        sel.disabled = true;
+        addBtn.disabled = true;
+      } else {
+        sel.disabled = false;
+        addBtn.disabled = false;
+      }
+    }
+
+    function renderAll() {
+      renderPlannerValue();
+      renderZones();
+    }
+
+    // ── mutations ───────────────────────────────────────────────
+    function setHome(tz) {
+      state.home = tz;
+      // keep home first for a stable, scannable order
+      var idx = state.zones.indexOf(tz);
+      if (idx > 0) { state.zones.splice(idx, 1); state.zones.unshift(tz); }
+      save();
+      renderAll();
+    }
+
+    function removeZone(tz) {
+      if (state.zones.length <= 1) return;
+      var idx = state.zones.indexOf(tz);
+      if (idx === -1) return;
+      state.zones.splice(idx, 1);
+      if (state.home === tz) state.home = state.zones[0];
+      save();
+      renderCitySelect();
+      renderAll();
+    }
+
+    function addZone(tz) {
+      if (!tz || state.zones.indexOf(tz) !== -1) return;
+      state.zones.push(tz);
+      save();
+      renderCitySelect();
+      renderAll();
+    }
+
+    // ── wiring ───────────────────────────────────────────────────
+    var slider = document.getElementById('slider');
+    slider.addEventListener('input', function () {
+      offsetMin = parseInt(slider.value, 10) || 0;
+      renderAll();
+    });
+
+    document.getElementById('nowBtn').addEventListener('click', function () {
+      offsetMin = 0;
+      slider.value = '0';
+      renderAll();
+    });
+
+    document.getElementById('addBtn').addEventListener('click', function () {
+      var sel = document.getElementById('citySelect');
+      if (sel.value) addZone(sel.value);
+    });
+
+    // Live tick — recompute against the wall clock every second so the display
+    // stays current (the planner offset is preserved relative to "now").
+    setInterval(function () { renderAll(); }, 1000);
+
+    // First paint
+    renderCitySelect();
+    renderAll();
+  </script>
+
+</body>
+</html>
