@@ -1,5 +1,5 @@
 {
-  "catalogVersion": 18,
+  "catalogVersion": 19,
   "tools": [
     {
       "dir": "color-capture",
@@ -190,6 +190,14 @@
       "name": "World Clock",
       "description": "See the time across cities worldwide and drag the planner to find a slot that works in every time zone.",
       "glyph": "🌍",
+      "color": "#4d63ff",
+      "version": 1
+    },
+    {
+      "dir": "password-generator",
+      "name": "Password Generator",
+      "description": "Create strong, random passwords locally — pick the length and character types, and see the strength as you go.",
+      "glyph": "🔑",
       "color": "#4d63ff",
       "version": 1
     }
