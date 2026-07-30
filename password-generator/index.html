@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#eef0f4" />
+  <title>Password Generator</title>
+  <style>
+    /* Single-file, fully offline. No remote fonts/scripts/images — the app runs
+       tools under a strict CSP. System fonts only. Settings live in localStorage.
+       Randomness comes from crypto.getRandomValues (never Math.random) so the
+       output is cryptographically strong. Palette + shapes follow the Hillnote
+       design system: azure primary, cool-mist canvas, near-black ink, 24px radius. */
+    :root {
+      --primary: #4d63ff;
+      --primary-active: #6f82ff;
+      --primary-pale: #e6ebff;
+      --on-primary: #f4f6ff;
+      --ink: #111318;
+      --body: #454852;
+      --mute: #868a93;
+      --canvas: #ffffff;
+      --canvas-soft: #eef0f4;
+      --line: #dfe3ec;
+      --positive: #22a559;
+      --warning: #f5b62a;
+      --negative: #e0453f;
+      --r-sm: 8px;
+      --r-md: 12px;
+      --r-lg: 16px;
+      --r-xl: 24px;
+      --display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--canvas-soft);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-feature-settings: "calt";
+      min-height: 100dvh;
+      padding: 28px 20px 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 22px;
+    }
+
+    header { text-align: center; max-width: 640px; }
+    header .eyebrow {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--primary);
+    }
+    header h1 {
+      font-family: var(--display);
+      font-weight: 900;
+      font-size: clamp(1.9rem, 6vw, 2.6rem);
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+      margin-top: 6px;
+    }
+    header p {
+      color: var(--body);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-top: 8px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 560px;
+      background: var(--canvas);
+      border-radius: var(--r-xl);
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* ── Output ────────────────────────────────────────────────── */
+    .output {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--canvas-soft);
+      border-radius: var(--r-lg);
+      padding: 14px 14px 14px 18px;
+    }
+    .password {
+      flex: 1;
+      min-width: 0;
+      font-family: var(--mono);
+      font-size: clamp(1.05rem, 3.6vw, 1.4rem);
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      color: var(--ink);
+      line-height: 1.35;
+      word-break: break-all;
+      user-select: all;
+    }
+    .out-btns { display: flex; gap: 6px; flex: none; }
+    .icon-btn {
+      width: 40px; height: 40px;
+      flex: none;
+      border: none;
+      background: var(--canvas);
+      color: var(--ink);
+      border-radius: 9999px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      transition: background 0.15s, transform 0.1s, color 0.15s;
+    }
+    .icon-btn:hover { background: var(--primary-pale); }
+    .icon-btn:active { transform: scale(0.92); }
+    .icon-btn svg { width: 20px; height: 20px; display: block; }
+
+    /* ── Strength meter ────────────────────────────────────────── */
+    .strength { display: flex; flex-direction: column; gap: 8px; }
+    .meter { display: flex; gap: 6px; }
+    .meter .seg {
+      flex: 1;
+      height: 7px;
+      border-radius: 9999px;
+      background: var(--line);
+      transition: background 0.25s;
+    }
+    .strength-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+    }
+    .strength-label { font-size: 0.8rem; font-weight: 600; color: var(--mute); }
+    .strength-label b { font-weight: 700; }
+    .entropy { font-size: 0.72rem; color: var(--mute); font-variant-numeric: tabular-nums; }
+
+    /* ── Controls ──────────────────────────────────────────────── */
+    .controls { display: flex; flex-direction: column; gap: 16px; }
+
+    .len-row { display: flex; flex-direction: column; gap: 10px; }
+    .len-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .len-head .k { font-size: 0.9rem; font-weight: 600; }
+    .len-head .v {
+      font-family: var(--display);
+      font-weight: 900;
+      font-size: 1.35rem;
+      color: var(--primary);
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 9999px;
+      background: var(--line);
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px; height: 22px;
+      border-radius: 9999px;
+      background: var(--primary);
+      border: 3px solid var(--canvas);
+      box-shadow: 0 1px 4px rgba(17, 19, 24, 0.28);
+      cursor: pointer;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 22px; height: 22px;
+      border-radius: 9999px;
+      background: var(--primary);
+      border: 3px solid var(--canvas);
+      box-shadow: 0 1px 4px rgba(17, 19, 24, 0.28);
+      cursor: pointer;
+    }
+
+    .opts { display: flex; flex-direction: column; gap: 8px; }
+    .opt {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--canvas-soft);
+      border-radius: var(--r-md);
+      padding: 11px 14px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .opt .info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+    .opt .name { font-size: 0.9rem; font-weight: 600; }
+    .opt .sample { font-family: var(--mono); font-size: 0.78rem; color: var(--mute); }
+
+    /* Accessible toggle switch */
+    .switch { position: relative; flex: none; width: 42px; height: 24px; }
+    .switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+    .track {
+      position: absolute;
+      inset: 0;
+      background: var(--line);
+      border-radius: 9999px;
+      transition: background 0.18s;
+    }
+    .track::after {
+      content: "";
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 18px; height: 18px;
+      border-radius: 9999px;
+      background: var(--canvas);
+      box-shadow: 0 1px 3px rgba(17, 19, 24, 0.3);
+      transition: transform 0.18s;
+    }
+    .switch input:checked + .track { background: var(--primary); }
+    .switch input:checked + .track::after { transform: translateX(18px); }
+    .switch input:focus-visible + .track { box-shadow: 0 0 0 3px var(--primary-pale); }
+
+    .warn {
+      font-size: 0.78rem;
+      color: var(--negative);
+      min-height: 1em;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .generate {
+      background: var(--primary);
+      color: var(--on-primary);
+      border: none;
+      border-radius: var(--r-xl);
+      font-family: var(--sans);
+      font-size: 1rem;
+      font-weight: 600;
+      padding: 14px 30px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .generate:hover { background: var(--primary-active); }
+    .generate:active { transform: scale(0.98); }
+    .generate svg { width: 19px; height: 19px; }
+
+    /* Copy toast */
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 26px;
+      transform: translate(-50%, 20px);
+      background: var(--ink);
+      color: var(--on-primary);
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: 9999px;
+      box-shadow: 0 6px 20px rgba(17, 19, 24, 0.28);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 10;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="eyebrow">Productive &middot; Security</div>
+    <h1>Password Generator</h1>
+    <p>Create strong, random passwords right in your workspace. Nothing leaves your device — every password is generated locally.</p>
+  </header>
+
+  <main class="card">
+    <div class="output">
+      <span class="password" id="password" aria-live="polite" title="Your generated password">click generate</span>
+      <div class="out-btns">
+        <button class="icon-btn" id="refreshBtn" type="button" title="Generate a new password" aria-label="Generate a new password">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v5h-5"/>
+          </svg>
+        </button>
+        <button class="icon-btn" id="copyBtn" type="button" title="Copy to clipboard" aria-label="Copy password to clipboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="strength">
+      <div class="meter" id="meter" aria-hidden="true">
+        <span class="seg"></span><span class="seg"></span><span class="seg"></span><span class="seg"></span>
+      </div>
+      <div class="strength-row">
+        <span class="strength-label" id="strengthLabel">Strength: <b>—</b></span>
+        <span class="entropy" id="entropy"></span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="len-row">
+        <div class="len-head">
+          <label class="k" for="length">Length</label>
+          <span class="v" id="lenValue">16</span>
+        </div>
+        <input type="range" id="length" min="4" max="64" value="16" step="1"
+               aria-label="Password length" />
+      </div>
+
+      <div class="opts" id="opts">
+        <label class="opt">
+          <span class="info"><span class="name">Uppercase</span><span class="sample">A B C D</span></span>
+          <span class="switch"><input type="checkbox" id="upper" checked /><span class="track"></span></span>
+        </label>
+        <label class="opt">
+          <span class="info"><span class="name">Lowercase</span><span class="sample">a b c d</span></span>
+          <span class="switch"><input type="checkbox" id="lower" checked /><span class="track"></span></span>
+        </label>
+        <label class="opt">
+          <span class="info"><span class="name">Numbers</span><span class="sample">0 1 2 3</span></span>
+          <span class="switch"><input type="checkbox" id="numbers" checked /><span class="track"></span></span>
+        </label>
+        <label class="opt">
+          <span class="info"><span class="name">Symbols</span><span class="sample">! @ # $</span></span>
+          <span class="switch"><input type="checkbox" id="symbols" checked /><span class="track"></span></span>
+        </label>
+        <label class="opt">
+          <span class="info"><span class="name">Avoid ambiguous</span><span class="sample">skip I l 1 O 0</span></span>
+          <span class="switch"><input type="checkbox" id="noAmbiguous" /><span class="track"></span></span>
+        </label>
+      </div>
+
+      <div class="warn" id="warn" role="alert"></div>
+
+      <button class="generate" id="generateBtn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="m5 3 1.5 3.5L10 8 6.5 9.5 5 13l-1.5-3.5L0 8l3.5-1.5z" transform="translate(2 1)"/>
+          <path d="M18 10l.9 2.1L21 13l-2.1.9L18 16l-.9-2.1L15 13l2.1-.9z"/>
+        </svg>
+        Generate password
+      </button>
+    </div>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">Copied to clipboard</div>
+
+  <script>
+    'use strict';
+
+    var KEY = 'password-generator:v1';
+
+    // Character sets. Built as literal strings (no fromCharCode) so the source
+    // reads plainly and stays out of the validator's obfuscation warnings.
+    var SETS = {
+      upper:   'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+      lower:   'abcdefghijklmnopqrstuvwxyz',
+      numbers: '0123456789',
+      symbols: '!@#$%^&*()-_=+[]{};:,.<>?/'
+    };
+    // Characters that are easy to confuse with one another.
+    var AMBIGUOUS = 'Il1O0oB8S5Z2G6|';
+
+    var els = {
+      password: document.getElementById('password'),
+      length: document.getElementById('length'),
+      lenValue: document.getElementById('lenValue'),
+      upper: document.getElementById('upper'),
+      lower: document.getElementById('lower'),
+      numbers: document.getElementById('numbers'),
+      symbols: document.getElementById('symbols'),
+      noAmbiguous: document.getElementById('noAmbiguous'),
+      warn: document.getElementById('warn'),
+      meter: document.getElementById('meter'),
+      strengthLabel: document.getElementById('strengthLabel'),
+      entropy: document.getElementById('entropy'),
+      toast: document.getElementById('toast')
+    };
+
+    // ── settings persistence ───────────────────────────────────
+    function loadSettings() {
+      try {
+        var raw = localStorage.getItem(KEY);
+        if (!raw) return;
+        var s = JSON.parse(raw);
+        if (!s || typeof s !== 'object') return;
+        if (typeof s.length === 'number' && s.length >= 4 && s.length <= 64) els.length.value = s.length;
+        ['upper', 'lower', 'numbers', 'symbols', 'noAmbiguous'].forEach(function (k) {
+          if (typeof s[k] === 'boolean') els[k].checked = s[k];
+        });
+      } catch (e) { /* ignore corrupt state */ }
+    }
+
+    function saveSettings() {
+      try {
+        localStorage.setItem(KEY, JSON.stringify({
+          length: Number(els.length.value),
+          upper: els.upper.checked,
+          lower: els.lower.checked,
+          numbers: els.numbers.checked,
+          symbols: els.symbols.checked,
+          noAmbiguous: els.noAmbiguous.checked
+        }));
+      } catch (e) { /* storage full / blocked */ }
+    }
+
+    // ── secure randomness ──────────────────────────────────────
+    // Uniform index in [0, max) using rejection sampling over crypto bytes, so
+    // no character class is subtly favoured by modulo bias.
+    function randInt(max) {
+      if (max <= 0) return 0;
+      var limit = 256 - (256 % max);
+      var buf = new Uint8Array(1);
+      var v;
+      do { crypto.getRandomValues(buf); v = buf[0]; } while (v >= limit);
+      return v % max;
+    }
+
+    function buildPool() {
+      var pool = '';
+      if (els.upper.checked) pool += SETS.upper;
+      if (els.lower.checked) pool += SETS.lower;
+      if (els.numbers.checked) pool += SETS.numbers;
+      if (els.symbols.checked) pool += SETS.symbols;
+      if (els.noAmbiguous.checked) {
+        pool = pool.split('').filter(function (c) { return AMBIGUOUS.indexOf(c) === -1; }).join('');
+      }
+      return pool;
+    }
+
+    // Which individual sets are active (after ambiguity filtering) — used to
+    // guarantee at least one character from each chosen class.
+    function activeSets() {
+      var out = [];
+      ['upper', 'lower', 'numbers', 'symbols'].forEach(function (k) {
+        if (!els[k].checked) return;
+        var set = SETS[k];
+        if (els.noAmbiguous.checked) {
+          set = set.split('').filter(function (c) { return AMBIGUOUS.indexOf(c) === -1; }).join('');
+        }
+        if (set.length) out.push(set);
+      });
+      return out;
+    }
+
+    function pick(set) { return set.charAt(randInt(set.length)); }
+
+    // Fisher–Yates shuffle using the same unbiased source.
+    function shuffle(arr) {
+      for (var i = arr.length - 1; i > 0; i--) {
+        var j = randInt(i + 1);
+        var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+      }
+      return arr;
+    }
+
+    function generate() {
+      var pool = buildPool();
+      var len = Number(els.length.value);
+
+      if (!pool) {
+        els.password.textContent = 'select a character type';
+        els.password.style.color = 'var(--mute)';
+        updateStrength('', 0);
+        return;
+      }
+      els.password.style.color = '';
+
+      var sets = activeSets();
+      var chars = [];
+      // Seed one guaranteed char from each active class (only if it fits).
+      for (var s = 0; s < sets.length && s < len; s++) chars.push(pick(sets[s]));
+      // Fill the remainder from the full pool.
+      for (var i = chars.length; i < len; i++) chars.push(pick(pool));
+
+      shuffle(chars);
+      var pw = chars.join('');
+      els.password.textContent = pw;
+      updateStrength(pw, pool.length);
+    }
+
+    // ── strength: Shannon-style entropy = length × log2(poolSize) ──
+    function updateStrength(pw, poolSize) {
+      var bits = (pw && poolSize > 1) ? Math.round(pw.length * Math.log2(poolSize)) : 0;
+
+      var level, label, color;
+      if (bits === 0)        { level = 0; label = '—';         color = 'var(--line)'; }
+      else if (bits < 45)    { level = 1; label = 'Weak';      color = 'var(--negative)'; }
+      else if (bits < 70)    { level = 2; label = 'Fair';      color = 'var(--warning)'; }
+      else if (bits < 110)   { level = 3; label = 'Strong';    color = 'var(--primary)'; }
+      else                   { level = 4; label = 'Very strong'; color = 'var(--positive)'; }
+
+      var segs = els.meter.children;
+      for (var i = 0; i < segs.length; i++) {
+        segs[i].style.background = i < level ? color : 'var(--line)';
+      }
+      els.strengthLabel.innerHTML = 'Strength: <b style="color:' + (bits ? color : 'var(--mute)') + '">' + label + '</b>';
+      els.entropy.textContent = bits ? (bits + ' bits of entropy') : '';
+    }
+
+    // ── copy ────────────────────────────────────────────────────
+    var toastTimer;
+    function showToast(msg) {
+      els.toast.textContent = msg;
+      els.toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { els.toast.classList.remove('show'); }, 1600);
+    }
+
+    function fallbackCopy(text) {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      document.body.removeChild(ta);
+      return ok;
+    }
+
+    function copyPassword() {
+      var pw = els.password.textContent;
+      if (!pw || pw === 'click generate' || pw === 'select a character type') return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(pw).then(
+          function () { showToast('Copied to clipboard'); },
+          function () { showToast(fallbackCopy(pw) ? 'Copied to clipboard' : 'Press Ctrl/Cmd+C to copy'); }
+        );
+      } else {
+        showToast(fallbackCopy(pw) ? 'Copied to clipboard' : 'Press Ctrl/Cmd+C to copy');
+      }
+    }
+
+    // ── validation of options ──────────────────────────────────
+    function anyTypeSelected() {
+      return els.upper.checked || els.lower.checked || els.numbers.checked || els.symbols.checked;
+    }
+
+    function ensureAtLeastOne(changed) {
+      // Never allow zero character types — re-check the one the user just cleared.
+      if (!anyTypeSelected()) {
+        changed.checked = true;
+        els.warn.textContent = 'Keep at least one character type on.';
+        setTimeout(function () { els.warn.textContent = ''; }, 1800);
+      }
+    }
+
+    // ── wiring ──────────────────────────────────────────────────
+    els.length.addEventListener('input', function () {
+      els.lenValue.textContent = els.length.value;
+      saveSettings();
+      generate();
+    });
+
+    ['upper', 'lower', 'numbers', 'symbols', 'noAmbiguous'].forEach(function (k) {
+      els[k].addEventListener('change', function () {
+        if (k !== 'noAmbiguous') ensureAtLeastOne(els[k]);
+        saveSettings();
+        generate();
+      });
+    });
+
+    document.getElementById('generateBtn').addEventListener('click', generate);
+    document.getElementById('refreshBtn').addEventListener('click', generate);
+    document.getElementById('copyBtn').addEventListener('click', copyPassword);
+
+    // First paint
+    loadSettings();
+    els.lenValue.textContent = els.length.value;
+    generate();
+  </script>
+
+</body>
+</html>
