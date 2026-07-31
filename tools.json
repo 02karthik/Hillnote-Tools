@@ -1,5 +1,5 @@
 {
-  "catalogVersion": 19,
+  "catalogVersion": 20,
   "tools": [
     {
       "dir": "color-capture",
@@ -198,6 +198,14 @@
       "name": "Password Generator",
       "description": "Create strong, random passwords locally — pick the length and character types, and see the strength as you go.",
       "glyph": "🔑",
+      "color": "#4d63ff",
+      "version": 1
+    },
+    {
+      "dir": "metronome",
+      "name": "Metronome",
+      "description": "Keep perfect time — set the tempo, pick a beat, and practise to an accurate, fully offline click with tap tempo.",
+      "glyph": "🎵",
       "color": "#4d63ff",
       "version": 1
     }
