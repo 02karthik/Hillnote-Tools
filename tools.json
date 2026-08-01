@@ -1,5 +1,5 @@
 {
-  "catalogVersion": 20,
+  "catalogVersion": 21,
   "tools": [
     {
       "dir": "color-capture",
@@ -206,6 +206,14 @@
       "name": "Metronome",
       "description": "Keep perfect time — set the tempo, pick a beat, and practise to an accurate, fully offline click with tap tempo.",
       "glyph": "🎵",
+      "color": "#4d63ff",
+      "version": 1
+    },
+    {
+      "dir": "unit-converter",
+      "name": "Unit Converter",
+      "description": "Convert length, weight, temperature, volume, area, speed, time, and digital storage — instantly and fully offline.",
+      "glyph": "📐",
       "color": "#4d63ff",
       "version": 1
     }
