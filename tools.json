@@ -1,5 +1,5 @@
 {
-  "catalogVersion": 21,
+  "catalogVersion": 22,
   "tools": [
     {
       "dir": "color-capture",
@@ -214,6 +214,14 @@
       "name": "Unit Converter",
       "description": "Convert length, weight, temperature, volume, area, speed, time, and digital storage — instantly and fully offline.",
       "glyph": "📐",
+      "color": "#4d63ff",
+      "version": 1
+    },
+    {
+      "dir": "markdown-preview",
+      "name": "Markdown Preview",
+      "description": "Write Markdown and watch it render live — headings, lists, tables, code and more, with word count and one-click copy, fully offline.",
+      "glyph": "📝",
       "color": "#4d63ff",
       "version": 1
     }
