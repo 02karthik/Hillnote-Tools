@@ -3,14 +3,33 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#eef0f4" />
   <title>Pomodoro Timer</title>
   <style>
+    /* Palette + shapes follow the Hillnote design system: azure primary,
+       cool-mist canvas, near-black ink, Manrope display + Inter body. */
+    :root {
+      --primary: #4d63ff;
+      --primary-active: #6f82ff;
+      --primary-pale: #e6ebff;
+      --on-primary: #f4f6ff;
+      --ink: #111318;
+      --body: #454852;
+      --mute: #868a93;
+      --canvas: #ffffff;
+      --canvas-soft: #eef0f4;
+      --line: #dfe3ec;
+      --display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      background: #0d0d0d;
-      color: #f0f0f0;
-      font-family: 'Georgia', serif;
+      background: var(--canvas-soft);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-feature-settings: "calt";
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -19,44 +38,52 @@
       user-select: none;
     }
 
-    h1 {
-      font-size: 1rem;
-      letter-spacing: 0.25em;
+    .eyebrow {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: #ffffff;
+      color: var(--primary);
+      margin-bottom: 6px;
+    }
+
+    h1 {
+      font-family: var(--display);
+      font-size: clamp(1.9rem, 6vw, 2.6rem);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+      color: var(--ink);
       margin-bottom: 2.5rem;
-      font-weight: normal;
     }
 
     .mode-tabs {
       display: flex;
       gap: 0;
       margin-bottom: 3rem;
-      border: 1px solid #333;
-      border-radius: 4px;
+      border: 1px solid var(--line);
+      background: var(--canvas);
+      border-radius: 9999px;
       overflow: hidden;
     }
 
     .mode-tab {
       background: none;
       border: none;
-      color: #555;
+      color: var(--body);
       font-family: inherit;
       font-size: 0.75rem;
+      font-weight: 600;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      padding: 0.5rem 1.25rem;
+      padding: 0.55rem 1.35rem;
       cursor: pointer;
       transition: background 0.2s, color 0.2s;
     }
 
     .mode-tab.active {
-      background: #f0f0f0;
-      color: #0d0d0d;
-    }
-
-    .mode-tab:not(:last-child) {
-      border-right: 1px solid #333;
+      background: var(--primary);
+      color: var(--on-primary);
     }
 
     .timer-ring {
@@ -74,13 +101,13 @@
 
     .ring-bg {
       fill: none;
-      stroke: #222;
+      stroke: var(--line);
       stroke-width: 6;
     }
 
     .ring-progress {
       fill: none;
-      stroke: #f0f0f0;
+      stroke: var(--primary);
       stroke-width: 6;
       stroke-linecap: round;
       transition: stroke-dashoffset 1s linear, stroke 0.4s;
@@ -97,9 +124,10 @@
     }
 
     .timer-time {
+      font-family: var(--display);
       font-size: 3.5rem;
-      font-weight: normal;
-      letter-spacing: 0.05em;
+      font-weight: 900;
+      letter-spacing: -0.02em;
       font-variant-numeric: tabular-nums;
       line-height: 1;
     }
@@ -108,7 +136,7 @@
       font-size: 0.7rem;
       letter-spacing: 0.15em;
       text-transform: uppercase;
-      color: #555;
+      color: var(--mute);
     }
 
     .controls {
@@ -119,46 +147,46 @@
     }
 
     .btn {
-      background: none;
-      border: 1px solid #333;
-      color: #f0f0f0;
+      background: var(--canvas);
+      border: 1px solid var(--line);
+      color: var(--ink);
       font-family: inherit;
       font-size: 0.8rem;
+      font-weight: 600;
       letter-spacing: 0.12em;
       text-transform: uppercase;
       padding: 0.6rem 1.8rem;
-      border-radius: 3px;
+      border-radius: 24px;
       cursor: pointer;
       transition: background 0.2s, border-color 0.2s;
     }
 
-    .btn:hover { border-color: #888; }
+    .btn:hover { border-color: var(--ink); }
 
     .btn-primary {
-      background: #ffffff;
-      color: #0d0d0d;
-      border-color: #ffffff;
+      background: var(--primary);
+      color: var(--on-primary);
+      border-color: var(--primary);
       font-size: 0.85rem;
       font-weight: 600;
       padding: 0.65rem 2.2rem;
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.25), 0 0 32px rgba(255,255,255,0.2);
     }
 
     .btn-primary:hover {
-      background: #ffffff;
-      border-color: #ffffff;
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.35), 0 0 40px rgba(255,255,255,0.28);
+      background: var(--primary-active);
+      border-color: var(--primary-active);
     }
 
     .btn-icon {
       border: none;
-      color: #f0f0f0;
+      background: none;
+      color: var(--body);
       padding: 0.5rem;
       font-size: 1.1rem;
       letter-spacing: 0;
     }
 
-    .btn-icon:hover { color: #ffffff; border-color: transparent; }
+    .btn-icon:hover { color: var(--ink); border-color: transparent; }
 
     .session-dots {
       display: flex;
@@ -170,25 +198,25 @@
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      border: 1px solid #444;
-      background: transparent;
+      border: 1px solid var(--line);
+      background: var(--canvas);
       transition: background 0.3s;
     }
 
-    .session-dot.done { background: #f0f0f0; border-color: #f0f0f0; }
-    .session-dot.active { border-color: #f0f0f0; }
+    .session-dot.done { background: var(--primary); border-color: var(--primary); }
+    .session-dot.active { border-color: var(--primary); }
 
     .stats {
       display: flex;
       gap: 2.5rem;
-      color: #444;
+      color: var(--mute);
       font-size: 0.75rem;
       letter-spacing: 0.1em;
       text-transform: uppercase;
     }
 
     .stat { text-align: center; }
-    .stat-value { font-size: 1.2rem; color: #f0f0f0; display: block; margin-bottom: 0.2rem; }
+    .stat-value { font-family: var(--display); font-size: 1.4rem; font-weight: 800; color: var(--ink); display: block; margin-bottom: 0.2rem; }
 
     .settings-row {
       margin-top: 2.5rem;
@@ -203,9 +231,9 @@
       gap: 0.8rem;
       margin-top: 1.5rem;
       padding: 1.2rem 1.5rem;
-      border: 1px solid #2a2a2a;
-      border-radius: 4px;
-      background: #111;
+      border: none;
+      border-radius: 24px;
+      background: var(--canvas);
       width: 260px;
     }
 
@@ -216,27 +244,27 @@
       justify-content: space-between;
       align-items: center;
       font-size: 0.78rem;
-      color: #888;
+      color: var(--body);
       letter-spacing: 0.08em;
     }
 
     .setting-row label { text-transform: uppercase; }
 
     .setting-row input[type=number] {
-      background: #1a1a1a;
-      border: 1px solid #333;
-      color: #f0f0f0;
+      background: var(--canvas);
+      border: 1px solid var(--line);
+      color: var(--ink);
       font-family: inherit;
       font-size: 0.85rem;
       width: 52px;
       padding: 0.3rem 0.5rem;
       text-align: center;
-      border-radius: 3px;
+      border-radius: 12px;
     }
 
     .setting-row input[type=number]:focus {
       outline: none;
-      border-color: #666;
+      border-color: var(--primary);
     }
 
     .notify-flash {
@@ -249,7 +277,7 @@
     }
 
     @keyframes flashBorder {
-      0%   { border-color: #f0f0f0; opacity: 1; }
+      0%   { border-color: var(--primary); opacity: 1; }
       100% { border-color: transparent; opacity: 0; }
     }
 
@@ -261,6 +289,7 @@
 </head>
 <body>
 
+<div class="eyebrow">Focus &middot; Timer</div>
 <h1>Pomodoro</h1>
 
 <div class="mode-tabs">
@@ -441,7 +470,7 @@
   }
 
   const modeNames = { focus: 'Focus', short: 'Short Break', long: 'Long Break' };
-  const modeColors = { focus: '#f0f0f0', short: '#7ec8a0', long: '#7ab4d4' };
+  const modeColors = { focus: '#4d63ff', short: '#22a559', long: '#38c9d6' };
 
   function setMode(mode, resetElapsed = true) {
     state.mode = mode;

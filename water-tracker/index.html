@@ -3,31 +3,51 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#eef0f4">
 <title>Water Tracker</title>
 <style>
+/* Palette + shapes follow the Hillnote design system: azure primary,
+   cool-mist canvas, near-black ink, Manrope display + Inter body. */
 :root {
-  --bg: #0f172a;
-  --card: #1e293b;
-  --border: #334155;
-  --text: #f1f5f9;
-  --muted: #94a3b8;
-  --accent: #38bdf8;
-  --accent-dim: #0c4a6e;
+  --bg: #eef0f4;
+  --card: #ffffff;
+  --border: #dfe3ec;
+  --text: #111318;
+  --body: #454852;
+  --muted: #868a93;
+  --accent: #4d63ff;
+  --accent-dim: #e6ebff;
+  --on-accent: #f4f6ff;
+  --display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: var(--sans);
+  font-feature-settings: "calt";
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 2rem 1.25rem 3rem;
 }
-h1 {
-  font-size: 1.25rem;
+header { text-align: center; }
+.eyebrow {
+  font-size: 12px;
   font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+h1 {
+  font-family: var(--display);
+  font-size: clamp(1.9rem, 6vw, 2.6rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
   margin-bottom: 0.25rem;
 }
 .subtitle {
@@ -42,8 +62,11 @@ h1 {
   margin-bottom: 1.75rem;
 }
 .count {
+  font-family: var(--display);
   font-size: 5.5rem;
-  font-weight: 700;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
   color: var(--accent);
   line-height: 1;
 }
@@ -63,7 +86,7 @@ h1 {
 .glass {
   aspect-ratio: 1;
   border-radius: 0.875rem;
-  border: 2px solid var(--border);
+  border: 2px solid transparent;
   background: var(--card);
   display: flex;
   align-items: center;
@@ -105,7 +128,7 @@ h1 {
   border-radius: 50%;
   border: none;
   background: var(--accent);
-  color: #0c1a2e;
+  color: var(--on-accent);
   font-size: 2.75rem;
   font-weight: 700;
   line-height: 1;
@@ -154,7 +177,10 @@ h1 {
 </head>
 <body>
 
-<h1>💧 Water Tracker</h1>
+<header>
+  <div class="eyebrow">Health &middot; Hydration</div>
+  <h1>Water Tracker</h1>
+</header>
 <p class="subtitle">Stay hydrated — one glass at a time</p>
 
 <div class="count-wrap">

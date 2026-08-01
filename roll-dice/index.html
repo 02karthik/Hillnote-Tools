@@ -3,8 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#eef0f4">
     <title>Roll a Dice</title>
     <style>
+        /* Palette + shapes follow the Hillnote design system: azure primary,
+           cool-mist canvas, near-black ink, Manrope display + Inter body. */
+        :root {
+            --primary: #4d63ff;
+            --primary-active: #6f82ff;
+            --primary-pale: #e6ebff;
+            --on-primary: #f4f6ff;
+            --ink: #111318;
+            --mute: #868a93;
+            --canvas: #ffffff;
+            --canvas-soft: #eef0f4;
+            --line: #dfe3ec;
+            --display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -12,8 +29,10 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #000;
+            font-family: var(--sans);
+            font-feature-settings: "calt";
+            background: var(--canvas-soft);
+            color: var(--ink);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -22,36 +41,49 @@
         }
 
         .container {
-            background: white;
-            border-radius: 20px;
+            background: var(--canvas);
+            border-radius: 24px;
             padding: 40px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             text-align: center;
             max-width: 400px;
             width: 100%;
         }
 
+        .eyebrow {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--primary);
+            margin-bottom: 6px;
+        }
+
         h1 {
-            color: #333;
+            font-family: var(--display);
+            font-size: clamp(1.9rem, 6vw, 2.6rem);
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            line-height: 1.05;
+            color: var(--ink);
             margin-bottom: 30px;
-            font-size: 2.5em;
         }
 
         .dice-display {
             width: 150px;
             height: 150px;
-            background: #fff;
-            border-radius: 15px;
+            background: var(--canvas-soft);
+            border-radius: 24px;
             display: flex;
             justify-content: center;
             align-items: center;
             margin: 0 auto 30px;
+            font-family: var(--display);
             font-size: 5em;
-            color: #000;
-            font-weight: bold;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            color: var(--ink);
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            font-variant-numeric: tabular-nums;
             transition: transform 0.3s ease;
-            border: 3px solid #000;
         }
 
         .dice-display.rolling {
@@ -66,22 +98,22 @@
         }
 
         button {
-            background: #1a1a1a;
-            color: white;
-            border: 2px solid #fff;
-            padding: 15px 40px;
-            font-size: 1.1em;
-            border-radius: 10px;
+            background: var(--primary);
+            color: var(--on-primary);
+            border: none;
+            padding: 14px 40px;
+            font-family: inherit;
+            font-size: 1rem;
+            border-radius: 24px;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            font-weight: bold;
+            transition: background 0.2s, transform 0.2s;
+            font-weight: 600;
             margin: 10px 5px;
         }
 
         button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(255, 255, 255, 0.3);
-            background: #222;
+            background: var(--primary-active);
         }
 
         button:active {
@@ -98,7 +130,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>🎲 Roll a Dice</h1>
+        <div class="eyebrow">Fun &middot; Chance</div>
+        <h1>Roll a Dice</h1>
         <div class="dice-display" id="diceDisplay">-</div>
         <button id="rollBtn" onclick="rollDice()">Roll Dice</button>
         

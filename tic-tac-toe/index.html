@@ -3,47 +3,41 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#eef0f4">
 <title>Tic · Tac · Toe</title>
 <style>
+  /* Palette + shapes follow the Hillnote design system: azure primary,
+     cool-mist canvas, near-black ink, Manrope display + Inter body.
+     Self-contained: no remote fonts (the app runs tools under a strict CSP). */
   :root {
-    --paper: #f4ece1;
-    --ink: #211c17;
-    --rust: #c8553d;
-    --teal: #1f6e6e;
-    --line: #c9bba6;
-    --shadow: rgba(33, 28, 23, .18);
-    /* Self-contained: system fonts only, no network (the app runs tools under a
-       strict CSP). Display = warm book serif; labels = clean monospace. */
-    --font-display: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
-    --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, 'Roboto Mono', monospace;
+    --paper: #eef0f4;
+    --canvas: #ffffff;
+    --ink: #111318;
+    --rust: #4d63ff;
+    --teal: #38c9d6;
+    --line: #dfe3ec;
+    --mute: #868a93;
+    --shadow: rgba(17, 19, 24, .10);
+    --font-display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-mono: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; }
   body {
     background: var(--paper);
-    background-image:
-      radial-gradient(circle at 20% 15%, rgba(200,85,61,.06), transparent 45%),
-      radial-gradient(circle at 85% 80%, rgba(31,110,110,.07), transparent 45%);
     color: var(--ink);
     font-family: var(--font-mono);
+    font-feature-settings: "calt";
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     min-height: 100%;
     padding: 24px;
     -webkit-font-smoothing: antialiased;
   }
-  /* subtle paper grain */
-  body::after {
-    content: "";
-    position: fixed; inset: 0;
-    pointer-events: none;
-    opacity: .035;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
   .stage {
     width: 100%;
-    max-width: 420px;
+    max-width: 260px;
     animation: rise .7s cubic-bezier(.2,.8,.2,1) both;
   }
   @keyframes rise { from { opacity:0; transform: translateY(14px);} to {opacity:1; transform:none;} }
@@ -52,17 +46,18 @@
   h1 {
     font-family: var(--font-display);
     font-weight: 900;
-    font-size: clamp(2.4rem, 9vw, 3.2rem);
+    font-size: clamp(1.6rem, 6vw, 2.1rem);
     letter-spacing: -.02em;
     line-height: .95;
   }
   h1 .dot { color: var(--rust); }
   .sub {
-    margin-top: 6px;
+    margin-bottom: 6px;
     font-size: .72rem;
-    letter-spacing: .28em;
+    letter-spacing: .14em;
+    font-weight: 600;
     text-transform: uppercase;
-    color: #8a7c66;
+    color: var(--rust);
   }
 
   .status {
@@ -81,9 +76,8 @@
     grid-template-columns: repeat(3, 1fr);
     gap: 0;
     aspect-ratio: 1;
-    background: #fbf6ee;
-    border-radius: 18px;
-    box-shadow: 0 18px 40px -18px var(--shadow), inset 0 0 0 1px rgba(33,28,23,.05);
+    background: var(--canvas);
+    border-radius: 24px;
     padding: 10px;
   }
   .cell {
@@ -101,7 +95,7 @@
     transition: background .15s;
     border-radius: 10px;
   }
-  .cell:not(.taken):hover { background: rgba(200,85,61,.07); }
+  .cell:not(.taken):hover { background: #e6ebff; }
   .cell:disabled { cursor: default; }
   /* grid rules drawn with pseudo elements */
   .cell:nth-child(-n+6)::after,
@@ -116,7 +110,7 @@
   @keyframes pop { from { transform: scale(.2) rotate(-12deg); opacity:0;} to {transform:none; opacity:1;} }
 
   .cell.win { animation: glow 1.2s ease-in-out infinite alternate; }
-  @keyframes glow { to { background: rgba(200,85,61,.16);} }
+  @keyframes glow { to { background: #e6ebff;} }
 
   .controls {
     margin-top: 22px;
@@ -126,8 +120,8 @@
   }
   .diff {
     display: flex;
-    background: #ece2d3;
-    border-radius: 12px;
+    background: var(--canvas);
+    border-radius: 9999px;
     padding: 4px;
     gap: 4px;
   }
@@ -139,37 +133,36 @@
     font-size: .72rem;
     letter-spacing: .08em;
     text-transform: uppercase;
+    font-weight: 600;
     padding: 9px 4px;
-    border-radius: 9px;
+    border-radius: 9999px;
     cursor: pointer;
-    color: #7d6f59;
+    color: #454852;
     transition: all .18s;
   }
   .diff button.active {
-    background: var(--ink);
-    color: var(--paper);
-    box-shadow: 0 4px 12px -4px var(--shadow);
+    background: var(--rust);
+    color: #f4f6ff;
   }
   .reset {
-    border: 2px solid var(--ink);
-    background: transparent;
-    color: var(--ink);
+    border: none;
+    background: var(--rust);
+    color: #f4f6ff;
     font-family: var(--font-mono);
-    font-size: .8rem;
-    letter-spacing: .12em;
-    text-transform: uppercase;
+    font-size: .9rem;
+    font-weight: 600;
     padding: 13px;
-    border-radius: 12px;
+    border-radius: 24px;
     cursor: pointer;
     transition: all .18s;
   }
-  .reset:hover { background: var(--ink); color: var(--paper); }
+  .reset:hover { background: #6f82ff; }
   .reset:active { transform: translateY(1px); }
 
   .score {
     display:flex; justify-content: space-around;
     margin-top: 18px; font-size:.74rem; letter-spacing:.1em;
-    text-transform: uppercase; color:#8a7c66;
+    text-transform: uppercase; font-weight: 600; color: var(--mute);
   }
   .score b { display:block; font-family:var(--font-display); font-size:1.5rem; color:var(--ink); font-weight:900; }
   .score .w b { color: var(--rust); }
@@ -179,8 +172,8 @@
 <body>
   <main class="stage">
     <header>
+      <p class="sub">Fun &middot; Games</p>
       <h1>Tic<span class="dot">·</span>Tac<span class="dot">·</span>Toe</h1>
-      <p class="sub">You vs. the machine</p>
     </header>
 
     <div class="status" id="status">Your move — you're X</div>

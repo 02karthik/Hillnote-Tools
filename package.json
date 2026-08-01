@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Source for single-file Hillnote tools. The Hillnote website clones this repo to build + sign the published catalog; this repo holds only the tool sources, tools.json, and the public verify key.",
   "scripts": {
+    "dev": "python3 -m http.server 8000",
     "validate": "node scripts/validate.mjs",
     "screenshot": "node takescreenshot.js"
   },

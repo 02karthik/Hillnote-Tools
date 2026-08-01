@@ -3,18 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#000000" />
+  <meta name="theme-color" content="#eef0f4" />
   <title>Ambient Sounds</title>
   <style>
     :root {
-      --bg: #000;
-      --surface: #0d0d0d;
-      --border: #1a1a1a;
-      --text: #f0f0f0;
-      --muted: #666;
-      --accent: #0891b2;
-      --accent-dim: rgba(8,145,178,0.12);
-      --radius: 16px;
+      --bg: #eef0f4;
+      --surface: #ffffff;
+      --border: #dfe3ec;
+      --text: #111318;
+      --muted: #868a93;
+      --accent: #4d63ff;
+      --accent-dim: #e6ebff;
+      --radius: 24px;
+      --body: #454852;
+      --on-accent: #f4f6ff;
+      --display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -22,7 +26,8 @@
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: var(--sans);
+      font-feature-settings: "calt";
       min-height: 100dvh;
       display: flex;
       flex-direction: column;
@@ -32,12 +37,23 @@
       padding: 32px 24px;
     }
 
-    h1 {
-      font-size: clamp(0.9rem, 3.5vw, 1.1rem);
-      font-weight: 500;
-      letter-spacing: 0.12em;
+    header { text-align: center; }
+    .eyebrow {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: var(--muted);
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    h1 {
+      font-family: var(--display);
+      font-size: clamp(1.9rem, 6vw, 2.6rem);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+      color: var(--text);
     }
 
     /* ── Waveform bars ── */
@@ -158,7 +174,7 @@
 
     input[type="range"]::-webkit-slider-thumb:hover {
       transform: scale(1.2);
-      box-shadow: 0 0 10px rgba(8,145,178,0.5);
+      box-shadow: 0 0 0 6px var(--accent-dim);
     }
 
     input[type="range"]::-moz-range-thumb {
@@ -193,14 +209,14 @@
     }
 
     .play-btn:hover {
-      background: rgba(8,145,178,0.25);
-      box-shadow: 0 0 28px rgba(8,145,178,0.3);
+      background: #d5ddff;
+      box-shadow: 0 0 0 6px var(--accent-dim);
     }
 
     .play-btn:active { transform: scale(0.94); }
 
     .play-btn.playing {
-      box-shadow: 0 0 36px rgba(8,145,178,0.22);
+      box-shadow: 0 0 0 8px var(--accent-dim);
     }
 
     /* ── Timer ── */
@@ -215,7 +231,10 @@
 </head>
 <body>
 
-  <h1>Ambient Sounds</h1>
+  <header>
+    <div class="eyebrow">Focus &middot; Sound</div>
+    <h1>Ambient Sounds</h1>
+  </header>
 
   <div class="visualizer" id="visualizer">
     <div class="bar"></div><div class="bar"></div><div class="bar"></div>
