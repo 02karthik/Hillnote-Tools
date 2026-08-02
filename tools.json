@@ -216,6 +216,14 @@
       "glyph": "📐",
       "color": "#4d63ff",
       "version": 2
+    },
+    {
+      "dir": "priority-matrix",
+      "name": "Priority Matrix",
+      "description": "Triage your to-dos with the Eisenhower method — sort tasks by urgency and importance into do, schedule, delegate, or eliminate.",
+      "glyph": "🎯",
+      "color": "#4d63ff",
+      "version": 1
     }
   ]
 }
