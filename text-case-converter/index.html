@@ -7,6 +7,7 @@
   <title>Text Case Converter</title>
   <style>
     :root {
+      color-scheme: light dark;
       --bg: #eef0f4;
       --surface: #ffffff;
       --border: #dfe3ec;
@@ -16,9 +17,25 @@
       --accent-dim: #e6ebff;
       --radius: 24px;
       --body: #454852;
-      --on-accent: #f4f6ff;
+      --on-accent: #ffffff;
       --display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --accent-text: #3b50e0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #14161b;
+        --surface: #20242e;
+        --border: #2f333d;
+        --text: #eceff5;
+        --muted: #7d8494;
+        --accent: #8b9bff;
+        --accent-dim: #232842;
+        --body: #a9b0bf;
+        --on-accent: #111318;
+        --accent-text: #8b9bff;
+      }
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -42,7 +59,7 @@
       font-weight: 600;
       letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: var(--accent);
+      color: var(--accent-text);
       margin-bottom: 6px;
     }
 
@@ -136,8 +153,8 @@
       transition: border-color 0.2s, color 0.2s, background 0.2s;
     }
 
-    .copy-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
-    .copy-btn.copied { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+    .copy-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent-text); }
+    .copy-btn.copied { border-color: var(--accent); color: var(--accent-text); background: var(--accent-dim); }
     .copy-btn:disabled { opacity: 0.3; cursor: default; }
 
     .clear-btn {

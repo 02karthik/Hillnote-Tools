@@ -10,16 +10,39 @@
      cool-mist canvas, near-black ink, Manrope display + Inter body.
      Self-contained: no remote fonts (the app runs tools under a strict CSP). */
   :root {
+    color-scheme: light dark;
     --paper: #eef0f4;
     --canvas: #ffffff;
     --ink: #111318;
     --rust: #4d63ff;
-    --teal: #38c9d6;
+    --teal: #0d6b73;
     --line: #dfe3ec;
     --mute: #868a93;
     --shadow: rgba(17, 19, 24, .10);
     --font-display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     --font-mono: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --primary-pale: #e6ebff;
+    --body: #454852;
+    --on-primary: #ffffff;
+    --primary-active: #6f82ff;
+    --rust-text: #3b50e0;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #14161b;
+      --canvas: #20242e;
+      --ink: #eceff5;
+      --rust: #8b9bff;
+      --teal: #8fe3ec;
+      --line: #2f333d;
+      --mute: #7d8494;
+      --primary-pale: #232842;
+      --body: #a9b0bf;
+      --on-primary: #111318;
+      --primary-active: #a8b4ff;
+      --rust-text: #8b9bff;
+    }
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; }
@@ -50,14 +73,14 @@
     letter-spacing: -.02em;
     line-height: .95;
   }
-  h1 .dot { color: var(--rust); }
+  h1 .dot { color: var(--rust-text); }
   .sub {
     margin-bottom: 6px;
     font-size: .72rem;
     letter-spacing: .14em;
     font-weight: 600;
     text-transform: uppercase;
-    color: var(--rust);
+    color: var(--rust-text);
   }
 
   .status {
@@ -95,7 +118,7 @@
     transition: background .15s;
     border-radius: 10px;
   }
-  .cell:not(.taken):hover { background: #e6ebff; }
+  .cell:not(.taken):hover { background: var(--primary-pale); }
   .cell:disabled { cursor: default; }
   /* grid rules drawn with pseudo elements */
   .cell:nth-child(-n+6)::after,
@@ -105,12 +128,12 @@
   .vline { position:absolute; top:8%; bottom:8%; width:2px; background:var(--line); border-radius:2px; }
 
   .cell .mark { display:inline-block; animation: pop .3s cubic-bezier(.2,1.4,.4,1) both; }
-  .cell.x .mark { color: var(--rust); }
+  .cell.x .mark { color: var(--rust-text); }
   .cell.o .mark { color: var(--teal); }
   @keyframes pop { from { transform: scale(.2) rotate(-12deg); opacity:0;} to {transform:none; opacity:1;} }
 
   .cell.win { animation: glow 1.2s ease-in-out infinite alternate; }
-  @keyframes glow { to { background: #e6ebff;} }
+  @keyframes glow { to { background: var(--primary-pale);} }
 
   .controls {
     margin-top: 22px;
@@ -137,17 +160,17 @@
     padding: 9px 4px;
     border-radius: 9999px;
     cursor: pointer;
-    color: #454852;
+    color: var(--body);
     transition: all .18s;
   }
   .diff button.active {
     background: var(--rust);
-    color: #f4f6ff;
+    color: var(--on-primary);
   }
   .reset {
     border: none;
     background: var(--rust);
-    color: #f4f6ff;
+    color: var(--on-primary);
     font-family: var(--font-mono);
     font-size: .9rem;
     font-weight: 600;
@@ -156,7 +179,7 @@
     cursor: pointer;
     transition: all .18s;
   }
-  .reset:hover { background: #6f82ff; }
+  .reset:hover { background: var(--primary-active); }
   .reset:active { transform: translateY(1px); }
 
   .score {
@@ -165,7 +188,7 @@
     text-transform: uppercase; font-weight: 600; color: var(--mute);
   }
   .score b { display:block; font-family:var(--font-display); font-size:1.5rem; color:var(--ink); font-weight:900; }
-  .score .w b { color: var(--rust); }
+  .score .w b { color: var(--rust-text); }
   .score .l b { color: var(--teal); }
 </style>
 </head>

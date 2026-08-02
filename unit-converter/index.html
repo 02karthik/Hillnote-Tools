@@ -13,10 +13,11 @@
        Hillnote design system: azure primary, cool-mist canvas, near-black ink,
        generous 24px card radius, Manrope display + Inter body. */
     :root {
+      color-scheme: light dark;
       --primary: #4d63ff;
       --primary-active: #6f82ff;
       --primary-pale: #e6ebff;
-      --on-primary: #f4f6ff;
+      --on-primary: #ffffff;
       --ink: #111318;
       --body: #454852;
       --mute: #868a93;
@@ -28,6 +29,25 @@
       --r-xl: 24px;
       --display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --negative: #e0453f;
+      --primary-text: #3b50e0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --primary: #8b9bff;
+        --primary-active: #a8b4ff;
+        --primary-pale: #232842;
+        --on-primary: #111318;
+        --ink: #eceff5;
+        --body: #a9b0bf;
+        --mute: #7d8494;
+        --canvas: #20242e;
+        --canvas-soft: #14161b;
+        --line: #2f333d;
+        --negative: #ff6b63;
+        --primary-text: #8b9bff;
+      }
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -52,7 +72,7 @@
       font-weight: 600;
       letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: var(--primary);
+      color: var(--primary-text);
     }
     header h1 {
       font-family: var(--display);
@@ -138,7 +158,7 @@
       border-color: var(--primary);
       box-shadow: 0 0 0 3px var(--primary-pale);
     }
-    input.value.invalid { border-color: var(--negative, #e0453f); }
+    input.value.invalid { border-color: var(--negative); }
 
     select {
       width: 100%;
@@ -169,7 +189,7 @@
       border-radius: 9999px;
       border: 1px solid var(--line);
       background: var(--canvas);
-      color: var(--primary);
+      color: var(--primary-text);
       cursor: pointer;
       display: inline-flex;
       align-items: center;

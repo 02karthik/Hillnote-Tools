@@ -7,6 +7,7 @@
   <title>Readability Score</title>
   <style>
     :root {
+      color-scheme: light dark;
       --bg: #eef0f4;
       --surface: #ffffff;
       --border: #dfe3ec;
@@ -16,9 +17,45 @@
       --accent-dim: #e6ebff;
       --radius: 24px;
       --body: #454852;
-      --on-accent: #f4f6ff;
+      --on-accent: #ffffff;
       --display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --accent-text: #3b50e0;
+      --pos-deep: #0c5230;
+      --positive: #22a559;
+      --pos-pale: #e2f5ea;
+      --cyan: #38c9d6;
+      --cyan-pale: #e2f7f9;
+      --warn-deep: #9a5b00;
+      --warn-pale: #fdf1d8;
+      --neg-deep: #b02a2a;
+      --neg-darkest: #8f0f16;
+      --neg-pale: #fbe3e2;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #14161b;
+        --surface: #20242e;
+        --border: #2f333d;
+        --text: #eceff5;
+        --muted: #7d8494;
+        --accent: #8b9bff;
+        --accent-dim: #232842;
+        --body: #a9b0bf;
+        --on-accent: #111318;
+        --accent-text: #8b9bff;
+        --pos-deep: #86efac;
+        --positive: #3ddc84;
+        --pos-pale: #14301f;
+        --cyan: #38c9d6;
+        --cyan-pale: #123338;
+        --warn-deep: #fcd34d;
+        --warn-pale: #33280d;
+        --neg-deep: #ff9490;
+        --neg-darkest: #ffc4c1;
+        --neg-pale: #3a1412;
+      }
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -42,7 +79,7 @@
       font-weight: 600;
       letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: var(--accent);
+      color: var(--accent-text);
       margin-bottom: 6px;
     }
 
@@ -112,7 +149,7 @@
       padding: 6px 18px;
       border-radius: 100px;
       background: var(--accent-dim);
-      color: var(--accent);
+      color: var(--accent-text);
       transition: background 0.4s, color 0.4s;
       min-height: 32px;
       display: flex;
@@ -251,13 +288,13 @@
     }
 
     function levelFor(ease) {
-      if (ease >= 90) return { label: 'Very Easy',        color: '#0c5230', dim: '#e2f5ea'    };
-      if (ease >= 80) return { label: 'Easy',             color: '#22a559', dim: '#e2f5ea'   };
-      if (ease >= 70) return { label: 'Fairly Easy',      color: '#38c9d6', dim: '#e2f7f9'   };
-      if (ease >= 60) return { label: 'Standard',         color: '#4d63ff', dim: '#e6ebff'   };
-      if (ease >= 50) return { label: 'Fairly Difficult', color: '#9a5b00', dim: '#fdf1d8'   };
-      if (ease >= 30) return { label: 'Difficult',        color: '#b02a2a', dim: '#fbe3e2'   };
-      return               { label: 'Very Difficult',   color: '#8f0f16', dim: '#fbe3e2'    };
+      if (ease >= 90) return { label: 'Very Easy',        color: 'var(--pos-deep)', dim: 'var(--pos-pale)'    };
+      if (ease >= 80) return { label: 'Easy',             color: 'var(--positive)', dim: 'var(--pos-pale)'   };
+      if (ease >= 70) return { label: 'Fairly Easy',      color: 'var(--cyan)', dim: 'var(--cyan-pale)'   };
+      if (ease >= 60) return { label: 'Standard',         color: 'var(--accent)', dim: 'var(--accent-dim)'   };
+      if (ease >= 50) return { label: 'Fairly Difficult', color: 'var(--warn-deep)', dim: 'var(--warn-pale)'   };
+      if (ease >= 30) return { label: 'Difficult',        color: 'var(--neg-deep)', dim: 'var(--neg-pale)'   };
+      return               { label: 'Very Difficult',   color: 'var(--neg-darkest)', dim: 'var(--neg-pale)'    };
     }
 
     function analyse() {
@@ -296,7 +333,7 @@
 
     function reset() {
       ring.style.strokeDashoffset = CIRC;
-      ring.style.stroke           = '#4d63ff';
+      ring.style.stroke           = 'var(--accent)';
       easeNum.textContent   = '—';
       badge.textContent     = 'Paste text to analyse';
       badge.style.color     = '';

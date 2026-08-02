@@ -9,10 +9,11 @@
         /* Palette + shapes follow the Hillnote design system: azure primary,
            cool-mist canvas, near-black ink, Manrope display + Inter body. */
         :root {
+            color-scheme: light dark;
             --primary: #4d63ff;
             --primary-active: #6f82ff;
             --primary-pale: #e6ebff;
-            --on-primary: #f4f6ff;
+            --on-primary: #ffffff;
             --ink: #111318;
             --mute: #868a93;
             --canvas: #ffffff;
@@ -20,6 +21,22 @@
             --line: #dfe3ec;
             --display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
             --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            --primary-text: #3b50e0;
+        }
+
+        @media (prefers-color-scheme: dark) {
+          :root {
+            --primary: #8b9bff;
+            --primary-active: #a8b4ff;
+            --primary-pale: #232842;
+            --on-primary: #111318;
+            --ink: #eceff5;
+            --mute: #7d8494;
+            --canvas: #20242e;
+            --canvas-soft: #14161b;
+            --line: #2f333d;
+            --primary-text: #8b9bff;
+          }
         }
 
         * {
@@ -54,7 +71,7 @@
             font-weight: 600;
             letter-spacing: 0.14em;
             text-transform: uppercase;
-            color: var(--primary);
+            color: var(--primary-text);
             margin-bottom: 6px;
         }
 

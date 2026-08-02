@@ -12,10 +12,11 @@
        localStorage. Palette + shapes follow the Hillnote design system: azure
        primary, cool-mist canvas, near-black ink, generous 24px card radius. */
     :root {
+      color-scheme: light dark;
       --primary: #4d63ff;
       --primary-active: #6f82ff;
       --primary-pale: #e6ebff;
-      --on-primary: #f4f6ff;
+      --on-primary: #ffffff;
       --ink: #111318;
       --body: #454852;
       --mute: #868a93;
@@ -29,6 +30,25 @@
       --r-xl: 24px;
       --display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --primary-text: #3b50e0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --primary: #8b9bff;
+        --primary-active: #a8b4ff;
+        --primary-pale: #232842;
+        --on-primary: #111318;
+        --ink: #eceff5;
+        --body: #a9b0bf;
+        --mute: #7d8494;
+        --canvas: #20242e;
+        --canvas-soft: #14161b;
+        --line: #2f333d;
+        --accent-amber: #fbbf24;
+        --negative: #ff6b63;
+        --primary-text: #8b9bff;
+      }
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -53,7 +73,7 @@
       font-weight: 600;
       letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: var(--primary);
+      color: var(--primary-text);
     }
     header h1 {
       font-family: var(--display);
@@ -112,7 +132,7 @@
       margin-top: 4px;
       font-size: 0.85rem;
       font-weight: 600;
-      color: var(--primary);
+      color: var(--primary-text);
       letter-spacing: 0.02em;
     }
 
@@ -217,7 +237,7 @@
       transition: background 0.12s, color 0.12s, border-color 0.12s;
     }
     .seg button:hover { background: var(--canvas-soft); }
-    .seg button.active { background: var(--primary-pale); color: var(--primary); border-color: var(--primary); }
+    .seg button.active { background: var(--primary-pale); color: var(--primary-text); border-color: var(--primary); }
 
     .tap {
       border: 1px dashed var(--line);
@@ -255,14 +275,14 @@
       <div class="pendulum-wrap" aria-hidden="true">
         <svg viewBox="0 0 200 150" role="img">
           <!-- base -->
-          <path d="M40 146 L160 146 L132 120 L68 120 Z" fill="#eef0f4" stroke="#dfe3ec" stroke-width="1.5" stroke-linejoin="round" />
+          <path d="M40 146 L160 146 L132 120 L68 120 Z" fill="var(--canvas-soft)" stroke="var(--line)" stroke-width="1.5" stroke-linejoin="round" />
           <!-- pivot -->
-          <circle cx="100" cy="128" r="5" fill="#868a93" />
+          <circle cx="100" cy="128" r="5" fill="var(--mute)" />
           <!-- rod + weight -->
           <g class="rod" id="rod">
-            <line x1="100" y1="128" x2="100" y2="30" stroke="#111318" stroke-width="3.5" stroke-linecap="round" />
-            <rect x="92" y="60" width="16" height="12" rx="3" fill="#4d63ff" />
-            <circle cx="100" cy="30" r="7" fill="#111318" />
+            <line x1="100" y1="128" x2="100" y2="30" stroke="var(--ink)" stroke-width="3.5" stroke-linecap="round" />
+            <rect x="92" y="60" width="16" height="12" rx="3" fill="var(--primary)" />
+            <circle cx="100" cy="30" r="7" fill="var(--ink)" />
           </g>
         </svg>
       </div>

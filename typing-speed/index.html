@@ -7,6 +7,7 @@
   <title>Typing Speed</title>
   <style>
     :root {
+      color-scheme: light dark;
       --bg: #eef0f4;
       --surface: #ffffff;
       --border: #dfe3ec;
@@ -16,9 +17,29 @@
       --accent-dim: #e6ebff;
       --radius: 24px;
       --body: #454852;
-      --on-accent: #f4f6ff;
+      --on-accent: #ffffff;
       --display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --negative: #e0453f;
+      --negative-pale: #fbe3e2;
+      --accent-text: #3b50e0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #14161b;
+        --surface: #20242e;
+        --border: #2f333d;
+        --text: #eceff5;
+        --muted: #7d8494;
+        --accent: #8b9bff;
+        --accent-dim: #232842;
+        --body: #a9b0bf;
+        --on-accent: #111318;
+        --negative: #ff6b63;
+        --negative-pale: #3a1412;
+        --accent-text: #8b9bff;
+      }
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -42,7 +63,7 @@
       font-weight: 600;
       letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: var(--accent);
+      color: var(--accent-text);
       margin-bottom: 6px;
     }
 
@@ -109,8 +130,8 @@
       user-select: none;
     }
 
-    .passage .correct { color: var(--accent); }
-    .passage .wrong   { color: #e0453f; background: #fbe3e2; border-radius: 2px; }
+    .passage .correct { color: var(--accent-text); }
+    .passage .wrong   { color: var(--negative); background: var(--negative-pale); border-radius: 2px; }
     .passage .cursor  {
       color: var(--text);
       border-left: 2px solid var(--accent);
@@ -153,7 +174,7 @@
       text-align: center;
     }
 
-    .status-line.done { color: var(--accent); font-weight: 600; }
+    .status-line.done { color: var(--accent-text); font-weight: 600; }
 
     .btn-row { display: flex; gap: 12px; }
 
@@ -171,7 +192,7 @@
       transition: border-color 0.2s, color 0.2s;
     }
 
-    .action-btn.primary { border-color: var(--accent); color: var(--accent); }
+    .action-btn.primary { border-color: var(--accent); color: var(--accent-text); }
     .action-btn:hover { border-color: var(--muted); color: var(--text); }
     .action-btn.primary:hover { border-color: var(--text); color: var(--text); }
     .action-btn:active { transform: scale(0.97); }

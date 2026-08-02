@@ -7,6 +7,7 @@
   <title>Word of the Day</title>
   <style>
     :root {
+      color-scheme: light dark;
       --bg: #eef0f4;
       --surface: #ffffff;
       --border: #dfe3ec;
@@ -16,9 +17,27 @@
       --accent-dim: #e6ebff;
       --radius: 24px;
       --body: #454852;
-      --on-accent: #f4f6ff;
+      --on-accent: #ffffff;
       --display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --primary-neutral: #b9c4ff;
+      --accent-text: #3b50e0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #14161b;
+        --surface: #20242e;
+        --border: #2f333d;
+        --text: #eceff5;
+        --muted: #7d8494;
+        --accent: #8b9bff;
+        --accent-dim: #232842;
+        --body: #a9b0bf;
+        --on-accent: #111318;
+        --primary-neutral: #4d63ff;
+        --accent-text: #8b9bff;
+      }
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -42,7 +61,7 @@
       font-weight: 600;
       letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: var(--accent);
+      color: var(--accent-text);
       margin-bottom: 6px;
     }
 
@@ -59,9 +78,9 @@
       font-size: 0.65rem;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: var(--accent);
+      color: var(--accent-text);
       background: var(--accent-dim);
-      border: 1px solid #b9c4ff;
+      border: 1px solid var(--primary-neutral);
       border-radius: 100px;
       padding: 5px 14px;
       font-weight: 500;
@@ -110,9 +129,9 @@
       font-weight: 600;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: var(--accent);
+      color: var(--accent-text);
       background: var(--accent-dim);
-      border: 1px solid #b9c4ff;
+      border: 1px solid var(--primary-neutral);
       padding: 3px 9px;
       border-radius: 100px;
     }
@@ -183,7 +202,7 @@
     }
 
     .btn-copy:hover { border-color: var(--muted); color: var(--text); }
-    .btn-copy.copied { border-color: var(--accent); color: var(--accent); }
+    .btn-copy.copied { border-color: var(--accent); color: var(--accent-text); }
     .btn-copy:active { transform: scale(0.97); }
   </style>
 </head>

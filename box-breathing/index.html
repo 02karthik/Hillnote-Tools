@@ -7,6 +7,7 @@
   <title>Box Breathing</title>
   <style>
     :root {
+      color-scheme: light dark;
       --bg: #eef0f4;
       --surface: #ffffff;
       --border: #dfe3ec;
@@ -20,9 +21,31 @@
       --exhale-dim: #e2f5ea;
       --radius: 24px;
       --body: #454852;
-      --on-accent: #f4f6ff;
+      --on-accent: #ffffff;
       --display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --accent-hover: #d5ddff;
+      --accent-text: #3b50e0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #14161b;
+        --surface: #20242e;
+        --border: #2f333d;
+        --text: #eceff5;
+        --muted: #7d8494;
+        --accent: #8b9bff;
+        --accent-dim: #232842;
+        --hold: #38c9d6;
+        --hold-dim: #123338;
+        --exhale: #3ddc84;
+        --exhale-dim: #14301f;
+        --body: #a9b0bf;
+        --on-accent: #111318;
+        --accent-hover: #2c3352;
+        --accent-text: #8b9bff;
+      }
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -48,7 +71,7 @@
       font-weight: 600;
       letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: var(--accent);
+      color: var(--accent-text);
       margin-bottom: 6px;
     }
 
@@ -117,7 +140,7 @@
       font-size: 0.85rem;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: var(--accent);
+      color: var(--accent-text);
       transition: color 0.4s ease;
       font-weight: 500;
     }
@@ -176,7 +199,7 @@
     }
 
     .btn-start:hover {
-      background: #d5ddff;
+      background: var(--accent-hover);
       box-shadow: 0 0 0 6px var(--accent-dim);
     }
 

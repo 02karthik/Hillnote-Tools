@@ -7,6 +7,7 @@
   <title>Flip a Coin</title>
   <style>
     :root {
+      color-scheme: light dark;
       --bg: #eef0f4;
       --surface: #ffffff;
       --border: #dfe3ec;
@@ -18,9 +19,29 @@
       --indigo-dim: #e2f7f9;
       --radius: 24px;
       --body: #454852;
-      --on-accent: #f4f6ff;
+      --on-accent: #ffffff;
       --display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --cyan-deep: #0d6b73;
+      --accent-text: #3b50e0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #14161b;
+        --surface: #20242e;
+        --border: #2f333d;
+        --text: #eceff5;
+        --muted: #7d8494;
+        --accent: #8b9bff;
+        --accent-dim: #232842;
+        --indigo: #38c9d6;
+        --indigo-dim: #123338;
+        --body: #a9b0bf;
+        --on-accent: #111318;
+        --cyan-deep: #8fe3ec;
+        --accent-text: #8b9bff;
+      }
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -45,7 +66,7 @@
       font-weight: 600;
       letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: var(--accent);
+      color: var(--accent-text);
       margin-bottom: 6px;
     }
 
@@ -107,7 +128,7 @@
       font-weight: 300;
       letter-spacing: 0.06em;
       min-height: 2.2rem;
-      color: var(--accent);
+      color: var(--accent-text);
       opacity: 0;
       transform: translateY(6px);
       transition: opacity 0.3s, transform 0.3s;
@@ -179,13 +200,13 @@
     .pill-H {
       background: var(--accent-dim);
       border: 1px solid var(--accent);
-      color: var(--accent);
+      color: var(--accent-text);
     }
 
     .pill-T {
       background: var(--indigo-dim);
       border: 1px solid var(--indigo);
-      color: #0d6b73;
+      color: var(--cyan-deep);
     }
 
     /* ── buttons ── */

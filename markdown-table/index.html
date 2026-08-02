@@ -11,10 +11,11 @@
        Palette + shapes follow the Hillnote design system: azure primary,
        cool-mist canvas, near-black ink, generous 24px card radius. */
     :root {
+      color-scheme: light dark;
       --primary: #4d63ff;
       --primary-active: #6f82ff;
       --primary-pale: #e6ebff;
-      --on-primary: #f4f6ff;
+      --on-primary: #ffffff;
       --ink: #111318;
       --body: #454852;
       --mute: #868a93;
@@ -28,6 +29,28 @@
       --display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       --mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+      --negative: #e0453f;
+      --negative-pale: #fbe3e2;
+      --primary-text: #3b50e0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --primary: #8b9bff;
+        --primary-active: #a8b4ff;
+        --primary-pale: #232842;
+        --on-primary: #111318;
+        --ink: #eceff5;
+        --body: #a9b0bf;
+        --mute: #7d8494;
+        --canvas: #20242e;
+        --canvas-soft: #14161b;
+        --line: #2f333d;
+        --positive: #3ddc84;
+        --negative: #ff6b63;
+        --negative-pale: #3a1412;
+        --primary-text: #8b9bff;
+      }
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -51,7 +74,7 @@
       font-weight: 600;
       letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: var(--primary);
+      color: var(--primary-text);
     }
     header h1 {
       font-family: var(--display);
@@ -140,7 +163,7 @@
       align-items: center;
       justify-content: center;
     }
-    .icon-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .icon-btn:hover { border-color: var(--primary); color: var(--primary-text); }
     .icon-btn:disabled { opacity: 0.35; cursor: not-allowed; }
     .icon-btn:disabled:hover { border-color: var(--line); color: var(--ink); }
 
@@ -194,7 +217,7 @@
       align-items: center;
       justify-content: center;
     }
-    .row-remove:hover { color: #e0453f; background: #fff0f0; }
+    .row-remove:hover { color: var(--negative); background: var(--negative-pale); }
 
     /* Output */
     .output {
@@ -202,7 +225,7 @@
       font-size: 0.82rem;
       line-height: 1.6;
       background: var(--ink);
-      color: #e7e9f2;
+      color: var(--canvas);
       border-radius: var(--r-lg);
       padding: 16px;
       white-space: pre;

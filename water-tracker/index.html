@@ -9,6 +9,7 @@
 /* Palette + shapes follow the Hillnote design system: azure primary,
    cool-mist canvas, near-black ink, Manrope display + Inter body. */
 :root {
+  color-scheme: light dark;
   --bg: #eef0f4;
   --card: #ffffff;
   --border: #dfe3ec;
@@ -17,9 +18,25 @@
   --muted: #868a93;
   --accent: #4d63ff;
   --accent-dim: #e6ebff;
-  --on-accent: #f4f6ff;
+  --on-accent: #ffffff;
   --display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --accent-text: #3b50e0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14161b;
+    --card: #20242e;
+    --border: #2f333d;
+    --text: #eceff5;
+    --body: #a9b0bf;
+    --muted: #7d8494;
+    --accent: #8b9bff;
+    --accent-dim: #232842;
+    --on-accent: #111318;
+    --accent-text: #8b9bff;
+  }
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -39,7 +56,7 @@ header { text-align: center; }
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--accent-text);
   margin-bottom: 6px;
 }
 h1 {
@@ -67,7 +84,7 @@ h1 {
   font-weight: 900;
   letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
-  color: var(--accent);
+  color: var(--accent-text);
   line-height: 1;
 }
 .goal-label {
@@ -118,7 +135,7 @@ h1 {
   min-height: 1.5rem;
   font-size: 0.9375rem;
   font-weight: 600;
-  color: var(--accent);
+  color: var(--accent-text);
   margin-bottom: 1rem;
   text-align: center;
 }

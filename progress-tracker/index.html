@@ -9,11 +9,12 @@
         /* Palette + shapes follow the Hillnote design system: azure primary,
            cool-mist canvas, near-black ink, Manrope display + Inter body. */
         :root {
+            color-scheme: light dark;
             --primary: #4d63ff;
             --primary-active: #6f82ff;
             --primary-pale: #e6ebff;
             --primary-neutral: #b9c4ff;
-            --on-primary: #f4f6ff;
+            --on-primary: #ffffff;
             --ink: #111318;
             --body: #454852;
             --mute: #868a93;
@@ -22,6 +23,32 @@
             --line: #dfe3ec;
             --display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
             --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            --negative-deep: #b02a2a;
+            --negative-pale: #fbe3e2;
+            --negative-line: #f3c9c7;
+            --negative-hover: #f8d3d1;
+            --primary-text: #3b50e0;
+        }
+
+        @media (prefers-color-scheme: dark) {
+          :root {
+            --primary: #8b9bff;
+            --primary-active: #a8b4ff;
+            --primary-pale: #232842;
+            --primary-neutral: #4d63ff;
+            --on-primary: #111318;
+            --ink: #eceff5;
+            --body: #a9b0bf;
+            --mute: #7d8494;
+            --canvas: #20242e;
+            --canvas-soft: #14161b;
+            --line: #2f333d;
+            --negative-deep: #ff9490;
+            --negative-pale: #3a1412;
+            --negative-line: #5c211f;
+            --negative-hover: #4a1a18;
+            --primary-text: #8b9bff;
+          }
         }
 
         * {
@@ -81,7 +108,7 @@
         }
         
         .days-left strong {
-            color: var(--primary);
+            color: var(--primary-text);
         }
         
         #settingsBtn {
@@ -103,7 +130,7 @@
         .subtitle {
             font-size: 12px;
             font-weight: 600;
-            color: var(--primary);
+            color: var(--primary-text);
             margin-bottom: 24px;
             letter-spacing: 0.12em;
             text-transform: uppercase;
@@ -158,7 +185,7 @@
         }
         
         .stat-number.green {
-            color: var(--primary);
+            color: var(--primary-text);
         }
         
         .stat-label {
@@ -294,15 +321,15 @@
         }
         
         .btn-reset {
-            background: #fbe3e2;
-            color: #b02a2a;
-            border: 1px solid #f3c9c7;
+            background: var(--negative-pale);
+            color: var(--negative-deep);
+            border: 1px solid var(--negative-line);
             width: 100%;
             margin-top: 12px;
         }
         
         .btn-reset:hover {
-            background: #f8d3d1;
+            background: var(--negative-hover);
         }
     </style>
 </head>
