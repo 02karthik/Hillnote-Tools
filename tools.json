@@ -1,5 +1,5 @@
 {
-  "catalogVersion": 21,
+  "catalogVersion": 22,
   "tools": [
     {
       "dir": "color-capture",
@@ -7,7 +7,7 @@
       "description": "Pull the dominant color palette out of any image.",
       "glyph": "🎨",
       "color": "#e11d48",
-      "version": 2
+      "version": 3
     },
     {
       "dir": "fav-quote-gen",
@@ -15,7 +15,7 @@
       "description": "Generate and save your favourite quotes.",
       "glyph": "💬",
       "color": "#0ea5e9",
-      "version": 1
+      "version": 2
     },
     {
       "dir": "habit-tracker",
@@ -23,7 +23,7 @@
       "description": "Track daily habits and build streaks.",
       "glyph": "✅",
       "color": "#22c55e",
-      "version": 1
+      "version": 2
     },
     {
       "dir": "pomodoro-timer",
@@ -31,7 +31,7 @@
       "description": "Focus in timed work and break intervals.",
       "glyph": "🍅",
       "color": "#ef4444",
-      "version": 1
+      "version": 2
     },
     {
       "dir": "progress-tracker",
@@ -39,7 +39,7 @@
       "description": "Visualise long-term progress, month by month.",
       "glyph": "📈",
       "color": "#8b5cf6",
-      "version": 2
+      "version": 3
     },
     {
       "dir": "roll-dice",
@@ -47,7 +47,7 @@
       "description": "Roll a simple 1–6 die.",
       "glyph": "🎲",
       "color": "#f59e0b",
-      "version": 1
+      "version": 2
     },
     {
       "dir": "tic-tac-toe",
@@ -55,7 +55,7 @@
       "description": "Play the classic two-player game.",
       "glyph": "⭕",
       "color": "#14b8a6",
-      "version": 2
+      "version": 3
     },
     {
       "dir": "box-breathing",
@@ -63,7 +63,7 @@
       "description": "Guided breathing with box, 4-7-8 and calming patterns.",
       "glyph": "🫁",
       "color": "#5b8dee",
-      "version": 1
+      "version": 2
     },
     {
       "dir": "mood-tracker",
@@ -71,7 +71,7 @@
       "description": "Log how you feel each day and spot your emotional trends.",
       "glyph": "🩷",
       "color": "#ec4899",
-      "version": 1
+      "version": 2
     },
     {
       "dir": "water-tracker",
@@ -79,7 +79,7 @@
       "description": "Log your daily water intake and hit your hydration goal.",
       "glyph": "💧",
       "color": "#38bdf8",
-      "version": 1
+      "version": 2
     },
     {
       "dir": "gratitude-journal",
@@ -87,7 +87,7 @@
       "description": "Write three things you're grateful for each day.",
       "glyph": "🙏",
       "color": "#f97316",
-      "version": 1
+      "version": 2
     },
     {
       "dir": "word-counter",
@@ -95,7 +95,7 @@
       "description": "Paste or type any text to instantly see word count, reading time, and more.",
       "glyph": "✍️",
       "color": "#10b981",
-      "version": 1
+      "version": 2
     },
     {
       "dir": "readability-score",
@@ -103,7 +103,7 @@
       "description": "Instantly check how readable your writing is with Flesch-Kincaid ease and grade level.",
       "glyph": "📖",
       "color": "#6366f1",
-      "version": 1
+      "version": 2
     },
     {
       "dir": "typing-speed",
@@ -111,7 +111,7 @@
       "description": "Measure your typing speed and accuracy with real-time WPM feedback.",
       "glyph": "⌨️",
       "color": "#f59e0b",
-      "version": 1
+      "version": 2
     },
     {
       "dir": "text-case-converter",
@@ -119,7 +119,7 @@
       "description": "Instantly convert text between UPPER, lower, Title, camelCase, snake_case, kebab-case and more.",
       "glyph": "🔡",
       "color": "#06b6d4",
-      "version": 1
+      "version": 2
     },
     {
       "dir": "writing-prompt",
@@ -127,7 +127,7 @@
       "description": "Spark your next idea with a random writing prompt across Fiction, Personal, Observation, and What If.",
       "glyph": "✨",
       "color": "#a855f7",
-      "version": 1
+      "version": 2
     },
     {
       "dir": "flip-a-coin",
@@ -135,7 +135,7 @@
       "description": "Flip a coin and let chance decide. Tracks heads and tails across multiple flips.",
       "glyph": "🪙",
       "color": "#eab308",
-      "version": 1
+      "version": 2
     },
     {
       "dir": "word-of-the-day",
@@ -143,7 +143,7 @@
       "description": "Discover a new word every day — definition, pronunciation, example, and etymology.",
       "glyph": "📖",
       "color": "#84cc16",
-      "version": 1
+      "version": 2
     },
     {
       "dir": "ambient-sounds",
@@ -151,7 +151,7 @@
       "description": "Play calming background sounds — rain, ocean, forest, cafe, or white noise — to help you focus or unwind.",
       "glyph": "🎧",
       "color": "#0891b2",
-      "version": 1
+      "version": 2
     },
     {
       "dir": "event-countdown",
@@ -159,7 +159,7 @@
       "description": "Count down the days, hours, minutes, and seconds to any event — birthday, launch, vacation, or deadline.",
       "glyph": "⏳",
       "color": "#fb923c",
-      "version": 1
+      "version": 2
     },
     {
       "dir": "markdown-table",
@@ -167,7 +167,7 @@
       "description": "Build a table visually, set per-column alignment, and copy clean, ready-to-paste Markdown.",
       "glyph": "📋",
       "color": "#4d63ff",
-      "version": 1
+      "version": 2
     },
     {
       "dir": "speed-reader",
@@ -175,7 +175,7 @@
       "description": "Read any text faster with RSVP — words flash one at a time, at the pace you choose.",
       "glyph": "⚡",
       "color": "#4d63ff",
-      "version": 1
+      "version": 2
     },
     {
       "dir": "decision-wheel",
@@ -183,7 +183,7 @@
       "description": "Add your own choices, spin the wheel, and let it decide for you.",
       "glyph": "🎡",
       "color": "#4d63ff",
-      "version": 1
+      "version": 2
     },
     {
       "dir": "world-clock",
@@ -191,7 +191,7 @@
       "description": "See the time across cities worldwide and drag the planner to find a slot that works in every time zone.",
       "glyph": "🌍",
       "color": "#4d63ff",
-      "version": 1
+      "version": 2
     },
     {
       "dir": "password-generator",
@@ -199,7 +199,7 @@
       "description": "Create strong, random passwords locally — pick the length and character types, and see the strength as you go.",
       "glyph": "🔑",
       "color": "#4d63ff",
-      "version": 1
+      "version": 2
     },
     {
       "dir": "metronome",
@@ -207,7 +207,7 @@
       "description": "Keep perfect time — set the tempo, pick a beat, and practise to an accurate, fully offline click with tap tempo.",
       "glyph": "🎵",
       "color": "#4d63ff",
-      "version": 1
+      "version": 2
     },
     {
       "dir": "unit-converter",
@@ -215,7 +215,7 @@
       "description": "Convert length, weight, temperature, volume, area, speed, time, and digital storage — instantly and fully offline.",
       "glyph": "📐",
       "color": "#4d63ff",
-      "version": 1
+      "version": 2
     }
   ]
 }

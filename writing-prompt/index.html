@@ -3,18 +3,39 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#000000" />
+  <meta name="theme-color" content="#eef0f4" />
   <title>Writing Prompt</title>
   <style>
     :root {
-      --bg: #000;
-      --surface: #0d0d0d;
-      --border: #1a1a1a;
-      --text: #f0f0f0;
-      --muted: #666;
-      --accent: #a855f7;
-      --accent-dim: rgba(168,85,247,0.12);
-      --radius: 16px;
+      color-scheme: light dark;
+      --bg: #eef0f4;
+      --surface: #ffffff;
+      --border: #dfe3ec;
+      --text: #111318;
+      --muted: #868a93;
+      --accent: #4d63ff;
+      --accent-dim: #e6ebff;
+      --radius: 24px;
+      --body: #454852;
+      --on-accent: #ffffff;
+      --display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --accent-text: #3b50e0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #14161b;
+        --surface: #20242e;
+        --border: #2f333d;
+        --text: #eceff5;
+        --muted: #7d8494;
+        --accent: #8b9bff;
+        --accent-dim: #232842;
+        --body: #a9b0bf;
+        --on-accent: #111318;
+        --accent-text: #8b9bff;
+      }
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -22,7 +43,8 @@
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: var(--sans);
+      font-feature-settings: "calt";
       min-height: 100dvh;
       display: flex;
       flex-direction: column;
@@ -31,12 +53,23 @@
       gap: 20px;
     }
 
-    h1 {
-      font-size: clamp(0.9rem, 3.5vw, 1.1rem);
-      font-weight: 500;
-      letter-spacing: 0.12em;
+    header { text-align: center; }
+    .eyebrow {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: var(--muted);
+      color: var(--accent-text);
+      margin-bottom: 6px;
+    }
+
+    h1 {
+      font-family: var(--display);
+      font-size: clamp(1.9rem, 6vw, 2.6rem);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+      color: var(--text);
     }
 
     .category-bar {
@@ -65,7 +98,7 @@
     .cat-btn:hover { border-color: var(--muted); color: var(--text); }
     .cat-btn.active {
       border-color: var(--accent);
-      color: var(--accent);
+      color: var(--accent-text);
       background: var(--accent-dim);
     }
 
@@ -90,7 +123,7 @@
       font-size: 0.65rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: var(--accent);
+      color: var(--accent-text);
       font-weight: 600;
       margin-bottom: 10px;
     }
@@ -124,7 +157,7 @@
       background: var(--accent);
       border: none;
       border-radius: 100px;
-      color: #fff;
+      color: var(--on-accent);
       font-size: 0.85rem;
       font-weight: 600;
       letter-spacing: 0.08em;
@@ -151,13 +184,16 @@
     }
 
     .btn-copy:hover { border-color: var(--muted); color: var(--text); }
-    .btn-copy.copied { border-color: var(--accent); color: var(--accent); }
+    .btn-copy.copied { border-color: var(--accent); color: var(--accent-text); }
     .btn-copy:active { transform: scale(0.97); }
   </style>
 </head>
 <body>
 
-  <h1>&#10024; Writing Prompt</h1>
+  <header>
+    <div class="eyebrow">Writing &middot; Ideas</div>
+    <h1>Writing Prompt</h1>
+  </header>
 
   <div class="category-bar" id="catBar">
     <button class="cat-btn active" data-cat="all">All</button>

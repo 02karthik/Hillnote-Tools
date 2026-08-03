@@ -3,18 +3,39 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#000000" />
+  <meta name="theme-color" content="#eef0f4" />
   <title>Event Countdown</title>
   <style>
     :root {
-      --bg: #000;
-      --surface: #0d0d0d;
-      --border: #1a1a1a;
-      --text: #f0f0f0;
-      --muted: #666;
-      --accent: #fb923c;
-      --accent-dim: rgba(251,146,60,0.12);
-      --radius: 16px;
+      color-scheme: light dark;
+      --bg: #eef0f4;
+      --surface: #ffffff;
+      --border: #dfe3ec;
+      --text: #111318;
+      --muted: #868a93;
+      --accent: #4d63ff;
+      --accent-dim: #e6ebff;
+      --radius: 24px;
+      --body: #454852;
+      --on-accent: #ffffff;
+      --display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --accent-text: #3b50e0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #14161b;
+        --surface: #20242e;
+        --border: #2f333d;
+        --text: #eceff5;
+        --muted: #7d8494;
+        --accent: #8b9bff;
+        --accent-dim: #232842;
+        --body: #a9b0bf;
+        --on-accent: #111318;
+        --accent-text: #8b9bff;
+      }
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -22,7 +43,8 @@
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: var(--sans);
+      font-feature-settings: "calt";
       min-height: 100dvh;
       display: flex;
       flex-direction: column;
@@ -32,12 +54,23 @@
       gap: 32px;
     }
 
-    h1 {
-      font-size: clamp(0.9rem, 3.5vw, 1.1rem);
-      font-weight: 500;
-      letter-spacing: 0.12em;
+    header { text-align: center; }
+    .eyebrow {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: var(--muted);
+      color: var(--accent-text);
+      margin-bottom: 6px;
+    }
+
+    h1 {
+      font-family: var(--display);
+      font-size: clamp(1.9rem, 6vw, 2.6rem);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+      color: var(--text);
     }
 
     /* ── setup form ── */
@@ -68,13 +101,12 @@
     .setup input:focus { border-color: var(--accent); }
 
     .setup input[type="date"]::-webkit-calendar-picker-indicator {
-      filter: invert(0.6);
       cursor: pointer;
     }
 
     .start-btn {
       background: var(--accent);
-      color: #000;
+      color: var(--on-accent);
       border: none;
       border-radius: 100px;
       padding: 14px 52px;
@@ -134,7 +166,7 @@
       justify-content: center;
       font-size: clamp(1.6rem, 5vw, 2.2rem);
       font-weight: 300;
-      color: var(--accent);
+      color: var(--accent-text);
       font-variant-numeric: tabular-nums;
       transition: transform 0.1s;
     }
@@ -162,7 +194,7 @@
       display: none;
       font-size: clamp(1rem, 4vw, 1.3rem);
       font-weight: 300;
-      color: var(--accent);
+      color: var(--accent-text);
       letter-spacing: 0.04em;
       text-align: center;
     }
@@ -190,7 +222,10 @@
 </head>
 <body>
 
-  <h1>⏳ Event Countdown</h1>
+  <header>
+    <div class="eyebrow">Productive &middot; Time</div>
+    <h1>Event Countdown</h1>
+  </header>
 
   <!-- setup form -->
   <div class="setup" id="setup">

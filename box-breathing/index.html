@@ -3,22 +3,49 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#000000" />
+  <meta name="theme-color" content="#eef0f4" />
   <title>Box Breathing</title>
   <style>
     :root {
-      --bg: #000;
-      --surface: #0d0d0d;
-      --border: #1a1a1a;
-      --text: #f0f0f0;
-      --muted: #666;
-      --accent: #5b8dee;
-      --accent-dim: rgba(91,141,238,0.15);
-      --hold: #a78bfa;
-      --hold-dim: rgba(167,139,250,0.15);
-      --exhale: #34d399;
-      --exhale-dim: rgba(52,211,153,0.15);
-      --radius: 16px;
+      color-scheme: light dark;
+      --bg: #eef0f4;
+      --surface: #ffffff;
+      --border: #dfe3ec;
+      --text: #111318;
+      --muted: #868a93;
+      --accent: #4d63ff;
+      --accent-dim: #e6ebff;
+      --hold: #38c9d6;
+      --hold-dim: #e2f7f9;
+      --exhale: #22a559;
+      --exhale-dim: #e2f5ea;
+      --radius: 24px;
+      --body: #454852;
+      --on-accent: #ffffff;
+      --display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --accent-hover: #d5ddff;
+      --accent-text: #3b50e0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #14161b;
+        --surface: #20242e;
+        --border: #2f333d;
+        --text: #eceff5;
+        --muted: #7d8494;
+        --accent: #8b9bff;
+        --accent-dim: #232842;
+        --hold: #38c9d6;
+        --hold-dim: #123338;
+        --exhale: #3ddc84;
+        --exhale-dim: #14301f;
+        --body: #a9b0bf;
+        --on-accent: #111318;
+        --accent-hover: #2c3352;
+        --accent-text: #8b9bff;
+      }
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -26,7 +53,8 @@
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: var(--sans);
+      font-feature-settings: "calt";
       min-height: 100dvh;
       display: flex;
       flex-direction: column;
@@ -37,12 +65,23 @@
       overflow: hidden;
     }
 
-    h1 {
-      font-size: clamp(1rem, 4vw, 1.2rem);
-      font-weight: 500;
-      letter-spacing: 0.12em;
+    header { text-align: center; }
+    .eyebrow {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: var(--muted);
+      color: var(--accent-text);
+      margin-bottom: 6px;
+    }
+
+    h1 {
+      font-family: var(--display);
+      font-size: clamp(1.9rem, 6vw, 2.6rem);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+      color: var(--text);
     }
 
     /* ── Circle ── */
@@ -101,7 +140,7 @@
       font-size: 0.85rem;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: var(--accent);
+      color: var(--accent-text);
       transition: color 0.4s ease;
       font-weight: 500;
     }
@@ -160,8 +199,8 @@
     }
 
     .btn-start:hover {
-      background: rgba(91,141,238,0.28);
-      box-shadow: 0 0 24px rgba(91,141,238,0.3);
+      background: var(--accent-hover);
+      box-shadow: 0 0 0 6px var(--accent-dim);
     }
 
     /* ── Pattern picker ── */
@@ -207,7 +246,10 @@
 </head>
 <body>
 
-  <h1>Box Breathing</h1>
+  <header>
+    <div class="eyebrow">Calm &middot; Breathing</div>
+    <h1>Box Breathing</h1>
+  </header>
 
   <div class="ring-wrap">
     <svg class="ring" viewBox="0 0 200 200">

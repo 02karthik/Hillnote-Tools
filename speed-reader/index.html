@@ -12,6 +12,7 @@
        the heavy system UI face. Palette + shapes follow the Hillnote design
        system: azure primary, cool mist canvas, white rounded-24px cards. */
     :root {
+      color-scheme: light dark;
       --primary: #4d63ff;
       --primary-active: #6f82ff;
       --primary-pale: #e6ebff;
@@ -25,6 +26,24 @@
       --radius-md: 12px;
       --display: 'Manrope', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
       --text: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      --on-primary: #ffffff;
+      --primary-text: #3b50e0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --primary: #8b9bff;
+        --primary-active: #a8b4ff;
+        --primary-pale: #232842;
+        --ink: #eceff5;
+        --body: #a9b0bf;
+        --mute: #7d8494;
+        --canvas: #20242e;
+        --canvas-soft: #14161b;
+        --line: #2f333d;
+        --on-primary: #111318;
+        --primary-text: #8b9bff;
+      }
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -71,7 +90,6 @@
       letter-spacing: -0.02em;
       line-height: 1;
     }
-    header p { color: var(--mute); font-size: 0.8rem; margin-top: 3px; }
 
     /* ── Reader stage ── */
     .stage {
@@ -108,7 +126,7 @@
       user-select: none;
     }
     .word .pre  { color: var(--ink); text-align: right; }
-    .word .piv  { color: var(--primary); }
+    .word .piv  { color: var(--primary-text); }
     .word .post { color: var(--ink); text-align: left; }
     /* fixed columns keep the pivot letter pinned to centre regardless of length */
     .word .pre  { width: 46%; }
@@ -154,7 +172,7 @@
     .btn-primary {
       flex: 1;
       background: var(--primary);
-      color: #f4f6ff;
+      color: var(--on-primary);
       padding: 13px 20px;
       font-size: 1rem;
     }
@@ -182,7 +200,7 @@
     .speed .wpm {
       font-family: var(--display);
       font-weight: 800;
-      color: var(--primary);
+      color: var(--primary-text);
       font-variant-numeric: tabular-nums;
       min-width: 3.4ch;
       text-align: right;
@@ -221,7 +239,7 @@
       cursor: pointer;
       font-size: 0.78rem;
       font-weight: 600;
-      color: var(--primary);
+      color: var(--primary-text);
       list-style: none;
       user-select: none;
       width: fit-content;
@@ -263,7 +281,6 @@
       <div class="badge">⚡</div>
       <div>
         <h1>Speed Reader</h1>
-        <p>Read any text faster, one word at a time.</p>
       </div>
     </header>
 

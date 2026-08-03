@@ -3,20 +3,45 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#000000" />
+  <meta name="theme-color" content="#eef0f4" />
   <title>Flip a Coin</title>
   <style>
     :root {
-      --bg: #000;
-      --surface: #0d0d0d;
-      --border: #1a1a1a;
-      --text: #f0f0f0;
-      --muted: #666;
-      --accent: #eab308;
-      --accent-dim: rgba(234,179,8,0.12);
-      --indigo: #6366f1;
-      --indigo-dim: rgba(99,102,241,0.12);
-      --radius: 16px;
+      color-scheme: light dark;
+      --bg: #eef0f4;
+      --surface: #ffffff;
+      --border: #dfe3ec;
+      --text: #111318;
+      --muted: #868a93;
+      --accent: #4d63ff;
+      --accent-dim: #e6ebff;
+      --indigo: #38c9d6;
+      --indigo-dim: #e2f7f9;
+      --radius: 24px;
+      --body: #454852;
+      --on-accent: #ffffff;
+      --display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --cyan-deep: #0d6b73;
+      --accent-text: #3b50e0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #14161b;
+        --surface: #20242e;
+        --border: #2f333d;
+        --text: #eceff5;
+        --muted: #7d8494;
+        --accent: #8b9bff;
+        --accent-dim: #232842;
+        --indigo: #38c9d6;
+        --indigo-dim: #123338;
+        --body: #a9b0bf;
+        --on-accent: #111318;
+        --cyan-deep: #8fe3ec;
+        --accent-text: #8b9bff;
+      }
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -24,7 +49,8 @@
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: var(--sans);
+      font-feature-settings: "calt";
       min-height: 100dvh;
       display: flex;
       flex-direction: column;
@@ -34,12 +60,23 @@
       gap: 28px;
     }
 
-    h1 {
-      font-size: clamp(0.9rem, 3.5vw, 1.1rem);
-      font-weight: 500;
-      letter-spacing: 0.12em;
+    header { text-align: center; }
+    .eyebrow {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: var(--muted);
+      color: var(--accent-text);
+      margin-bottom: 6px;
+    }
+
+    h1 {
+      font-family: var(--display);
+      font-size: clamp(1.9rem, 6vw, 2.6rem);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+      color: var(--text);
     }
 
     /* ── 3-D coin ── */
@@ -91,7 +128,7 @@
       font-weight: 300;
       letter-spacing: 0.06em;
       min-height: 2.2rem;
-      color: var(--accent);
+      color: var(--accent-text);
       opacity: 0;
       transform: translateY(6px);
       transition: opacity 0.3s, transform 0.3s;
@@ -116,10 +153,13 @@
     }
 
     .stat-val {
+      font-family: var(--display);
       font-size: 1.8rem;
-      font-weight: 300;
+      font-weight: 800;
+      letter-spacing: -0.02em;
       color: var(--text);
       line-height: 1;
+      font-variant-numeric: tabular-nums;
     }
 
     .stat-label {
@@ -160,19 +200,19 @@
     .pill-H {
       background: var(--accent-dim);
       border: 1px solid var(--accent);
-      color: var(--accent);
+      color: var(--accent-text);
     }
 
     .pill-T {
       background: var(--indigo-dim);
       border: 1px solid var(--indigo);
-      color: #a5b4fc;
+      color: var(--cyan-deep);
     }
 
     /* ── buttons ── */
     .flip-btn {
       background: var(--accent);
-      color: #000;
+      color: var(--on-accent);
       border: none;
       border-radius: 100px;
       padding: 14px 52px;
@@ -208,7 +248,10 @@
 </head>
 <body>
 
-  <h1>🪙 Flip a Coin</h1>
+  <header>
+    <div class="eyebrow">Fun &middot; Chance</div>
+    <h1>Flip a Coin</h1>
+  </header>
 
   <div class="coin-scene">
     <div class="coin" id="coin">

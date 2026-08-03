@@ -12,10 +12,11 @@
        and needs no network. Palette + shapes follow the Hillnote design system:
        azure primary, cool-mist canvas, near-black ink, generous 24px card radius. */
     :root {
+      color-scheme: light dark;
       --primary: #4d63ff;
       --primary-active: #6f82ff;
       --primary-pale: #e6ebff;
-      --on-primary: #f4f6ff;
+      --on-primary: #ffffff;
       --ink: #111318;
       --body: #454852;
       --mute: #868a93;
@@ -23,12 +24,35 @@
       --canvas-soft: #eef0f4;
       --line: #dfe3ec;
       --positive: #22a559;
+      --positive-deep: #0c5230;
       --warning: #f5b62a;
       --r-md: 12px;
       --r-lg: 16px;
       --r-xl: 24px;
       --display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --negative-pale: #fbe3e2;
+      --primary-text: #3b50e0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --primary: #8b9bff;
+        --primary-active: #a8b4ff;
+        --primary-pale: #232842;
+        --on-primary: #111318;
+        --ink: #eceff5;
+        --body: #a9b0bf;
+        --mute: #7d8494;
+        --canvas: #20242e;
+        --canvas-soft: #14161b;
+        --line: #2f333d;
+        --positive: #3ddc84;
+      --positive-deep: #86efac;
+        --warning: #fbbf24;
+        --negative-pale: #3a1412;
+        --primary-text: #8b9bff;
+      }
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -52,7 +76,7 @@
       font-weight: 600;
       letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: var(--primary);
+      color: var(--primary-text);
     }
     header h1 {
       font-family: var(--display);
@@ -61,12 +85,6 @@
       letter-spacing: -0.02em;
       line-height: 1.05;
       margin-top: 6px;
-    }
-    header p {
-      color: var(--body);
-      font-size: 0.95rem;
-      line-height: 1.5;
-      margin-top: 8px;
     }
 
     .layout {
@@ -105,9 +123,9 @@
       font-variant-numeric: tabular-nums;
       font-weight: 600;
       font-size: 0.9rem;
-      color: var(--primary);
+      color: var(--primary-text);
     }
-    .planner-value.is-now { color: var(--positive); }
+    .planner-value.is-now { color: var(--positive-deep); }
 
     .slider-row { display: flex; align-items: center; gap: 12px; }
     input[type="range"] {
@@ -151,7 +169,7 @@
       transition: background 0.15s, color 0.15s, transform 0.1s;
       white-space: nowrap;
     }
-    .btn-now:hover { background: var(--primary-pale); color: var(--primary); }
+    .btn-now:hover { background: var(--primary-pale); color: var(--primary-text); }
     .btn-now:active { transform: scale(0.96); }
 
     /* ── Zone rows ───────────────────────────────────────── */
@@ -191,7 +209,7 @@
       font-weight: 700;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: var(--primary);
+      color: var(--primary-text);
       background: var(--canvas);
       border-radius: 9999px;
       padding: 2px 8px;
@@ -207,13 +225,13 @@
     }
     .offset-pill {
       font-variant-numeric: tabular-nums;
-      color: var(--mute);
+      color: var(--body);
     }
     .day-diff {
       font-weight: 600;
       color: var(--warning);
     }
-    .day-diff.behind { color: var(--primary); }
+    .day-diff.behind { color: var(--primary-text); }
 
     .zone .clock { text-align: right; flex-shrink: 0; }
     .zone .time {
@@ -224,8 +242,8 @@
       letter-spacing: -0.02em;
       line-height: 1;
     }
-    .zone .ampm { font-size: 0.7rem; font-weight: 700; color: var(--mute); margin-left: 3px; }
-    .zone .date { font-size: 0.74rem; color: var(--mute); margin-top: 4px; }
+    .zone .ampm { font-size: 0.7rem; font-weight: 700; color: var(--body); margin-left: 3px; }
+    .zone .date { font-size: 0.74rem; color: var(--body); margin-top: 4px; }
 
     .zone-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
     .mini-btn {
@@ -233,7 +251,7 @@
       border-radius: 9999px;
       background: transparent;
       border: none;
-      color: var(--mute);
+      color: var(--body);
       font-size: 1rem;
       cursor: pointer;
       display: inline-flex;
@@ -241,9 +259,9 @@
       justify-content: center;
       transition: background 0.15s, color 0.15s, transform 0.1s;
     }
-    .mini-btn:hover { background: var(--canvas); color: var(--primary); }
+    .mini-btn:hover { background: var(--canvas); color: var(--primary-text); }
     .mini-btn:active { transform: scale(0.9); }
-    .mini-btn.remove:hover { color: var(--negative, #e0453f); background: #fff0f0; }
+    .mini-btn.remove:hover { color: var(--negative); background: var(--negative-pale); }
     .mini-btn:disabled { opacity: 0.25; cursor: not-allowed; }
     .mini-btn:disabled:hover { background: transparent; color: var(--mute); }
 
@@ -300,7 +318,6 @@
   <header>
     <div class="eyebrow">Productive &middot; Time</div>
     <h1>World Clock</h1>
-    <p>See the current time across cities worldwide, then drag the planner to find a time that works everywhere.</p>
   </header>
 
   <div class="layout">

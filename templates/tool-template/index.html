@@ -2,72 +2,156 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#eef0f4">
   <!-- TODO: your tool's name -->
   <title>My Tool</title>
   <style>
     /* Everything is inline — a tool is ONE self-contained file. No remote fonts,
        scripts, stylesheets, or images: the app runs tools under a strict CSP
        that blocks the network, so anything remote simply won't load. Use system
-       fonts and, if you need an icon, an emoji or an inline data: URI. */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+       fonts and, if you need an icon, an emoji or an inline data: URI.
 
+       Colours come from Hillnote-Tools-Design-System.md. Two rules matter most:
+         1. Never hard-code a colour — always go through a token below, including
+            box-shadow, border, SVG fill/stroke, and anything set from JS.
+            A literal #fff is the usual reason a tool fails to flip to dark.
+         2. --primary is a FILL. For azure *text* use --primary-text, which is
+            darkened in light mode so small type still clears WCAG AA. */
     :root {
-      /* TODO: match the "color" you set in tools.json */
-      --accent: #6366f1;
+      color-scheme: light dark;
+
+      --primary: #4d63ff;        /* CTA fill, active states           */
+      --primary-text: #3b50e0;   /* azure as TEXT (eyebrow, links)    */
+      --primary-active: #6f82ff; /* hover / pressed fill              */
+      --primary-pale: #e6ebff;   /* soft tint, badge + focus ring     */
+      --on-primary: #ffffff;     /* label sitting on --primary        */
+
+      --ink: #111318;            /* headings, highest-emphasis text   */
+      --body: #454852;           /* secondary body text               */
+      --mute: #868a93;           /* captions, placeholder, fine print */
+
+      --canvas: #ffffff;         /* card surface                      */
+      --canvas-soft: #eef0f4;    /* page background                   */
+      --line: #dfe3ec;           /* hairline borders + dividers       */
+
+      --display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     }
 
+    /* Dark mode follows the OS — there is no in-product toggle. Every token
+       keeps its role and only its value flips: --canvas is still the card,
+       --canvas-soft is still the page, --ink is still the strongest text. */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --primary: #8b9bff;
+        --primary-text: #8b9bff;
+        --primary-active: #a8b4ff;
+        --primary-pale: #232842;
+        --on-primary: #111318;
+
+        --ink: #eceff5;
+        --body: #a9b0bf;
+        --mute: #7d8494;
+
+        --canvas: #20242e;
+        --canvas-soft: #14161b;
+        --line: #2f333d;
+      }
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #0b0b0f;
-      color: #1a1a1a;
+      font-family: var(--sans);
+      font-feature-settings: "calt";
+      background: var(--canvas-soft);
+      color: var(--ink);
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
+      min-height: 100dvh;
       padding: 20px;
     }
 
+    /* Elevation is carried by surface contrast — a --canvas card on a
+       --canvas-soft page. That works in both schemes, so no shadow is needed. */
     .container {
-      background: #fff;
-      border-radius: 20px;
+      background: var(--canvas);
+      border-radius: 24px;   /* the system's canonical card + button radius */
       padding: 40px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
       text-align: center;
       max-width: 420px;
       width: 100%;
     }
 
-    h1 { font-size: 2em; margin-bottom: 8px; }
-    p.sub { color: #666; margin-bottom: 28px; }
+    .eyebrow {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--primary-text);
+      margin-bottom: 6px;
+    }
 
-    .count { font-size: 3.5em; font-weight: 800; color: var(--accent); margin-bottom: 24px; }
+    h1 {
+      font-family: var(--display);
+      font-size: clamp(1.9rem, 6vw, 2.6rem);
+      font-weight: 900;          /* the display ceiling — never lighter */
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+      color: var(--ink);
+    }
+
+    p.sub { color: var(--body); margin: 8px 0 28px; }
+
+    .count {
+      font-family: var(--display);
+      font-size: 3.5em;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+      color: var(--primary-text);
+      margin-bottom: 24px;
+    }
 
     button {
-      background: var(--accent);
-      color: #fff;
+      background: var(--primary);
+      color: var(--on-primary);
       border: none;
-      padding: 14px 32px;
-      font-size: 1.05em;
-      font-weight: 700;
-      border-radius: 12px;
+      font-family: inherit;
+      padding: 13px 32px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 24px;
       cursor: pointer;
-      transition: transform 0.15s, filter 0.15s;
+      transition: background 0.15s, transform 0.15s;
     }
-    button:hover { transform: translateY(-2px); filter: brightness(1.08); }
+    button:hover { background: var(--primary-active); transform: translateY(-2px); }
     button:active { transform: translateY(0); }
-    .reset { background: transparent; color: #888; font-weight: 500; padding: 8px; margin-top: 8px; }
+    button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+    .reset {
+      background: transparent;
+      color: var(--mute);
+      font-weight: 500;
+      padding: 8px;
+      margin-top: 8px;
+    }
+    .reset:hover { background: transparent; color: var(--ink); transform: none; }
   </style>
 </head>
 <body>
   <!-- TODO: replace this demo (a localStorage-backed counter) with your tool.
-       The demo shows the conventions: offline, persists state locally, no network. -->
+       The demo shows the conventions: offline, persists state locally, no
+       network, and every colour driven by a token so dark mode works for free. -->
   <div class="container">
-    <h1>🛠️ My Tool</h1>
+    <div class="eyebrow">Category &middot; Subcategory</div>
+    <h1>My Tool</h1>
     <p class="sub">A one-line description of what it does.</p>
     <div class="count" id="count">0</div>
     <button id="inc">Count up</button>
-    <div><button class="reset" id="reset">reset</button></div>
+    <div><button class="reset" id="reset">Reset</button></div>
   </div>
 
   <script>
