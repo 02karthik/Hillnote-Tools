@@ -7,7 +7,7 @@ colors:
   primary: "#4d63ff"
   primary-text: "#3b50e0"
   primary-on-ink: "#8b9bff"
-  on-primary: "#f4f6ff"
+  on-primary: "#ffffff"
   primary-active: "#6f82ff"
   primary-neutral: "#b9c4ff"
   primary-pale: "#e6ebff"
@@ -440,14 +440,16 @@ Measured WCAG 2.1 ratios for the pairings that carry text. Body copy targets 4.5
 | `mute` on `canvas` | 3.46:1 | 4.14:1 |
 | `primary-text` on `canvas-soft` | 5.40:1 | 7.09:1 |
 | `primary-text` on `canvas` | 6.16:1 | 6.08:1 |
-| `on-primary` on `primary` (CTA label) | **4.29:1** | 7.28:1 |
+| `on-primary` on `primary` (CTA label) | 4.62:1 | 7.28:1 |
 | `positive-deep` on `positive-pale` | 8.16:1 | 10.16:1 |
 | `positive-deep` on `primary-pale` (badge) | 7.81:1 | 10.29:1 |
 | `warning-content` on `warning-pale` | 9.80:1 | 11.63:1 |
 | `negative-deep` on `negative-pale` | 5.35:1 | 7.67:1 |
 | `canvas` vs `canvas-soft` (elevation) | 1.14:1 | 1.17:1 |
 
-**Known gap.** The light CTA label — `{colors.on-primary}` `#f4f6ff` on `{colors.primary}` `#4d63ff` — measures 4.29:1 and falls just short of AA for a 16 px label. Setting `on-primary` to pure `#ffffff` raises it to 4.62:1 and is visually indistinguishable; darkening the fill to `#4459f0` reaches 4.95:1 but shifts the brand hue. The value is left unchanged here because `{colors.primary}` is the brand identity — resolve it deliberately, not by accident. Dark mode has no such gap.
+**Resolved.** The light CTA label was `#f4f6ff` on `{colors.primary}`, which measured 4.29:1 and fell just short of AA for a 16 px label. `{colors.on-primary}` is now pure `#ffffff`, taking it to 4.62:1 — visually indistinguishable, and it leaves the brand fill `{colors.primary}` untouched. (Darkening the fill to `#4459f0` would have reached 4.95:1 but shifts the brand hue, so it was rejected.)
+
+**Remaining gap.** `{colors.mute}` is a deliberate 3:1 fine-print token and clears that comfortably on every surface in both schemes. It does not reach the stricter 4.5:1 body-text bar: 3.46:1 on `{colors.canvas}` and 3.03:1 on `{colors.canvas-soft}` in light, 4.14:1 and 4.83:1 in dark. Strict WCAG AA grants no exemption for small or low-priority text, so `{colors.mute}` set below 18.66 px is technically non-conforming — most visibly in light mode. Closing it would mean roughly `#686c77` in light and `#8a91a1` in dark, at the cost of visibly heavier fine print throughout. The 3:1 target is retained as an explicit, informed trade-off rather than an oversight.
 
 ## Typography
 
