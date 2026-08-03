@@ -1,5 +1,5 @@
 {
-  "catalogVersion": 23,
+  "catalogVersion": 24,
   "tools": [
     {
       "dir": "color-capture",
@@ -224,6 +224,14 @@
       "glyph": "🎯",
       "color": "#4d63ff",
       "version": 2
+    },
+    {
+      "dir": "diff-checker",
+      "name": "Diff Checker",
+      "description": "Compare two versions of any text and see exactly what changed — additions and deletions highlighted inline, word by word or line by line.",
+      "glyph": "🔀",
+      "color": "#c026d3",
+      "version": 1
     }
   ]
 }
