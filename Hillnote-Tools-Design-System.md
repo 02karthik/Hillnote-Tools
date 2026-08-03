@@ -414,7 +414,7 @@ Scheme follows the OS via `prefers-color-scheme` — there is no in-product them
   color-scheme: light dark;
   --canvas: #ffffff;  --canvas-soft: #eef0f4;  --line: #dfe3ec;
   --ink: #111318;     --body: #454852;         --mute: #868a93;
-  --primary: #4d63ff; --primary-text: #3b50e0; --on-primary: #f4f6ff;
+  --primary: #4d63ff; --primary-text: #3b50e0; --on-primary: #ffffff;
 }
 
 @media (prefers-color-scheme: dark) {

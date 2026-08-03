@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#eef0f4" />
+  <title>Priority Matrix</title>
+  <style>
+    /* Single-file, fully offline. No remote fonts/scripts/images — the app runs
+       tools under a strict CSP, so system fonts only and all state in localStorage.
+       Palette + shapes follow the Hillnote design system: azure primary, cool-mist
+       canvas, near-black ink, 24px card radius, Manrope display + Inter body. */
+    :root {
+      color-scheme: light dark;
+      --primary: #4d63ff;
+      --primary-text: #3b50e0;
+      --primary-active: #6f82ff;
+      --primary-pale: #e6ebff;
+      --on-primary: #ffffff;
+      --ink: #111318;
+      --body: #454852;
+      --mute: #868a93;
+      --canvas: #ffffff;
+      --canvas-soft: #eef0f4;
+      --line: #dfe3ec;
+      --positive: #22a559;
+      --warning: #f5b62a;
+      --warning-deep: #9a5b00;
+      --warning-content: #4a3a1c;
+      --warning-pale: #fdf1d8;
+      --negative: #e0453f;
+      --negative-deep: #b02a2a;
+      --negative-pale: #fbe3e2;
+      --r-sm: 8px;
+      --r-md: 12px;
+      --r-lg: 16px;
+      --r-xl: 24px;
+      --display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --primary: #8b9bff;
+        --primary-text: #8b9bff;
+        --primary-active: #a8b4ff;
+        --primary-pale: #232842;
+        --on-primary: #111318;
+        --ink: #eceff5;
+        --body: #a9b0bf;
+        --mute: #7d8494;
+        --canvas: #20242e;
+        --canvas-soft: #14161b;
+        --line: #2f333d;
+        --positive: #3ddc84;
+        --warning: #fbbf24;
+        --warning-deep: #fcd34d;
+        --warning-content: #fde68a;
+        --warning-pale: #33280d;
+        --negative: #ff6b63;
+        --negative-deep: #ff9490;
+        --negative-pale: #3a1412;
+      }
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--canvas-soft);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-feature-settings: "calt";
+      min-height: 100dvh;
+      padding: 26px 18px 36px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    header { text-align: center; max-width: 680px; }
+    header .eyebrow {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--primary-text);
+    }
+    header h1 {
+      font-family: var(--display);
+      font-weight: 900;
+      font-size: clamp(1.9rem, 6vw, 2.6rem);
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+      margin-top: 6px;
+    }
+    header p {
+      color: var(--body);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-top: 8px;
+    }
+
+    .shell {
+      width: 100%;
+      max-width: 860px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ── Add bar ──────────────────────────────────────────────── */
+    .addbar {
+      background: var(--canvas);
+      border-radius: var(--r-xl);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .add-row { display: flex; gap: 10px; }
+    .add-row input[type="text"] {
+      flex: 1;
+      min-width: 0;
+      border: 1px solid var(--line);
+      background: var(--canvas);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 0.95rem;
+      border-radius: var(--r-md);
+      padding: 12px 14px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .add-row input[type="text"]::placeholder { color: var(--mute); }
+    .add-row input[type="text"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-pale);
+    }
+    .add-btn {
+      flex: none;
+      background: var(--primary);
+      color: var(--on-primary);
+      border: none;
+      border-radius: var(--r-md);
+      font-family: var(--sans);
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 12px 20px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .add-btn:hover { background: var(--primary-active); }
+    .add-btn:active { transform: scale(0.97); }
+    .add-btn svg { width: 17px; height: 17px; }
+
+    .quad-picker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      align-items: center;
+    }
+    .quad-picker .lbl { font-size: 0.78rem; color: var(--mute); font-weight: 600; margin-right: 2px; }
+    .pill {
+      border: 1px solid var(--line);
+      background: var(--canvas);
+      color: var(--body);
+      border-radius: 9999px;
+      font-family: var(--sans);
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 6px 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .pill .dot { width: 8px; height: 8px; border-radius: 9999px; background: var(--q-color, var(--mute)); }
+    .pill[aria-pressed="true"] {
+      border-color: var(--q-color, var(--primary));
+      background: var(--q-pale, var(--primary-pale));
+      color: var(--ink);
+    }
+
+    /* ── Matrix grid ──────────────────────────────────────────── */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .quad {
+      --q-color: var(--mute);
+      --q-pale: var(--canvas-soft);
+      background: var(--canvas);
+      border-radius: var(--r-xl);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 168px;
+      border: 2px solid transparent;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .quad.drag-over {
+      border-color: var(--q-color);
+      background: var(--q-pale);
+    }
+    .quad-head { display: flex; align-items: flex-start; gap: 10px; }
+    .quad-bar { width: 4px; align-self: stretch; border-radius: 9999px; background: var(--q-color); flex: none; }
+    .quad-meta { flex: 1; min-width: 0; }
+    .quad-title {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 1.05rem;
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+    }
+    .quad-sub { font-size: 0.72rem; color: var(--mute); margin-top: 3px; font-weight: 600; }
+    .count {
+      flex: none;
+      min-width: 24px;
+      height: 24px;
+      padding: 0 7px;
+      border-radius: 9999px;
+      background: var(--q-pale);
+      color: var(--q-text, var(--q-color));
+      font-size: 0.78rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .tasks { display: flex; flex-direction: column; gap: 7px; flex: 1; }
+    .empty {
+      font-size: 0.8rem;
+      color: var(--mute);
+      text-align: center;
+      padding: 14px 6px;
+      border: 1px dashed var(--line);
+      border-radius: var(--r-md);
+      line-height: 1.4;
+    }
+
+    .task {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      background: var(--canvas-soft);
+      border-radius: var(--r-md);
+      padding: 9px 10px;
+      cursor: grab;
+      border: 1px solid transparent;
+    }
+    .task:active { cursor: grabbing; }
+    .task.dragging { opacity: 0.45; }
+    .task .grip { color: var(--mute); flex: none; display: inline-flex; touch-action: none; }
+    .task .grip svg { width: 15px; height: 15px; display: block; }
+
+    .check {
+      flex: none;
+      width: 19px; height: 19px;
+      border-radius: 6px;
+      border: 2px solid var(--line);
+      background: var(--canvas);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .check svg { width: 12px; height: 12px; color: var(--on-primary); opacity: 0; }
+    .check.done { background: var(--positive); border-color: var(--positive); }
+    .check.done svg { opacity: 1; }
+
+    .task .txt {
+      flex: 1;
+      min-width: 0;
+      font-size: 0.86rem;
+      line-height: 1.35;
+      color: var(--ink);
+      word-break: break-word;
+    }
+    .task.is-done .txt { color: var(--mute); text-decoration: line-through; }
+
+    .del {
+      flex: none;
+      width: 24px; height: 24px;
+      border: none;
+      background: transparent;
+      color: var(--mute);
+      border-radius: 9999px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      line-height: 1;
+      transition: background 0.15s, color 0.15s;
+    }
+    .del:hover { background: var(--negative-pale); color: var(--negative-deep); }
+
+    /* ── Footer ───────────────────────────────────────────────── */
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 4px 4px 0;
+    }
+    .progress { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 200px; }
+    .bar { flex: 1; height: 7px; border-radius: 9999px; background: var(--line); overflow: hidden; }
+    .bar span { display: block; height: 100%; width: 0; background: var(--positive); border-radius: 9999px; transition: width 0.3s; }
+    .progress .stat { font-size: 0.78rem; color: var(--body); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .ghost-btn {
+      border: 1px solid var(--line);
+      background: var(--canvas);
+      color: var(--body);
+      border-radius: 9999px;
+      font-family: var(--sans);
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 7px 15px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .ghost-btn:hover:not(:disabled) { border-color: var(--negative); color: var(--negative); }
+    .ghost-btn:disabled { opacity: 0.5; cursor: default; }
+
+    .hint { text-align: center; font-size: 0.74rem; color: var(--mute); margin-top: -4px; }
+
+    @media (max-width: 620px) {
+      .grid { grid-template-columns: 1fr; }
+      .quad { min-height: 0; }
+      .add-btn span { display: none; }
+      .add-btn { padding: 12px 15px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="eyebrow">Productive &middot; Focus</div>
+    <h1>Priority Matrix</h1>
+    <p>Triage your to-dos the Eisenhower way — sort each task by urgency and importance so you know what to do now, what to schedule, what to hand off, and what to drop.</p>
+  </header>
+
+  <div class="shell">
+    <div class="addbar">
+      <div class="add-row">
+        <input type="text" id="taskInput" placeholder="Add a task…" maxlength="140"
+               autocomplete="off" aria-label="Task description" />
+        <button class="add-btn" id="addBtn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          <span>Add</span>
+        </button>
+      </div>
+      <div class="quad-picker" id="quadPicker" role="group" aria-label="Choose a quadrant">
+        <span class="lbl">Add to:</span>
+      </div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+
+    <p class="hint">Tip: drag a task by its handle to move it between quadrants.</p>
+
+    <div class="footer">
+      <div class="progress">
+        <div class="bar"><span id="barFill"></span></div>
+        <span class="stat" id="stat">0 of 0 done</span>
+      </div>
+      <button class="ghost-btn" id="clearBtn" type="button" disabled>Clear completed</button>
+    </div>
+  </div>
+
+  <script>
+    'use strict';
+
+    var KEY = 'priority-matrix:v1';
+
+    // The four Eisenhower quadrants, in reading order (top-left → bottom-right).
+    var QUADS = [
+      // `color` tints the bar/border (a fill — no contrast floor); `text` is the
+      // count label sitting on `pale`, so it needs a text-safe variant instead.
+      { id: 'do',        title: 'Do First',  sub: 'Urgent · Important',         color: 'var(--negative)',     pale: 'var(--negative-pale)', text: 'var(--negative-deep)' },
+      { id: 'schedule',  title: 'Schedule',  sub: 'Important · Not urgent',     color: 'var(--primary)',      pale: 'var(--primary-pale)',  text: 'var(--primary-text)' },
+      { id: 'delegate',  title: 'Delegate',  sub: 'Urgent · Not important',     color: 'var(--warning-deep)', pale: 'var(--warning-pale)',  text: 'var(--warning-content)' },
+      { id: 'eliminate', title: 'Eliminate', sub: 'Not urgent · Not important', color: 'var(--mute)',         pale: 'var(--canvas-soft)',   text: 'var(--body)' }
+    ];
+    var QUAD_IDS = QUADS.map(function (q) { return q.id; });
+
+    var input = document.getElementById('taskInput');
+    var grid = document.getElementById('grid');
+    var picker = document.getElementById('quadPicker');
+    var barFill = document.getElementById('barFill');
+    var statEl = document.getElementById('stat');
+    var clearBtn = document.getElementById('clearBtn');
+
+    var tasks = [];        // { id, text, quad, done }
+    var target = 'do';     // quadrant new tasks land in
+    var seq = 0;           // local id counter (combined with a timestamp base)
+    var base = Date.now();
+
+    // ── persistence ────────────────────────────────────────────
+    function load() {
+      try {
+        var raw = localStorage.getItem(KEY);
+        if (!raw) return;
+        var s = JSON.parse(raw);
+        if (!s || typeof s !== 'object') return;
+        if (Array.isArray(s.tasks)) {
+          tasks = s.tasks.filter(function (t) {
+            return t && typeof t.text === 'string' && QUAD_IDS.indexOf(t.quad) !== -1;
+          }).map(function (t) {
+            return { id: String(t.id || nextId()), text: t.text, quad: t.quad, done: !!t.done };
+          });
+        }
+        if (QUAD_IDS.indexOf(s.target) !== -1) target = s.target;
+      } catch (e) { /* ignore corrupt state */ }
+    }
+
+    function save() {
+      try {
+        localStorage.setItem(KEY, JSON.stringify({ tasks: tasks, target: target }));
+      } catch (e) { /* storage full / blocked */ }
+    }
+
+    function nextId() { return base.toString(36) + '-' + (seq++).toString(36); }
+
+    // ── quadrant picker (segmented pills) ──────────────────────
+    function buildPicker() {
+      QUADS.forEach(function (q) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'pill';
+        b.style.setProperty('--q-color', q.color);
+        b.style.setProperty('--q-pale', q.pale);
+        b.style.setProperty('--q-text', q.text);
+        b.setAttribute('aria-pressed', String(q.id === target));
+        b.dataset.quad = q.id;
+        b.innerHTML = '<span class="dot"></span>' + q.title;
+        b.addEventListener('click', function () {
+          target = q.id;
+          save();
+          syncPicker();
+        });
+        picker.appendChild(b);
+      });
+    }
+
+    function syncPicker() {
+      var pills = picker.querySelectorAll('.pill');
+      for (var i = 0; i < pills.length; i++) {
+        pills[i].setAttribute('aria-pressed', String(pills[i].dataset.quad === target));
+      }
+    }
+
+    // ── rendering ──────────────────────────────────────────────
+    var CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+    var GRIP_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>';
+
+    function render() {
+      grid.textContent = '';
+      QUADS.forEach(function (q) {
+        var mine = tasks.filter(function (t) { return t.quad === q.id; });
+
+        var quad = document.createElement('section');
+        quad.className = 'quad';
+        quad.style.setProperty('--q-color', q.color);
+        quad.style.setProperty('--q-pale', q.pale);
+        quad.style.setProperty('--q-text', q.text);
+        quad.dataset.quad = q.id;
+
+        var head = document.createElement('div');
+        head.className = 'quad-head';
+        head.innerHTML =
+          '<span class="quad-bar"></span>' +
+          '<div class="quad-meta"><div class="quad-title"></div>' +
+          '<div class="quad-sub"></div></div>' +
+          '<span class="count"></span>';
+        head.querySelector('.quad-title').textContent = q.title;
+        head.querySelector('.quad-sub').textContent = q.sub;
+        head.querySelector('.count').textContent = String(mine.length);
+        quad.appendChild(head);
+
+        var list = document.createElement('div');
+        list.className = 'tasks';
+        if (mine.length === 0) {
+          var e = document.createElement('div');
+          e.className = 'empty';
+          e.textContent = 'Nothing here yet';
+          list.appendChild(e);
+        } else {
+          mine.forEach(function (t) { list.appendChild(taskEl(t)); });
+        }
+        quad.appendChild(list);
+
+        wireDropTarget(quad);
+        grid.appendChild(quad);
+      });
+      updateProgress();
+    }
+
+    function taskEl(t) {
+      var row = document.createElement('div');
+      row.className = 'task' + (t.done ? ' is-done' : '');
+      row.draggable = true;
+      row.dataset.id = t.id;
+
+      var grip = document.createElement('span');
+      grip.className = 'grip';
+      grip.innerHTML = GRIP_SVG;
+
+      var check = document.createElement('button');
+      check.type = 'button';
+      check.className = 'check' + (t.done ? ' done' : '');
+      check.innerHTML = CHECK_SVG;
+      check.setAttribute('aria-label', t.done ? 'Mark as not done' : 'Mark as done');
+      check.setAttribute('aria-pressed', String(t.done));
+      check.addEventListener('click', function () { toggle(t.id); });
+
+      var txt = document.createElement('span');
+      txt.className = 'txt';
+      txt.textContent = t.text;
+
+      var del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'del';
+      del.innerHTML = '&times;';
+      del.setAttribute('aria-label', 'Delete task');
+      del.addEventListener('click', function () { remove(t.id); });
+
+      row.appendChild(grip);
+      row.appendChild(check);
+      row.appendChild(txt);
+      row.appendChild(del);
+
+      row.addEventListener('dragstart', function (ev) {
+        row.classList.add('dragging');
+        if (ev.dataTransfer) {
+          ev.dataTransfer.effectAllowed = 'move';
+          ev.dataTransfer.setData('text/plain', t.id);
+        }
+      });
+      row.addEventListener('dragend', function () { row.classList.remove('dragging'); });
+
+      return row;
+    }
+
+    // ── drag & drop between quadrants ──────────────────────────
+    function wireDropTarget(quad) {
+      quad.addEventListener('dragover', function (ev) {
+        ev.preventDefault();
+        if (ev.dataTransfer) ev.dataTransfer.dropEffect = 'move';
+        quad.classList.add('drag-over');
+      });
+      quad.addEventListener('dragleave', function (ev) {
+        // Only clear when the pointer truly leaves the quadrant, not its children.
+        if (!quad.contains(ev.relatedTarget)) quad.classList.remove('drag-over');
+      });
+      quad.addEventListener('drop', function (ev) {
+        ev.preventDefault();
+        quad.classList.remove('drag-over');
+        var id = ev.dataTransfer ? ev.dataTransfer.getData('text/plain') : '';
+        move(id, quad.dataset.quad);
+      });
+    }
+
+    // ── mutations ──────────────────────────────────────────────
+    function addTask() {
+      var text = input.value.trim();
+      if (!text) { input.focus(); return; }
+      tasks.push({ id: nextId(), text: text, quad: target, done: false });
+      input.value = '';
+      input.focus();
+      save();
+      render();
+    }
+
+    function toggle(id) {
+      var t = find(id);
+      if (!t) return;
+      t.done = !t.done;
+      save();
+      render();
+    }
+
+    function remove(id) {
+      tasks = tasks.filter(function (t) { return t.id !== id; });
+      save();
+      render();
+    }
+
+    function move(id, quad) {
+      if (QUAD_IDS.indexOf(quad) === -1) return;
+      var t = find(id);
+      if (!t || t.quad === quad) return;
+      t.quad = quad;
+      save();
+      render();
+    }
+
+    function clearCompleted() {
+      if (!tasks.some(function (t) { return t.done; })) return;
+      tasks = tasks.filter(function (t) { return !t.done; });
+      save();
+      render();
+    }
+
+    function find(id) {
+      for (var i = 0; i < tasks.length; i++) if (tasks[i].id === id) return tasks[i];
+      return null;
+    }
+
+    // ── progress ───────────────────────────────────────────────
+    function updateProgress() {
+      var total = tasks.length;
+      var done = tasks.filter(function (t) { return t.done; }).length;
+      barFill.style.width = total ? (done / total * 100) + '%' : '0%';
+      statEl.textContent = done + ' of ' + total + ' done';
+      clearBtn.disabled = done === 0;
+    }
+
+    // ── wiring ─────────────────────────────────────────────────
+    document.getElementById('addBtn').addEventListener('click', addTask);
+    input.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter') { ev.preventDefault(); addTask(); }
+    });
+    clearBtn.addEventListener('click', clearCompleted);
+
+    // First paint
+    load();
+    buildPicker();
+    render();
+  </script>
+
+</body>
+</html>
