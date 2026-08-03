@@ -1,5 +1,5 @@
 {
-  "catalogVersion": 22,
+  "catalogVersion": 23,
   "tools": [
     {
       "dir": "color-capture",
@@ -223,7 +223,7 @@
       "description": "Triage your to-dos with the Eisenhower method — sort tasks by urgency and importance into do, schedule, delegate, or eliminate.",
       "glyph": "🎯",
       "color": "#4d63ff",
-      "version": 1
+      "version": 2
     }
   ]
 }

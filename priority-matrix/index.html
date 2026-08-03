@@ -11,10 +11,12 @@
        Palette + shapes follow the Hillnote design system: azure primary, cool-mist
        canvas, near-black ink, 24px card radius, Manrope display + Inter body. */
     :root {
+      color-scheme: light dark;
       --primary: #4d63ff;
+      --primary-text: #3b50e0;
       --primary-active: #6f82ff;
       --primary-pale: #e6ebff;
-      --on-primary: #f4f6ff;
+      --on-primary: #ffffff;
       --ink: #111318;
       --body: #454852;
       --mute: #868a93;
@@ -24,13 +26,41 @@
       --positive: #22a559;
       --warning: #f5b62a;
       --warning-deep: #9a5b00;
+      --warning-content: #4a3a1c;
+      --warning-pale: #fdf1d8;
       --negative: #e0453f;
+      --negative-deep: #b02a2a;
+      --negative-pale: #fbe3e2;
       --r-sm: 8px;
       --r-md: 12px;
       --r-lg: 16px;
       --r-xl: 24px;
       --display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --primary: #8b9bff;
+        --primary-text: #8b9bff;
+        --primary-active: #a8b4ff;
+        --primary-pale: #232842;
+        --on-primary: #111318;
+        --ink: #eceff5;
+        --body: #a9b0bf;
+        --mute: #7d8494;
+        --canvas: #20242e;
+        --canvas-soft: #14161b;
+        --line: #2f333d;
+        --positive: #3ddc84;
+        --warning: #fbbf24;
+        --warning-deep: #fcd34d;
+        --warning-content: #fde68a;
+        --warning-pale: #33280d;
+        --negative: #ff6b63;
+        --negative-deep: #ff9490;
+        --negative-pale: #3a1412;
+      }
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -54,7 +84,7 @@
       font-weight: 600;
       letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: var(--primary);
+      color: var(--primary-text);
     }
     header h1 {
       font-family: var(--display);
@@ -197,7 +227,7 @@
       padding: 0 7px;
       border-radius: 9999px;
       background: var(--q-pale);
-      color: var(--q-color);
+      color: var(--q-text, var(--q-color));
       font-size: 0.78rem;
       font-weight: 700;
       display: inline-flex;
@@ -274,7 +304,7 @@
       line-height: 1;
       transition: background 0.15s, color 0.15s;
     }
-    .del:hover { background: #fbe5e4; color: var(--negative); }
+    .del:hover { background: var(--negative-pale); color: var(--negative-deep); }
 
     /* ── Footer ───────────────────────────────────────────────── */
     .footer {
@@ -359,10 +389,12 @@
 
     // The four Eisenhower quadrants, in reading order (top-left → bottom-right).
     var QUADS = [
-      { id: 'do',        title: 'Do First',  sub: 'Urgent · Important',         color: 'var(--negative)',     pale: '#fbe5e4' },
-      { id: 'schedule',  title: 'Schedule',  sub: 'Important · Not urgent',     color: 'var(--primary)',      pale: 'var(--primary-pale)' },
-      { id: 'delegate',  title: 'Delegate',  sub: 'Urgent · Not important',     color: 'var(--warning-deep)', pale: '#fbf1d6' },
-      { id: 'eliminate', title: 'Eliminate', sub: 'Not urgent · Not important', color: 'var(--mute)',         pale: 'var(--canvas-soft)' }
+      // `color` tints the bar/border (a fill — no contrast floor); `text` is the
+      // count label sitting on `pale`, so it needs a text-safe variant instead.
+      { id: 'do',        title: 'Do First',  sub: 'Urgent · Important',         color: 'var(--negative)',     pale: 'var(--negative-pale)', text: 'var(--negative-deep)' },
+      { id: 'schedule',  title: 'Schedule',  sub: 'Important · Not urgent',     color: 'var(--primary)',      pale: 'var(--primary-pale)',  text: 'var(--primary-text)' },
+      { id: 'delegate',  title: 'Delegate',  sub: 'Urgent · Not important',     color: 'var(--warning-deep)', pale: 'var(--warning-pale)',  text: 'var(--warning-content)' },
+      { id: 'eliminate', title: 'Eliminate', sub: 'Not urgent · Not important', color: 'var(--mute)',         pale: 'var(--canvas-soft)',   text: 'var(--body)' }
     ];
     var QUAD_IDS = QUADS.map(function (q) { return q.id; });
 
@@ -412,6 +444,7 @@
         b.className = 'pill';
         b.style.setProperty('--q-color', q.color);
         b.style.setProperty('--q-pale', q.pale);
+        b.style.setProperty('--q-text', q.text);
         b.setAttribute('aria-pressed', String(q.id === target));
         b.dataset.quad = q.id;
         b.innerHTML = '<span class="dot"></span>' + q.title;
@@ -444,6 +477,7 @@
         quad.className = 'quad';
         quad.style.setProperty('--q-color', q.color);
         quad.style.setProperty('--q-pale', q.pale);
+        quad.style.setProperty('--q-text', q.text);
         quad.dataset.quad = q.id;
 
         var head = document.createElement('div');
