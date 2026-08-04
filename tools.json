@@ -1,5 +1,5 @@
 {
-  "catalogVersion": 24,
+  "catalogVersion": 25,
   "tools": [
     {
       "dir": "color-capture",
@@ -231,6 +231,14 @@
       "description": "Compare two versions of any text and see exactly what changed — additions and deletions highlighted inline, word by word or line by line.",
       "glyph": "🔀",
       "color": "#c026d3",
+      "version": 1
+    },
+    {
+      "dir": "contrast-checker",
+      "name": "Contrast Checker",
+      "description": "Check any two colours for WCAG AA/AAA contrast — pick a text and background colour, see the ratio and a live preview.",
+      "glyph": "🌗",
+      "color": "#64748b",
       "version": 1
     }
   ]
