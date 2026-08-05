@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#eef0f4">
+  <title>Regex Tester</title>
+  <style>
+    /* Single self-contained file — no remote fonts, scripts, styles or network.
+       Every colour goes through a token so dark mode flips for free. The matching
+       is done entirely by the browser's own RegExp engine; nothing leaves the
+       device. */
+    :root {
+      color-scheme: light dark;
+
+      --primary: #4d63ff;
+      --primary-text: #3b50e0;
+      --primary-active: #6f82ff;
+      --primary-pale: #e6ebff;
+      --on-primary: #ffffff;
+
+      --ink: #111318;
+      --body: #454852;
+      --mute: #868a93;
+
+      --canvas: #ffffff;
+      --canvas-soft: #eef0f4;
+      --line: #dfe3ec;
+
+      /* Semantic families (from the design system). A valid pattern reports in
+         positive green; a syntax error reports in negative red. Match highlights
+         reuse the single azure accent so the tool keeps one accent only. */
+      --ok-text: #0c5230;
+      --err-text: #b02a2a;
+      --err-bg: #fbe3e2;
+      --hl-bg: #dfe4ff;
+      --hl-line: #4d63ff;
+
+      --display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --primary: #8b9bff;
+        --primary-text: #8b9bff;
+        --primary-active: #a8b4ff;
+        --primary-pale: #232842;
+        --on-primary: #111318;
+
+        --ink: #eceff5;
+        --body: #a9b0bf;
+        --mute: #7d8494;
+
+        --canvas: #20242e;
+        --canvas-soft: #14161b;
+        --line: #2f333d;
+
+        --ok-text: #8fe6b4;
+        --err-text: #f6a6a2;
+        --err-bg: #34161a;
+        --hl-bg: #2c3566;
+        --hl-line: #8b9bff;
+      }
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--sans);
+      font-feature-settings: "calt";
+      background: var(--canvas-soft);
+      color: var(--ink);
+      min-height: 100dvh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 28px 20px;
+    }
+
+    .container {
+      background: var(--canvas);
+      border-radius: 24px;
+      padding: 32px;
+      width: 100%;
+      max-width: 820px;
+    }
+
+    header { margin-bottom: 22px; }
+    .eyebrow {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--primary-text);
+      margin-bottom: 6px;
+    }
+    h1 {
+      font-family: var(--display);
+      font-size: clamp(1.8rem, 5vw, 2.4rem);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+      color: var(--ink);
+    }
+    p.sub { color: var(--body); margin-top: 8px; max-width: 62ch; }
+
+    label.cap {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--mute);
+      margin-bottom: 8px;
+    }
+
+    /* ── pattern field: /…/ with a monospace slash delimiter ─────────── */
+    .pattern {
+      display: flex;
+      align-items: stretch;
+      background: var(--canvas-soft);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .pattern:focus-within {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-pale);
+    }
+    .pattern.invalid { border-color: var(--err-text); }
+    .pattern.invalid:focus-within { box-shadow: 0 0 0 3px var(--err-bg); }
+    .slash {
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      font-family: var(--mono);
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--mute);
+      user-select: none;
+    }
+    .pattern input {
+      flex: 1 1 auto;
+      min-width: 0;
+      font-family: var(--mono);
+      font-size: 1rem;
+      color: var(--ink);
+      background: transparent;
+      border: none;
+      padding: 15px 0;
+    }
+    .pattern input:focus { outline: none; }
+    .pattern input::placeholder { color: var(--mute); }
+    .pattern .flags-live {
+      display: flex;
+      align-items: center;
+      padding: 0 14px 0 4px;
+      font-family: var(--mono);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--primary-text);
+      user-select: none;
+    }
+
+    /* ── flag toggles ────────────────────────────────────────────────── */
+    .flags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .flag {
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--body);
+      background: var(--canvas-soft);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 7px 14px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .flag b { font-family: var(--mono); margin-right: 5px; }
+    .flag[aria-pressed="true"] {
+      background: var(--primary);
+      color: var(--on-primary);
+      border-color: var(--primary);
+    }
+    .flag:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+    .status {
+      margin-top: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      min-height: 1.2em;
+      color: var(--mute);
+    }
+    .status.ok b { color: var(--ok-text); }
+    .status.err { color: var(--err-text); }
+
+    /* ── test string ─────────────────────────────────────────────────── */
+    .test-wrap { margin-top: 22px; }
+    textarea {
+      font-family: var(--mono);
+      font-size: 0.92rem;
+      line-height: 1.6;
+      color: var(--ink);
+      background: var(--canvas-soft);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px 16px;
+      resize: vertical;
+      min-height: 130px;
+      width: 100%;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    textarea::placeholder { color: var(--mute); }
+    textarea:focus-visible {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-pale);
+    }
+
+    /* ── highlighted preview ─────────────────────────────────────────── */
+    .preview-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 22px 0 8px;
+    }
+    .preview-head .count {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--mute);
+    }
+    .preview-head .count b { color: var(--primary-text); }
+    .preview {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--canvas-soft);
+      padding: 16px 18px;
+      min-height: 74px;
+      font-family: var(--mono);
+      font-size: 0.92rem;
+      line-height: 1.7;
+      color: var(--ink);
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-x: auto;
+    }
+    mark.hl {
+      background: var(--hl-bg);
+      color: var(--ink);
+      border-bottom: 2px solid var(--hl-line);
+      border-radius: 3px;
+      padding: 0 1px;
+    }
+    /* Zero-length matches (e.g. \b, a*) have nothing to paint, so mark the
+       position with a thin caret instead. */
+    mark.hl.zero {
+      display: inline-block;
+      width: 2px;
+      border-bottom: none;
+      border-left: 2px solid var(--hl-line);
+      background: transparent;
+      vertical-align: text-bottom;
+      height: 1.1em;
+      padding: 0;
+    }
+    .empty { color: var(--mute); font-style: italic; font-family: var(--sans); }
+
+    /* ── match list ──────────────────────────────────────────────────── */
+    .matches { margin-top: 18px; display: none; }
+    .matches.show { display: block; }
+    .matches ol { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .m {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 14px;
+      background: var(--canvas-soft);
+    }
+    .m .idx {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--primary-text);
+      flex: none;
+    }
+    .m .val {
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      color: var(--ink);
+      background: var(--hl-bg);
+      border-radius: 4px;
+      padding: 1px 6px;
+      word-break: break-word;
+    }
+    .m .pos { font-size: 0.78rem; color: var(--mute); margin-left: auto; flex: none; }
+    .groups {
+      flex-basis: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 2px;
+    }
+    .grp {
+      font-family: var(--mono);
+      font-size: 0.76rem;
+      color: var(--body);
+      border: 1px dashed var(--line);
+      border-radius: 6px;
+      padding: 2px 7px;
+    }
+    .grp span { color: var(--mute); }
+    .grp b { color: var(--ink); font-weight: 600; }
+    .truncated { font-size: 0.8rem; color: var(--mute); margin-top: 10px; }
+
+    footer { margin-top: 20px; font-size: 0.8rem; color: var(--mute); line-height: 1.6; }
+    footer code {
+      font-family: var(--mono);
+      background: var(--canvas-soft);
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      padding: 1px 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="eyebrow">Developer &middot; Text</div>
+      <h1>Regex Tester</h1>
+      <p class="sub">Write a regular expression, toggle its flags, and watch every match light up in
+        your test text — with capture groups broken out, live. Runs entirely on your device.</p>
+    </header>
+
+    <label class="cap" for="pattern">Pattern</label>
+    <div class="pattern" id="pattern-box">
+      <span class="slash">/</span>
+      <input id="pattern" type="text" spellcheck="false" autocapitalize="off" autocomplete="off"
+             placeholder="e.g. (\w+)@([\w.]+)" aria-label="Regular expression pattern">
+      <span class="slash">/</span>
+      <span class="flags-live" id="flags-live" aria-hidden="true"></span>
+    </div>
+
+    <div class="flags" id="flags" role="group" aria-label="Flags">
+      <button class="flag" data-flag="g" aria-pressed="false"><b>g</b>global</button>
+      <button class="flag" data-flag="i" aria-pressed="false"><b>i</b>ignore case</button>
+      <button class="flag" data-flag="m" aria-pressed="false"><b>m</b>multiline</button>
+      <button class="flag" data-flag="s" aria-pressed="false"><b>s</b>dotall</button>
+      <button class="flag" data-flag="u" aria-pressed="false"><b>u</b>unicode</button>
+      <button class="flag" data-flag="y" aria-pressed="false"><b>y</b>sticky</button>
+    </div>
+
+    <div class="status" id="status" aria-live="polite"></div>
+
+    <div class="test-wrap">
+      <label class="cap" for="test">Test string</label>
+      <textarea id="test" spellcheck="false" placeholder="Paste or type the text to match against…"></textarea>
+    </div>
+
+    <div class="preview-head">
+      <label class="cap" style="margin:0">Matches</label>
+      <span class="count" id="count"></span>
+    </div>
+    <div class="preview" id="preview" aria-live="polite"></div>
+
+    <div class="matches" id="matches">
+      <ol id="match-list"></ol>
+      <p class="truncated" id="truncated" style="display:none"></p>
+    </div>
+
+    <footer>
+      Quick reference: <code>\d</code> digit &middot; <code>\w</code> word char &middot;
+      <code>\s</code> whitespace &middot; <code>.</code> any char &middot; <code>[abc]</code> set &middot;
+      <code>a*</code> zero+ &middot; <code>a+</code> one+ &middot; <code>a?</code> optional &middot;
+      <code>(…)</code> capture group &middot; <code>a|b</code> or &middot; <code>^ $</code> anchors.
+      Your pattern and text are saved locally.
+    </footer>
+  </div>
+
+  <script>
+    const NS = 'regex-tester:';
+    const ALL_FLAGS = ['g', 'i', 'm', 's', 'u', 'y'];
+    const MAX_MATCHES = 1000;   // guard against runaway global loops
+    const LIST_LIMIT = 200;     // cap the rendered match cards
+
+    const patternEl = document.getElementById('pattern');
+    const patternBox = document.getElementById('pattern-box');
+    const flagsLiveEl = document.getElementById('flags-live');
+    const flagsWrap = document.getElementById('flags');
+    const statusEl = document.getElementById('status');
+    const testEl = document.getElementById('test');
+    const previewEl = document.getElementById('preview');
+    const countEl = document.getElementById('count');
+    const matchesEl = document.getElementById('matches');
+    const listEl = document.getElementById('match-list');
+    const truncatedEl = document.getElementById('truncated');
+
+    // Active flags kept as a Set; rendered back in canonical order.
+    const active = new Set();
+
+    // ── first-run sample ─────────────────────────────────────────────
+    // Seeds a worked example so the tool (and its catalog card) shows what it
+    // does. Cleared/edited state is persisted, so the sample never returns.
+    const seeded = localStorage.getItem(NS + 'pattern') === null;
+    if (seeded) {
+      patternEl.value = '(\\w+)@([\\w.]+)';
+      testEl.value = 'Reach us at hello@hillnote.com or support@example.org anytime.';
+      active.add('g'); active.add('i');
+    } else {
+      patternEl.value = localStorage.getItem(NS + 'pattern') || '';
+      testEl.value = localStorage.getItem(NS + 'test') || '';
+      const savedFlags = localStorage.getItem(NS + 'flags') || '';
+      for (const f of savedFlags) if (ALL_FLAGS.includes(f)) active.add(f);
+    }
+
+    const flagString = () => ALL_FLAGS.filter((f) => active.has(f)).join('');
+
+    function syncFlagButtons() {
+      for (const btn of flagsWrap.querySelectorAll('.flag')) {
+        btn.setAttribute('aria-pressed', String(active.has(btn.dataset.flag)));
+      }
+      flagsLiveEl.textContent = flagString();
+    }
+
+    // Build a RegExp from the current inputs, or return an Error describing why not.
+    function compile() {
+      const src = patternEl.value;
+      if (!src) return null;                 // empty pattern → nothing to do
+      try {
+        return new RegExp(src, flagString());
+      } catch (e) {
+        return e;                            // invalid pattern
+      }
+    }
+
+    function toMatch(m) {
+      return {
+        start: m.index,
+        end: m.index + m[0].length,
+        text: m[0],
+        groups: m.slice(1),
+        named: m.groups || null,
+      };
+    }
+
+    // Collect matches. For non-global/non-sticky patterns that means the first
+    // match; otherwise iterate, nudging lastIndex past zero-length matches so the
+    // loop can't spin forever.
+    function collect(re, text) {
+      const out = [];
+      if (!re.global && !re.sticky) {
+        const m = re.exec(text);
+        if (m) out.push(toMatch(m));
+        return { out, truncated: false };
+      }
+      re.lastIndex = 0;
+      let m;
+      while ((m = re.exec(text)) !== null) {
+        out.push(toMatch(m));
+        if (m.index === re.lastIndex) re.lastIndex++;
+        if (out.length >= MAX_MATCHES) return { out, truncated: true };
+      }
+      return { out, truncated: false };
+    }
+
+    // Render the test text with matched ranges wrapped in <mark>. Built with DOM
+    // nodes (never innerHTML) so the user's text can never inject markup.
+    function renderPreview(text, matches) {
+      previewEl.textContent = '';
+      if (!text) {
+        previewEl.innerHTML = '<span class="empty">Your test string will appear here, with matches highlighted.</span>';
+        return;
+      }
+      let cursor = 0;
+      for (const mt of matches) {
+        if (mt.start < cursor) continue;               // skip any overlap
+        if (mt.start > cursor) previewEl.appendChild(document.createTextNode(text.slice(cursor, mt.start)));
+        const mark = document.createElement('mark');
+        mark.className = mt.text.length === 0 ? 'hl zero' : 'hl';
+        mark.textContent = mt.text;
+        previewEl.appendChild(mark);
+        cursor = mt.end;
+      }
+      if (cursor < text.length) previewEl.appendChild(document.createTextNode(text.slice(cursor)));
+    }
+
+    function renderList(matches, truncated) {
+      listEl.textContent = '';
+      if (!matches.length) { matchesEl.classList.remove('show'); return; }
+      matchesEl.classList.add('show');
+      const shown = matches.slice(0, LIST_LIMIT);
+      for (let i = 0; i < shown.length; i++) {
+        const mt = shown[i];
+        const li = document.createElement('li');
+        li.className = 'm';
+
+        const idx = document.createElement('span');
+        idx.className = 'idx';
+        idx.textContent = '#' + (i + 1);
+
+        const val = document.createElement('span');
+        val.className = 'val';
+        val.textContent = mt.text.length ? mt.text : '∅ (empty)';
+
+        const pos = document.createElement('span');
+        pos.className = 'pos';
+        pos.textContent = mt.start === mt.end ? `at ${mt.start}` : `${mt.start}–${mt.end}`;
+
+        li.append(idx, val, pos);
+
+        // Capture groups — numbered, plus named groups when present.
+        if (mt.groups.length) {
+          const wrap = document.createElement('div');
+          wrap.className = 'groups';
+          mt.groups.forEach((g, gi) => {
+            const chip = document.createElement('span');
+            chip.className = 'grp';
+            const lbl = document.createElement('span');
+            lbl.textContent = '$' + (gi + 1) + ' ';
+            const b = document.createElement('b');
+            b.textContent = g === undefined ? '(no match)' : (g.length ? g : '(empty)');
+            chip.append(lbl, b);
+            wrap.appendChild(chip);
+          });
+          if (mt.named) {
+            for (const [name, gval] of Object.entries(mt.named)) {
+              const chip = document.createElement('span');
+              chip.className = 'grp';
+              const lbl = document.createElement('span');
+              lbl.textContent = name + ' ';
+              const b = document.createElement('b');
+              b.textContent = gval === undefined ? '(no match)' : (gval.length ? gval : '(empty)');
+              chip.append(lbl, b);
+              wrap.appendChild(chip);
+            }
+          }
+          li.appendChild(wrap);
+        }
+        listEl.appendChild(li);
+      }
+      if (matches.length > LIST_LIMIT || truncated) {
+        truncatedEl.style.display = 'block';
+        truncatedEl.textContent = truncated
+          ? `Showing the first ${LIST_LIMIT} of ${MAX_MATCHES}+ matches — refine your pattern to narrow it down.`
+          : `Showing the first ${LIST_LIMIT} of ${matches.length} matches.`;
+      } else {
+        truncatedEl.style.display = 'none';
+      }
+    }
+
+    function run() {
+      const compiled = compile();
+      patternBox.classList.remove('invalid');
+      statusEl.className = 'status';
+
+      // No pattern yet: show the plain text, no matches.
+      if (compiled === null) {
+        statusEl.textContent = 'Enter a pattern to begin.';
+        countEl.textContent = '';
+        renderPreview(testEl.value, []);
+        renderList([], false);
+        return;
+      }
+
+      // Invalid pattern: report the syntax error, keep the plain text visible.
+      if (compiled instanceof Error) {
+        patternBox.classList.add('invalid');
+        statusEl.className = 'status err';
+        statusEl.textContent = '✗ ' + compiled.message;
+        countEl.textContent = '';
+        renderPreview(testEl.value, []);
+        renderList([], false);
+        return;
+      }
+
+      const text = testEl.value;
+      const { out, truncated } = collect(compiled, text);
+      const n = out.length;
+      statusEl.className = 'status ok';
+      statusEl.innerHTML = `<b>✓ Valid pattern</b> · flags: <b>${flagString() || 'none'}</b>`;
+      countEl.innerHTML = n
+        ? `<b>${truncated ? MAX_MATCHES + '+' : n}</b> match${n === 1 ? '' : 'es'}`
+        : 'No matches';
+      renderPreview(text, out);
+      renderList(out, truncated);
+    }
+
+    function persist() {
+      localStorage.setItem(NS + 'pattern', patternEl.value);
+      localStorage.setItem(NS + 'test', testEl.value);
+      localStorage.setItem(NS + 'flags', flagString());
+    }
+
+    // Debounce recompute so typing stays snappy on large inputs.
+    let timer = 0;
+    function schedule() {
+      persist();
+      clearTimeout(timer);
+      timer = setTimeout(run, 120);
+    }
+
+    patternEl.addEventListener('input', schedule);
+    testEl.addEventListener('input', schedule);
+    flagsWrap.addEventListener('click', (e) => {
+      const btn = e.target.closest('.flag');
+      if (!btn) return;
+      const f = btn.dataset.flag;
+      if (active.has(f)) active.delete(f); else active.add(f);
+      syncFlagButtons();
+      schedule();
+    });
+
+    syncFlagButtons();
+    // Persist the seeded sample immediately so it never re-seeds on next open.
+    if (seeded) persist();
+    run();
+  </script>
+</body>
+</html>
