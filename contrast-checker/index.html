@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#eef0f4" />
+  <title>Contrast Checker</title>
+  <style>
+    /* Everything inline — a tool is ONE self-contained, fully-offline file.
+       Colours come from Hillnote-Tools-Design-System.md. Two rules matter most:
+         1. Never hard-code a UI colour — always through a token below, so the
+            whole surface flips to dark for free. The ONLY colours set literally
+            are the user's chosen foreground/background — those are the tool's
+            content (the thing being tested), not chrome.
+         2. --primary is a FILL. For azure *text* use --primary-text. */
+    :root {
+      color-scheme: light dark;
+
+      --primary: #4d63ff;        /* CTA fill, active states           */
+      --primary-text: #3b50e0;   /* azure as TEXT (eyebrow, links)    */
+      --primary-active: #6f82ff; /* hover / pressed fill              */
+      --primary-pale: #e6ebff;   /* soft tint, badge + focus ring     */
+      --on-primary: #ffffff;     /* label sitting on --primary        */
+
+      --ink: #111318;            /* headings, highest-emphasis text   */
+      --body: #454852;           /* secondary body text               */
+      --mute: #868a93;           /* captions, placeholder, fine print */
+
+      --canvas: #ffffff;         /* card surface                      */
+      --canvas-soft: #eef0f4;    /* page background                   */
+      --line: #dfe3ec;           /* hairline borders + dividers       */
+
+      --positive-deep: #0c5230;  /* pass text                         */
+      --positive-pale: #e2f5ea;  /* pass tint                         */
+      --negative-deep: #b02a2a;  /* fail text                         */
+      --negative-pale: #fbe3e2;  /* fail tint                         */
+
+      --display: "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+
+    /* Dark mode follows the OS — no in-product toggle. Every token keeps its
+       role and only its value flips: --canvas is still the card, --canvas-soft
+       still the page, --ink still the strongest text, the CTA flips polarity. */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --primary: #8b9bff;
+        --primary-text: #8b9bff;
+        --primary-active: #a8b4ff;
+        --primary-pale: #232842;
+        --on-primary: #111318;
+
+        --ink: #eceff5;
+        --body: #a9b0bf;
+        --mute: #7d8494;
+
+        --canvas: #20242e;
+        --canvas-soft: #14161b;
+        --line: #2f333d;
+
+        --positive-deep: #86efac;
+        --positive-pale: #14301f;
+        --negative-deep: #ff9490;
+        --negative-pale: #3a1412;
+      }
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--sans);
+      font-feature-settings: "calt";
+      background: var(--canvas-soft);
+      color: var(--ink);
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 28px 20px 40px;
+      gap: 22px;
+    }
+
+    header { text-align: center; max-width: 640px; }
+    .eyebrow {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--primary-text);
+      margin-bottom: 6px;
+    }
+    h1 {
+      font-family: var(--display);
+      font-size: clamp(1.9rem, 5vw, 2.6rem);
+      font-weight: 900;          /* the display ceiling — never lighter */
+      letter-spacing: -0.02em;
+      line-height: 1.04;
+    }
+    header p { color: var(--body); margin-top: 8px; font-size: 15px; }
+
+    /* Elevation is surface contrast — a --canvas card on a --canvas-soft page.
+       Works in both schemes, so no shadow needed. */
+    .card {
+      background: var(--canvas);
+      border-radius: 24px;
+      padding: 24px;
+      width: 100%;
+      max-width: 860px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 720px) { .card { grid-template-columns: 1fr; } }
+
+    .col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+    /* ── colour controls ─────────────────────────────────────────── */
+    .field label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--body);
+      margin-bottom: 8px;
+    }
+    .picker {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 8px 10px;
+      background: var(--canvas);
+    }
+    .picker:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-pale); }
+    input[type="color"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 38px;
+      height: 38px;
+      border: none;
+      border-radius: 10px;
+      background: none;
+      cursor: pointer;
+      flex: none;
+      padding: 0;
+    }
+    input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+    input[type="color"]::-webkit-color-swatch { border: 1px solid var(--line); border-radius: 10px; }
+    input[type="color"]::-moz-color-swatch { border: 1px solid var(--line); border-radius: 10px; }
+    input[type="text"] {
+      flex: 1;
+      min-width: 0;
+      border: none;
+      background: none;
+      font-family: var(--sans);
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      color: var(--ink);
+    }
+    input[type="text"]:focus { outline: none; }
+
+    .swap-row { display: flex; justify-content: center; margin: -4px 0; }
+    .swap {
+      background: var(--canvas-soft);
+      color: var(--ink);
+      border: none;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 9px 18px;
+      border-radius: 24px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      transition: background 0.15s, transform 0.15s;
+    }
+    .swap:hover { background: var(--primary-pale); transform: translateY(-1px); }
+    .swap:active { transform: translateY(0); }
+    .swap:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+    /* ── ratio + verdicts ────────────────────────────────────────── */
+    .ratio-wrap { text-align: center; padding: 4px 0 2px; }
+    .ratio {
+      font-family: var(--display);
+      font-size: clamp(2.8rem, 9vw, 3.6rem);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      color: var(--primary-text);
+      font-variant-numeric: tabular-nums;
+    }
+    .ratio small { font-size: 0.42em; font-weight: 700; color: var(--mute); letter-spacing: 0; }
+    .ratio-note { font-size: 13px; color: var(--mute); margin-top: 6px; }
+
+    .checks { display: flex; flex-direction: column; gap: 8px; }
+    .check {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: var(--canvas-soft);
+      font-size: 14px;
+    }
+    .check .name { font-weight: 600; color: var(--ink); }
+    .check .name span { display: block; font-weight: 400; font-size: 12px; color: var(--mute); margin-top: 1px; }
+    .badge {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      white-space: nowrap;
+    }
+    .badge.pass { background: var(--positive-pale); color: var(--positive-deep); }
+    .badge.fail { background: var(--negative-pale); color: var(--negative-deep); }
+
+    /* ── live preview ────────────────────────────────────────────── */
+    .preview {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      justify-content: center;
+      min-height: 180px;
+      flex: 1;
+      /* colours are set from JS — this is the user's content being tested */
+    }
+    .preview .p-lg { font-family: var(--display); font-size: 26px; font-weight: 900; letter-spacing: -0.02em; }
+    .preview .p-md { font-size: 15px; line-height: 1.5; }
+    .preview .p-sm { font-size: 13px; opacity: 0.85; }
+    .preview-cap { font-size: 12px; color: var(--mute); text-align: center; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="eyebrow">Productivity &middot; Accessibility</div>
+    <h1>Contrast Checker</h1>
+    <p>Pick a text and background colour, and see the WCAG contrast ratio with a live preview — so your notes, highlights and docs stay readable for everyone.</p>
+  </header>
+
+  <div class="card">
+    <div class="col">
+      <div class="field">
+        <label for="fgText">Text colour</label>
+        <div class="picker">
+          <input type="color" id="fgColor" value="#3b50e0" aria-label="Text colour swatch" />
+          <input type="text" id="fgText" value="#3B50E0" spellcheck="false" maxlength="7" aria-label="Text colour hex" />
+        </div>
+      </div>
+
+      <div class="swap-row">
+        <button class="swap" id="swap" type="button" aria-label="Swap text and background colours">
+          <span aria-hidden="true">⇅</span> Swap
+        </button>
+      </div>
+
+      <div class="field">
+        <label for="bgText">Background colour</label>
+        <div class="picker">
+          <input type="color" id="bgColor" value="#ffffff" aria-label="Background colour swatch" />
+          <input type="text" id="bgText" value="#FFFFFF" spellcheck="false" maxlength="7" aria-label="Background colour hex" />
+        </div>
+      </div>
+
+      <div class="ratio-wrap">
+        <div class="ratio" id="ratio">6.16<small> : 1</small></div>
+        <div class="ratio-note" id="ratioNote">Contrast ratio</div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="preview" id="preview">
+        <div class="p-lg" id="pLg">Large heading</div>
+        <div class="p-md" id="pMd">Normal body text sits here so you can judge how the pairing reads at a regular size before you commit to it.</div>
+        <div class="p-sm" id="pSm">Small caption &middot; 13px</div>
+      </div>
+      <div class="preview-cap">Live preview of your chosen colours</div>
+
+      <div class="checks" id="checks">
+        <div class="check">
+          <div class="name">Normal text <span>AA &middot; needs 4.5:1</span></div>
+          <div class="badge" data-check="normalAA">—</div>
+        </div>
+        <div class="check">
+          <div class="name">Normal text <span>AAA &middot; needs 7:1</span></div>
+          <div class="badge" data-check="normalAAA">—</div>
+        </div>
+        <div class="check">
+          <div class="name">Large text <span>AA &middot; needs 3:1</span></div>
+          <div class="badge" data-check="largeAA">—</div>
+        </div>
+        <div class="check">
+          <div class="name">Large text <span>AAA &middot; needs 4.5:1</span></div>
+          <div class="badge" data-check="largeAAA">—</div>
+        </div>
+        <div class="check">
+          <div class="name">UI &amp; graphics <span>needs 3:1</span></div>
+          <div class="badge" data-check="ui">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Persist the last pairing so it's there next time. Namespaced key.
+    const KEY = 'contrast-checker:pair';
+
+    const els = {
+      fgColor: document.getElementById('fgColor'),
+      fgText: document.getElementById('fgText'),
+      bgColor: document.getElementById('bgColor'),
+      bgText: document.getElementById('bgText'),
+      ratio: document.getElementById('ratio'),
+      ratioNote: document.getElementById('ratioNote'),
+      preview: document.getElementById('preview'),
+      pLg: document.getElementById('pLg'),
+      pMd: document.getElementById('pMd'),
+      pSm: document.getElementById('pSm'),
+      swap: document.getElementById('swap'),
+    };
+    const badges = {};
+    document.querySelectorAll('.badge[data-check]').forEach((b) => { badges[b.dataset.check] = b; });
+
+    const HEX_RE = /^#?[0-9a-fA-F]{6}$/;
+    const norm = (v) => '#' + v.replace('#', '').toLowerCase();
+
+    // WCAG 2.1 relative luminance + contrast ratio.
+    function luminance(hex) {
+      const n = parseInt(hex.slice(1), 16);
+      const rgb = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((c) => {
+        const s = c / 255;
+        return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+      });
+      return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+    }
+    function contrast(fg, bg) {
+      const l1 = luminance(fg), l2 = luminance(bg);
+      const hi = Math.max(l1, l2), lo = Math.min(l1, l2);
+      return (hi + 0.05) / (lo + 0.05);
+    }
+
+    function setBadge(el, ok) {
+      el.textContent = ok ? 'Pass' : 'Fail';
+      el.classList.toggle('pass', ok);
+      el.classList.toggle('fail', !ok);
+    }
+
+    function render() {
+      const fg = norm(els.fgColor.value);
+      const bg = norm(els.bgColor.value);
+      const r = contrast(fg, bg);
+      const rr = Math.round(r * 100) / 100;
+
+      els.ratio.innerHTML = rr.toFixed(2) + '<small> : 1</small>';
+
+      const best =
+        r >= 7 ? 'Passes every level' :
+        r >= 4.5 ? 'Great for body text' :
+        r >= 3 ? 'Large text only' :
+        'Too low — hard to read';
+      els.ratioNote.textContent = best;
+
+      setBadge(badges.normalAA, r >= 4.5);
+      setBadge(badges.normalAAA, r >= 7);
+      setBadge(badges.largeAA, r >= 3);
+      setBadge(badges.largeAAA, r >= 4.5);
+      setBadge(badges.ui, r >= 3);
+
+      // Preview shows the user's actual colours — content, not chrome.
+      els.preview.style.background = bg;
+      [els.pLg, els.pMd, els.pSm].forEach((n) => { n.style.color = fg; });
+
+      try { localStorage.setItem(KEY, JSON.stringify({ fg, bg })); } catch (e) {}
+    }
+
+    // Keep the swatch and hex field in sync, both directions.
+    function fromSwatch(which) {
+      const c = els[which + 'Color'];
+      const t = els[which + 'Text'];
+      t.value = c.value.toUpperCase();
+      render();
+    }
+    function fromText(which) {
+      const c = els[which + 'Color'];
+      const t = els[which + 'Text'];
+      const v = t.value.trim();
+      if (HEX_RE.test(v)) { c.value = norm(v); render(); }
+    }
+
+    els.fgColor.addEventListener('input', () => fromSwatch('fg'));
+    els.bgColor.addEventListener('input', () => fromSwatch('bg'));
+    els.fgText.addEventListener('input', () => fromText('fg'));
+    els.bgText.addEventListener('input', () => fromText('bg'));
+    // Snap the text field back to a valid value when the user leaves it.
+    els.fgText.addEventListener('blur', () => { els.fgText.value = els.fgColor.value.toUpperCase(); });
+    els.bgText.addEventListener('blur', () => { els.bgText.value = els.bgColor.value.toUpperCase(); });
+
+    els.swap.addEventListener('click', () => {
+      const fg = els.fgColor.value, bg = els.bgColor.value;
+      els.fgColor.value = bg; els.bgColor.value = fg;
+      fromSwatch('fg'); fromSwatch('bg');
+    });
+
+    // Restore the last pairing.
+    try {
+      const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+      if (saved && HEX_RE.test(saved.fg) && HEX_RE.test(saved.bg)) {
+        els.fgColor.value = norm(saved.fg); els.bgColor.value = norm(saved.bg);
+        els.fgText.value = norm(saved.fg).toUpperCase();
+        els.bgText.value = norm(saved.bg).toUpperCase();
+      }
+    } catch (e) {}
+
+    render();
+  </script>
+</body>
+</html>

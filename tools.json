@@ -234,6 +234,14 @@
       "version": 1
     },
     {
+      "dir": "contrast-checker",
+      "name": "Contrast Checker",
+      "description": "Check any two colours for WCAG AA/AAA contrast — pick a text and background colour, see the ratio and a live preview.",
+      "glyph": "🌗",
+      "color": "#64748b",
+      "version":1
+    },
+    {
       "dir": "regex-tester",
       "name": "Regex Tester",
       "description": "Write a regular expression, toggle its flags, and see every match and capture group light up in your text — live and fully offline.",
