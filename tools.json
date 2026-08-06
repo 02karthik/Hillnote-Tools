@@ -1,5 +1,5 @@
 {
-  "catalogVersion": 24,
+  "catalogVersion": 25,
   "tools": [
     {
       "dir": "color-capture",
@@ -231,6 +231,14 @@
       "description": "Compare two versions of any text and see exactly what changed — additions and deletions highlighted inline, word by word or line by line.",
       "glyph": "🔀",
       "color": "#c026d3",
+      "version": 1
+    },
+    {
+      "dir": "regex-tester",
+      "name": "Regex Tester",
+      "description": "Write a regular expression, toggle its flags, and see every match and capture group light up in your text — live and fully offline.",
+      "glyph": "🔍",
+      "color": "#7c3aed",
       "version": 1
     }
   ]
