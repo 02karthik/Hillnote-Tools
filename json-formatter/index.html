@@ -365,7 +365,6 @@
 
   <script>
     'use strict';
-    const KEY = 'json-formatter:input';
     const PLACEHOLDER = 'Formatted JSON appears here.';
 
     const $ = (id) => document.getElementById(id);
@@ -480,7 +479,6 @@
     // ── core actions ───────────────────────────────────────────────────────
     function parse() {
       const text = input.value;
-      localStorage.setItem(KEY, text);
       if (!text.trim()) {
         setStatus('idle', 'Type or paste JSON, then hit Beautify.', false);
         setStats(undefined);
@@ -515,7 +513,6 @@
 
     $('clear').onclick = () => {
       input.value = '';
-      localStorage.removeItem(KEY);
       showPlaceholder(PLACEHOLDER);
       setStatus('idle', 'Type or paste JSON, then hit Beautify.', false);
       setStats(undefined);
@@ -577,10 +574,6 @@
       const text = output.querySelector('.placeholder') ? '' : output.textContent;
       copyText(text, 'Output');
     };
-
-    // ── restore ────────────────────────────────────────────────────────────
-    const saved = localStorage.getItem(KEY);
-    if (saved) { input.value = saved; render(indentValue()); }
   </script>
 </body>
 </html>
