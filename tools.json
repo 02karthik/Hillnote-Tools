@@ -1,5 +1,5 @@
 {
-  "catalogVersion": 25,
+  "catalogVersion": 26,
   "tools": [
     {
       "dir": "color-capture",
@@ -247,6 +247,14 @@
       "description": "Write a regular expression, toggle its flags, and see every match and capture group light up in your text — live and fully offline.",
       "glyph": "🔍",
       "color": "#7c3aed",
+      "version": 1
+    },
+    {
+      "dir": "json-formatter",
+      "name": "JSON Formatter",
+      "description": "Beautify, minify, and validate JSON with syntax highlighting and pinpoint error locations — fully offline.",
+      "glyph": "🧩",
+      "color": "#0d9488",
       "version": 1
     }
   ]
